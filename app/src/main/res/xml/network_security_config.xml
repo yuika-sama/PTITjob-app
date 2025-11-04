@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+        Development network security config: allow cleartext traffic for localhost and emulator host
+        For production builds you should tighten this configuration and use HTTPS.
+    -->
+    <base-config cleartextTrafficPermitted="false" />
+
+    <!-- Allow cleartext for local emulator/host addresses -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain>localhost</domain>
+        <domain>10.0.2.2</domain>
+        <domain>10.0.3.2</domain>
+        <domain>10.0.0.2</domain>
+    </domain-config>
+</network-security-config>
