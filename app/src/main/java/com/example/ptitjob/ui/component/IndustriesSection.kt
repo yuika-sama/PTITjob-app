@@ -44,6 +44,7 @@ data class IndustryItem(
     val name: String,
     val jobs: Int,
     val iconUrl: String?,
+    val backendId: String = id.toString(),
 )
 
 // --- Helper để quản lý màu sắc động ---

@@ -223,7 +223,8 @@ class CandidateDashboardViewModel @Inject constructor(
             id = id.toIntOrNull() ?: index,
             name = name,
             jobs = jobCount ?: 0,
-            iconUrl = iconUrl
+            iconUrl = iconUrl,
+            backendId = id
         )
     }
 

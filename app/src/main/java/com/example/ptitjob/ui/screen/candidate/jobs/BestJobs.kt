@@ -4,7 +4,18 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -13,9 +24,37 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,21 +68,67 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ptitjob.ui.component.JobListCard
 import com.example.ptitjob.ui.component.JobListCardData
-import com.example.ptitjob.ui.theme.*
+import com.example.ptitjob.ui.theme.PTITCornerRadius
+import com.example.ptitjob.ui.theme.PTITElevation
+import com.example.ptitjob.ui.theme.PTITGradientEnd
+import com.example.ptitjob.ui.theme.PTITGradientMiddle
+import com.example.ptitjob.ui.theme.PTITGradientStart
+import com.example.ptitjob.ui.theme.PTITInfo
+import com.example.ptitjob.ui.theme.PTITNeutral100
+import com.example.ptitjob.ui.theme.PTITNeutral200
+import com.example.ptitjob.ui.theme.PTITPrimary
+import com.example.ptitjob.ui.theme.PTITSecondary
+import com.example.ptitjob.ui.theme.PTITSize
+import com.example.ptitjob.ui.theme.PTITSpacing
+import com.example.ptitjob.ui.theme.PTITSuccess
+import com.example.ptitjob.ui.theme.PTITTextLight
+import com.example.ptitjob.ui.theme.PTITTextPrimary
+import com.example.ptitjob.ui.theme.PTITTextSecondary
+import com.example.ptitjob.ui.theme.PTITWarning
 
 @Composable
-fun BestJobsScreen() {
-    val mockBestJobs = getSampleBestJobs()
-    var searchQuery by remember { mutableStateOf("") }
-    var locationQuery by remember { mutableStateOf("") }
-    var fieldQuery by remember { mutableStateOf("") }
+fun BestJobsRoute(
+    onBack: () -> Unit,
+    onJobSelected: (String) -> Unit,
+    onSaveJob: (JobListCardData) -> Unit = {},
+    viewModel: BestJobsViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    BestJobsScreen(
+        state = state,
+        onBack = onBack,
+        onSearchChange = viewModel::updateSearchQuery,
+        onLocationChange = viewModel::updateLocationQuery,
+        onFieldChange = viewModel::updateFieldQuery,
+        onSearch = viewModel::submitSearch,
+        onRefresh = viewModel::refresh,
+        onPageChange = viewModel::changePage,
+        onJobSelected = { data -> onJobSelected(data.backendId) },
+        onSave = onSaveJob
+    )
+}
+
+@Composable
+fun BestJobsScreen(
+    state: BestJobsUiState,
+    onBack: () -> Unit,
+    onSearchChange: (String) -> Unit,
+    onLocationChange: (String) -> Unit,
+    onFieldChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onRefresh: () -> Unit,
+    onPageChange: (Int) -> Unit,
+    onJobSelected: (JobListCardData) -> Unit,
+    onSave: (JobListCardData) -> Unit
+) {
     var isVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
+    LaunchedEffect(Unit) { isVisible = true }
 
     Box(
         modifier = Modifier
@@ -56,119 +141,129 @@ fun BestJobsScreen() {
                 )
             )
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
-        ) {
-            // Header Banner
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
-                ) {
-                    BestJobsHeader()
-                }
+        when {
+            state.isLoading && state.jobs.isEmpty() -> BestJobsLoadingState()
+            state.errorMessage != null && state.jobs.isEmpty() -> {
+                BestJobsErrorState(message = state.errorMessage, onRetry = onRefresh, onBack = onBack)
             }
-
-            // Advanced Search Section
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = PTITSpacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
                 ) {
-                    BestJobsAdvancedSearch(
-                        searchQuery = searchQuery,
-                        locationQuery = locationQuery,
-                        fieldQuery = fieldQuery,
-                        onSearchChange = { searchQuery = it },
-                        onLocationChange = { locationQuery = it },
-                        onFieldChange = { fieldQuery = it },
-                        onSearch = { /* TODO: Implement search */ }
-                    )
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
+                        ) {
+                            BestJobsHeader(onBack = onBack)
+                        }
+                    }
 
-            // Featured Categories
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
-                ) {
-                    FeaturedCategoriesSection()
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                        ) {
+                            BestJobsAdvancedSearch(
+                                searchQuery = state.searchQuery,
+                                locationQuery = state.locationQuery,
+                                fieldQuery = state.fieldQuery,
+                                onSearchChange = onSearchChange,
+                                onLocationChange = onLocationChange,
+                                onFieldChange = onFieldChange,
+                                onSearch = onSearch
+                            )
+                        }
+                    }
 
-            // Results Summary
-            item {
-                ResultsSummary(totalJobs = mockBestJobs.size)
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
+                        ) {
+                            FeaturedCategoriesSection()
+                        }
+                    }
 
-            // Job List
-            items(mockBestJobs) { job ->
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = PTITSpacing.lg),
-                        shape = PTITCornerRadius.lg,
-                        color = Color.White,
-                        shadowElevation = PTITElevation.md
-                    ) {
-                        JobListCard(
-                            job = job,
-                            onApply = { /* TODO */ },
-                            onSave = { /* TODO */ }
-                        )
+                    item {
+                        ResultsSummary(totalJobs = state.totalJobs)
+                    }
+
+                    if (state.jobs.isEmpty()) {
+                        item {
+                            EmptyJobsPlaceholder(onRetry = onRefresh)
+                        }
+                    } else {
+                        items(state.jobs) { job ->
+                            AnimatedVisibility(
+                                visible = isVisible,
+                                enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
+                            ) {
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = PTITSpacing.lg),
+                                    shape = PTITCornerRadius.lg,
+                                    color = Color.White,
+                                    shadowElevation = PTITElevation.md
+                                ) {
+                                    JobListCard(
+                                        job = job,
+                                        onApply = onJobSelected,
+                                        onSave = onSave,
+                                        onCardClick = onJobSelected
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (state.errorMessage != null && state.jobs.isNotEmpty()) {
+                        item {
+                            InlineError(message = state.errorMessage, onRetry = onRefresh)
+                        }
+                    }
+
+                    if (state.totalPages > 1) {
+                        item {
+                            PaginationControls(
+                                currentPage = state.currentPage,
+                                totalPages = state.totalPages,
+                                onPageChange = onPageChange
+                            )
+                        }
                     }
                 }
-            }
-
-            // Pagination
-            item {
-                PaginationControls(
-                    currentPage = 1,
-                    totalPages = 18,
-                    onPageChange = { /* TODO */ }
-                )
             }
         }
     }
 }
 
 @Composable
-private fun BestJobsHeader() {
+private fun BestJobsHeader(onBack: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Transparent
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(horizontal = PTITSpacing.lg, vertical = PTITSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
         ) {
-            // Title with icon
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = PTITSuccess.copy(alpha = 0.2f),
-                    modifier = Modifier.size(PTITSize.avatarLg)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.Star,
-                            contentDescription = null,
-                            tint = PTITSuccess,
-                            modifier = Modifier.size(PTITSize.iconXl)
-                        )
-                    }
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Quay lại",
+                        tint = PTITTextLight
+                    )
                 }
-                
                 Text(
                     text = "Việc làm tốt nhất",
                     style = MaterialTheme.typography.displaySmall.copy(
@@ -176,10 +271,9 @@ private fun BestJobsHeader() {
                         color = PTITTextLight
                     )
                 )
+                Spacer(modifier = Modifier.size(PTITSize.iconLg))
             }
 
-            Spacer(Modifier.height(PTITSpacing.md))
-            
             Text(
                 text = "Tìm kiếm công việc mơ ước từ những cơ hội việc làm tốt nhất với lương cao và phúc lợi hấp dẫn",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -190,18 +284,12 @@ private fun BestJobsHeader() {
                 modifier = Modifier.padding(horizontal = PTITSpacing.lg)
             )
 
-            Spacer(Modifier.height(PTITSpacing.xl))
-            
-            // Features Row
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
                 contentPadding = PaddingValues(horizontal = PTITSpacing.lg)
             ) {
                 items(getBestJobFeatures()) { feature ->
-                    FeatureChip(
-                        text = feature.title,
-                        icon = feature.icon
-                    )
+                    FeatureChip(text = feature.title, icon = feature.icon)
                 }
             }
         }
@@ -215,7 +303,7 @@ private fun FeatureChip(
 ) {
     Surface(
         shape = PTITCornerRadius.md,
-        color = Color.White.copy(alpha = 0.2f), // Tăng visibility
+        color = Color.White.copy(alpha = 0.2f),
         modifier = Modifier.clip(PTITCornerRadius.md)
     ) {
         Row(
@@ -281,23 +369,22 @@ private fun BestJobsAdvancedSearch(
                     )
                 )
             }
-            
-            // Job Title Search
+
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = { 
+                placeholder = {
                     Text(
-                        "Nhập tên công việc, vị trí...", 
+                        "Nhập tên công việc, vị trí...",
                         color = PTITTextSecondary
-                    ) 
+                    )
                 },
-                leadingIcon = { 
+                leadingIcon = {
                     Icon(
-                        Icons.Default.Work, 
+                        Icons.Default.Business,
                         contentDescription = null,
                         tint = PTITSuccess
-                    ) 
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = PTITCornerRadius.md,
@@ -306,26 +393,25 @@ private fun BestJobsAdvancedSearch(
                     unfocusedBorderColor = PTITNeutral200
                 )
             )
-            
-            // Location and Field in Row
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
                 OutlinedTextField(
                     value = locationQuery,
                     onValueChange = onLocationChange,
-                    placeholder = { 
+                    placeholder = {
                         Text(
-                            "Tỉnh/thành phố", 
+                            "Tỉnh/thành phố",
                             color = PTITTextSecondary
-                        ) 
+                        )
                     },
-                    leadingIcon = { 
+                    leadingIcon = {
                         Icon(
-                            Icons.Default.LocationOn, 
+                            Icons.Default.LocationOn,
                             contentDescription = null,
                             tint = PTITSecondary
-                        ) 
+                        )
                     },
                     trailingIcon = {
                         Icon(
@@ -341,22 +427,22 @@ private fun BestJobsAdvancedSearch(
                         unfocusedBorderColor = PTITNeutral200
                     )
                 )
-                
+
                 OutlinedTextField(
                     value = fieldQuery,
                     onValueChange = onFieldChange,
-                    placeholder = { 
+                    placeholder = {
                         Text(
-                            "Lĩnh vực", 
+                            "Lĩnh vực",
                             color = PTITTextSecondary
-                        ) 
+                        )
                     },
-                    leadingIcon = { 
+                    leadingIcon = {
                         Icon(
-                            Icons.Default.Category, 
+                            Icons.Default.Category,
                             contentDescription = null,
                             tint = PTITInfo
-                        ) 
+                        )
                     },
                     trailingIcon = {
                         Icon(
@@ -373,8 +459,7 @@ private fun BestJobsAdvancedSearch(
                     )
                 )
             }
-            
-            // Search Button
+
             Button(
                 onClick = onSearch,
                 modifier = Modifier
@@ -411,13 +496,13 @@ private fun FeaturedCategoriesSection() {
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
     ) {
         Text(
-            text = "📂 Danh mục phổ biến", // Thêm icon cho thân thiện
+            text = "📂 Danh mục phổ biến",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = PTITTextLight
             )
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
             contentPadding = PaddingValues(end = PTITSpacing.lg)
@@ -505,7 +590,7 @@ private fun ResultsSummary(totalJobs: Int) {
                     )
                 }
             }
-            
+
             Text(
                 text = buildAnnotatedString {
                     append("Tìm thấy ")
@@ -525,8 +610,8 @@ private fun ResultsSummary(totalJobs: Int) {
 
 @Composable
 private fun PaginationControls(
-    currentPage: Int, 
-    totalPages: Int, 
+    currentPage: Int,
+    totalPages: Int,
     onPageChange: (Int) -> Unit
 ) {
     Surface(
@@ -543,7 +628,7 @@ private fun PaginationControls(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                onClick = { onPageChange(currentPage - 1) }, 
+                onClick = { onPageChange(currentPage - 1) },
                 enabled = currentPage > 1,
                 modifier = Modifier
                     .background(
@@ -560,7 +645,7 @@ private fun PaginationControls(
             }
 
             Spacer(Modifier.width(PTITSpacing.lg))
-            
+
             Text(
                 text = "Trang $currentPage / $totalPages",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -570,9 +655,9 @@ private fun PaginationControls(
             )
 
             Spacer(Modifier.width(PTITSpacing.lg))
-            
+
             IconButton(
-                onClick = { onPageChange(currentPage + 1) }, 
+                onClick = { onPageChange(currentPage + 1) },
                 enabled = currentPage < totalPages,
                 modifier = Modifier
                     .background(
@@ -591,7 +676,125 @@ private fun PaginationControls(
     }
 }
 
+@Composable
+private fun BestJobsLoadingState() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        androidx.compose.material3.CircularProgressIndicator(color = PTITSuccess)
+    }
+}
+
+@Composable
+private fun BestJobsErrorState(message: String, onRetry: () -> Unit, onBack: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Surface(
+            shape = PTITCornerRadius.lg,
+            color = Color.White,
+            shadowElevation = PTITElevation.lg,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PTITSpacing.xl)
+        ) {
+            Column(
+                modifier = Modifier.padding(PTITSpacing.xl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            ) {
+                Text(
+                    text = "Không thể tải danh sách việc làm",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITTextPrimary
+                    )
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextSecondary),
+                    textAlign = TextAlign.Center
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)) {
+                    TextButton(onClick = onBack) {
+                        Text("Quay lại")
+                    }
+                    ElevatedButton(onClick = onRetry) {
+                        Text("Thử lại")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InlineError(message: String, onRetry: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PTITSpacing.lg),
+        shape = PTITCornerRadius.md,
+        color = Color.White,
+        shadowElevation = PTITElevation.sm
+    ) {
+        Row(
+            modifier = Modifier.padding(PTITSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Không thể làm mới dữ liệu",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITWarning
+                    )
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall.copy(color = PTITTextSecondary)
+                )
+            }
+            TextButton(onClick = onRetry) {
+                Text("Thử lại")
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyJobsPlaceholder(onRetry: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PTITSpacing.lg),
+        shape = PTITCornerRadius.lg,
+        color = Color.White,
+        shadowElevation = PTITElevation.sm
+    ) {
+        Column(
+            modifier = Modifier.padding(PTITSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+        ) {
+            Text(
+                text = "Chưa có việc làm phù hợp",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextPrimary
+                )
+            )
+            Text(
+                text = "Hãy thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác.",
+                style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextSecondary),
+                textAlign = TextAlign.Center
+            )
+            Button(onClick = onRetry) {
+                Text("Làm mới")
+            }
+        }
+    }
+}
+
 // Data classes
+
 data class BestJobFeature(
     val title: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector
@@ -619,9 +822,9 @@ private fun getFeaturedCategories(): List<JobCategory> {
         JobCategory("Công nghệ", Icons.Default.Computer, PTITInfo, 245),
         JobCategory("Marketing", Icons.Default.Campaign, PTITWarning, 128),
         JobCategory("Tài chính", Icons.Default.AccountBalance, PTITSuccess, 89),
-        JobCategory("Thiết kế", Icons.Default.Palette, PTITSecondary, 156),
+        JobCategory("Thiết kế", Icons.Default.Category, PTITSecondary, 156),
         JobCategory("Kinh doanh", Icons.Default.Business, PTITPrimary, 203),
-        JobCategory("Giáo dục", Icons.Default.School, PTITInfo, 67)
+        JobCategory("Giáo dục", Icons.Default.Schedule, PTITInfo, 67)
     )
 }
 
@@ -629,20 +832,40 @@ private fun getFeaturedCategories(): List<JobCategory> {
 @Composable
 fun BestJobsScreenPreview() {
     MaterialTheme {
-        BestJobsScreen()
+        BestJobsScreen(
+            state = sampleBestJobsState(),
+            onBack = {},
+            onSearchChange = {},
+            onLocationChange = {},
+            onFieldChange = {},
+            onSearch = {},
+            onRefresh = {},
+            onPageChange = {},
+            onJobSelected = {},
+            onSave = {}
+        )
     }
+}
+
+private fun sampleBestJobsState(): BestJobsUiState {
+    return BestJobsUiState(
+        jobs = getSampleBestJobs(),
+        totalJobs = 128,
+        totalPages = 5
+    )
 }
 
 private fun getSampleBestJobs(): List<JobListCardData> {
     return listOf(
         JobListCardData(
             id = 1,
+            backendId = "1",
             title = "Senior Frontend Developer - React/Next.js",
             company = "CÔNG TY CÔNG NGHỆ DIGITEQ",
             companyLogo = null,
             salary = "25 - 40 triệu",
             location = "Hà Nội, TP.HCM",
-            experience = null,
+            experience = "5 năm",
             deadline = "15 ngày",
             postedTime = "1 giờ trước",
             isUrgent = true,
@@ -651,59 +874,18 @@ private fun getSampleBestJobs(): List<JobListCardData> {
         ),
         JobListCardData(
             id = 2,
+            backendId = "2",
             title = "Marketing Manager - Thương Hiệu Quốc Tế",
             company = "UNILEVER VIETNAM",
             companyLogo = null,
             salary = "Từ 30 triệu",
             location = "TP.HCM",
-            experience = null,
+            experience = "3 năm",
             deadline = "20 ngày",
             postedTime = "2 giờ trước",
             isUrgent = false,
             isVerified = true,
             tags = listOf("Thương hiệu lớn", "Marketing")
-        ),
-        JobListCardData(
-            id = 3,
-            title = "DevOps Engineer - Startup Fintech",
-            company = "MOMO E-WALLET",
-            companyLogo = null,
-            salary = "35 - 55 triệu",
-            location = "TP.HCM",
-            experience = null,
-            deadline = "25 ngày",
-            postedTime = "30 phút trước",
-            isUrgent = true,
-            isVerified = true,
-            tags = listOf("Fintech", "Startup", "DevOps")
-        ),
-        JobListCardData(
-            id = 4,
-            title = "UI/UX Designer - App Mobile",
-            company = "VIETCOMBANK",
-            companyLogo = null,
-            salary = "20 - 35 triệu",
-            location = "Hà Nội",
-            experience = null,
-            deadline = "10 ngày",
-            postedTime = "45 phút trước",
-            isUrgent = true,
-            isVerified = false,
-            tags = listOf("Design", "Mobile", "Banking")
-        ),
-        JobListCardData(
-            id = 5,
-            title = "Data Scientist - AI/ML",
-            company = "FPT SOFTWARE",
-            companyLogo = null,
-            salary = "40 - 60 triệu",
-            location = "Đà Nẵng, TP.HCM",
-            experience = null,
-            deadline = "30 ngày",
-            postedTime = "3 giờ trước",
-            isUrgent = false,
-            isVerified = true,
-            tags = listOf("AI/ML", "Data Science", "Remote")
         )
     )
 }

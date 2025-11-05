@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -115,6 +117,7 @@ import com.example.ptitjob.ui.theme.PTITWarning
 
 data class UiCompany(
     val id: Int,
+    val backendId: String,
     val name: String,
     val logo: String,
     val industry: String,
@@ -129,6 +132,7 @@ enum class UiJobTag {
 
 data class UiJob(
     val id: Int,
+    val backendId: String,
     val title: String,
     val company: UiCompany,
     val salary: String,
@@ -152,6 +156,11 @@ data class UiJob(
 @Composable
 fun JobSearchRoute(
     presetPayload: DashboardSearchPayload?,
+    onBack: () -> Unit,
+    onNavigateToJob: (String) -> Unit,
+    onNavigateToCompany: (String) -> Unit,
+    onApplyToJob: (String) -> Unit = onNavigateToJob,
+    onSaveJobRequest: (String) -> Unit = {},
     viewModel: JobSearchViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -168,7 +177,12 @@ fun JobSearchRoute(
         onRemoveFilter = viewModel::removeFilter,
         onClearFilters = viewModel::clearFilters,
         onPageChange = viewModel::changePage,
-        onRetry = viewModel::retryLastSearch
+        onRetry = viewModel::retryLastSearch,
+        onBack = onBack,
+        onJobSelected = { job -> onNavigateToJob(job.backendId) },
+        onApplyJob = { job -> onApplyToJob(job.backendId) },
+        onSaveJob = { job -> onSaveJobRequest(job.backendId) },
+        onCompanySelected = { company -> onNavigateToCompany(company.backendId) }
     )
 }
 
@@ -181,10 +195,16 @@ fun JobSearchScreen(
     onRemoveFilter: (String) -> Unit,
     onClearFilters: () -> Unit,
     onPageChange: (Int) -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+    onJobSelected: (UiJob) -> Unit,
+    onApplyJob: (UiJob) -> Unit,
+    onSaveJob: (UiJob) -> Unit,
+    onCompanySelected: (UiCompany) -> Unit
 ) {
     var showFilters by remember { mutableStateOf(false) }
     var isVisible by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) { isVisible = true }
 
@@ -202,6 +222,7 @@ fun JobSearchScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(bottom = PTITSpacing.xl),
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
         ) {
@@ -210,7 +231,7 @@ fun JobSearchScreen(
                 visible = isVisible,
                 enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
             ) {
-                JobSearchHeader()
+                JobSearchHeader(onBack = onBack)
             }
 
             // Advanced Search
@@ -262,7 +283,11 @@ fun JobSearchScreen(
                     totalPages = uiState.totalPages,
                     onPageChange = onPageChange,
                     onRetry = onRetry,
-                    onClearFilters = onClearFilters
+                    onClearFilters = onClearFilters,
+                    onJobSelected = onJobSelected,
+                    onApplyJob = onApplyJob,
+                    onSaveJob = onSaveJob,
+                    onCompanySelected = onCompanySelected
                 )
             }
         }
@@ -270,7 +295,7 @@ fun JobSearchScreen(
 }
 
 @Composable
-private fun JobSearchHeader() {
+private fun JobSearchHeader(onBack: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Transparent
@@ -279,6 +304,20 @@ private fun JobSearchHeader() {
             modifier = Modifier.padding(PTITSpacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Quay lại",
+                        tint = PTITTextLight
+                    )
+                }
+            }
+
             Surface(
                 shape = CircleShape,
                 color = Color.White.copy(alpha = 0.15f),
@@ -848,7 +887,11 @@ private fun SearchResultsSection(
     totalPages: Int,
     onPageChange: (Int) -> Unit,
     onRetry: () -> Unit,
-    onClearFilters: () -> Unit
+    onClearFilters: () -> Unit,
+    onJobSelected: (UiJob) -> Unit,
+    onApplyJob: (UiJob) -> Unit,
+    onSaveJob: (UiJob) -> Unit,
+    onCompanySelected: (UiCompany) -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -948,7 +991,13 @@ private fun SearchResultsSection(
                         verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
                     ) {
                         jobs.forEach { job ->
-                            ModernJobCard(job = job)
+                            ModernJobCard(
+                                job = job,
+                                onViewDetail = onJobSelected,
+                                onApply = onApplyJob,
+                                onSave = onSaveJob,
+                                onCompanySelected = onCompanySelected
+                            )
                         }
 
                         if (totalPages > 1) {
@@ -966,14 +1015,20 @@ private fun SearchResultsSection(
 }
 
 @Composable
-private fun ModernJobCard(job: UiJob) {
+private fun ModernJobCard(
+    job: UiJob,
+    onViewDetail: (UiJob) -> Unit,
+    onApply: (UiJob) -> Unit,
+    onSave: (UiJob) -> Unit,
+    onCompanySelected: (UiCompany) -> Unit
+) {
     Surface(
         shape = PTITCornerRadius.lg,
         color = PTITNeutral50,
         tonalElevation = PTITElevation.sm,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* TODO: Navigate to job detail */ }
+            .clickable { onViewDetail(job) }
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -1019,7 +1074,8 @@ private fun ModernJobCard(job: UiJob) {
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = PTITSecondary,
                             fontWeight = FontWeight.Medium
-                        )
+                        ),
+                        modifier = Modifier.clickable { onCompanySelected(job.company) }
                     )
 
                     Row(
@@ -1045,7 +1101,7 @@ private fun ModernJobCard(job: UiJob) {
 
                 // Save
                 IconButton(
-                    onClick = { /* TODO: Save job */ }
+                    onClick = { onSave(job) }
                 ) {
                     Icon(
                         Icons.Default.BookmarkBorder,
@@ -1087,7 +1143,7 @@ private fun ModernJobCard(job: UiJob) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { /* TODO: Apply */ },
+                    onClick = { onApply(job) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PTITPrimary
@@ -1101,7 +1157,7 @@ private fun ModernJobCard(job: UiJob) {
                 }
 
                 OutlinedButton(
-                    onClick = { /* TODO: View details */ },
+                    onClick = { onViewDetail(job) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = PTITPrimary
@@ -1368,7 +1424,12 @@ fun JobSearchScreenPreview() {
                 onRemoveFilter = {},
                 onClearFilters = {},
                 onPageChange = {},
-                onRetry = {}
+                onRetry = {},
+                onBack = {},
+                onJobSelected = { _ -> },
+                onApplyJob = { _ -> },
+                onSaveJob = { _ -> },
+                onCompanySelected = { _ -> }
             )
         }
     }
@@ -1379,6 +1440,7 @@ fun JobSearchScreenPreview() {
 private fun sampleJobs(): List<UiJob> {
     val c1 = UiCompany(
         id = 1,
+        backendId = "company_1",
         name = "FPT Software",
         logo = "https://img.topdev.vn/unsafe/150x/https://static.topcv.vn/company_logos/OeWHmPgGYL7CqbjwzYfD.jpg",
         industry = "Công nghệ thông tin",
@@ -1388,6 +1450,7 @@ private fun sampleJobs(): List<UiJob> {
     )
     val c2 = UiCompany(
         id = 2,
+        backendId = "company_2",
         name = "VNG Corporation",
         logo = "https://img.topdev.vn/unsafe/150x/https://static.topcv.vn/company_logos/vng-corporation-6195fb1a4e59c.jpg",
         industry = "Game/Entertainment",
@@ -1397,6 +1460,7 @@ private fun sampleJobs(): List<UiJob> {
     )
     val c3 = UiCompany(
         id = 3,
+        backendId = "company_3",
         name = "Tiki Corporation",
         logo = "https://img.topdev.vn/unsafe/150x/https://static.topcv.vn/company_logos/tiki-corporation-6195fb39e0a1b.jpg",
         industry = "E-commerce",
@@ -1408,6 +1472,7 @@ private fun sampleJobs(): List<UiJob> {
     return listOf(
         UiJob(
             id = 1,
+            backendId = "job_1",
             title = "Frontend Developer (React/Vue)",
             company = c1,
             salary = "15 - 25 triệu VNĐ",
@@ -1427,6 +1492,7 @@ private fun sampleJobs(): List<UiJob> {
         ),
         UiJob(
             id = 2,
+            backendId = "job_2",
             title = "Backend Developer (Java Spring)",
             company = c2,
             salary = "20 - 35 triệu VNĐ",
@@ -1446,6 +1512,7 @@ private fun sampleJobs(): List<UiJob> {
         ),
         UiJob(
             id = 3,
+            backendId = "job_3",
             title = "UI/UX Designer",
             company = c3,
             salary = "12 - 18 triệu VNĐ",
@@ -1465,6 +1532,7 @@ private fun sampleJobs(): List<UiJob> {
         ),
         UiJob(
             id = 4,
+            backendId = "job_4",
             title = "DevOps Engineer",
             company = c2,
             salary = "25 - 40 triệu VNĐ",
@@ -1484,6 +1552,7 @@ private fun sampleJobs(): List<UiJob> {
         ),
         UiJob(
             id = 5,
+            backendId = "job_5",
             title = "Marketing Specialist",
             company = c3,
             salary = "10 - 15 triệu VNĐ",
@@ -1503,6 +1572,7 @@ private fun sampleJobs(): List<UiJob> {
         ),
         UiJob(
             id = 6,
+            backendId = "job_6",
             title = "Data Analyst",
             company = c1,
             salary = "18 - 28 triệu VNĐ",

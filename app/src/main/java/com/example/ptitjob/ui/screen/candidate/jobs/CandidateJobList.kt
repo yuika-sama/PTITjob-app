@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Recommend
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
@@ -46,6 +48,7 @@ import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.filled.WorkOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -56,6 +59,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,7 +80,11 @@ import com.example.ptitjob.ui.component.CompanyItem
 import com.example.ptitjob.ui.component.FeaturedCompany
 import com.example.ptitjob.ui.component.IndustryItem
 import com.example.ptitjob.ui.component.JobItem
+import com.example.ptitjob.ui.component.JobListCard
+import com.example.ptitjob.ui.component.JobListCardData
 import com.example.ptitjob.ui.component.RecommendedJob
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ptitjob.ui.theme.PTITCornerRadius
 import com.example.ptitjob.ui.theme.PTITElevation
 import com.example.ptitjob.ui.theme.PTITError
@@ -97,15 +105,45 @@ import com.example.ptitjob.ui.theme.PTITTextSecondary
 import com.example.ptitjob.ui.theme.PTITWarning
 
 @Composable
-fun CandidateJobListScreen() {
-    val sampleJobs = getSampleJobsForPreview()
-    val sampleRecommendedJobs = getSampleRecommendedJobsForPreview()
-    val sampleCompanies = getSampleCompaniesForPreview()
-    val sampleFeaturedCompanies = getSampleFeaturedCompaniesForPreview()
-    val sampleCategories = getSampleCategoriesForPreview()
-    
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("Tất cả") }
+fun CandidateJobListRoute(
+    onJobSelected: (String) -> Unit,
+    onCompanySelected: (String) -> Unit,
+    onCategorySelected: (IndustryItem) -> Unit,
+    viewModel: CandidateJobListViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    CandidateJobListScreen(
+        state = state,
+        onSearchChange = viewModel::updateSearchQuery,
+        onSearch = viewModel::performSearch,
+    onFilterChange = viewModel::selectFilter,
+        onRefresh = viewModel::refreshAll,
+        onJobSelected = { job -> onJobSelected(job.backendId) },
+        onApply = { job -> onJobSelected(job.backendId) },
+        onSave = { _ -> },
+        onRecommendedSelected = { recommendation -> onJobSelected(recommendation.id) },
+        onCompanySelected = { company -> onCompanySelected(company.id) },
+        onFeaturedCompanySelected = { company -> onCompanySelected(company.id) },
+        onCategorySelected = onCategorySelected
+    )
+}
+
+@Composable
+fun CandidateJobListScreen(
+    state: CandidateJobListUiState,
+    onSearchChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onFilterChange: (CandidateJobFilter) -> Unit,
+    onRefresh: () -> Unit,
+    onJobSelected: (JobListCardData) -> Unit,
+    onApply: (JobListCardData) -> Unit,
+    onSave: (JobListCardData) -> Unit,
+    onRecommendedSelected: (RecommendedJob) -> Unit,
+    onCompanySelected: (CompanyItem) -> Unit,
+    onFeaturedCompanySelected: (FeaturedCompany) -> Unit,
+    onCategorySelected: (IndustryItem) -> Unit
+) {
     var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -123,97 +161,134 @@ fun CandidateJobListScreen() {
                 )
             )
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
-        ) {
-            // Header
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
-                ) {
-                    CandidateJobListHeader()
-                }
+        when {
+            state.isLoading && state.jobs.isEmpty() -> {
+                CandidateJobsLoadingState()
             }
-
-            // Search and Filters
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
-                ) {
-                    SearchAndFiltersSection(
-                        searchQuery = searchQuery,
-                        onSearchChange = { searchQuery = it },
-                        selectedFilter = selectedFilter,
-                        onFilterChange = { selectedFilter = it }
-                    )
-                }
+            state.errorMessage != null && state.jobs.isEmpty() -> {
+                CandidateJobsErrorState(message = state.errorMessage, onRetry = onRefresh)
             }
-
-            // Stats Overview
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = PTITSpacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
                 ) {
-                    JobStatsOverview(
-                        totalJobs = sampleJobs.size,
-                        newJobsToday = 12,
-                        companiesHiring = sampleCompanies.size
-                    )
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
+                        ) {
+                            CandidateJobListHeader()
+                        }
+                    }
 
-            // Featured Jobs Grid
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
-                ) {
-                    FeaturedJobsSection(jobs = sampleJobs.take(6))
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                        ) {
+                            SearchAndFiltersSection(
+                                searchQuery = state.searchQuery,
+                                onSearchChange = onSearchChange,
+                                selectedFilter = state.selectedFilter,
+                                filters = state.availableFilters,
+                                onFilterChange = onFilterChange,
+                                onSearch = onSearch
+                            )
+                        }
+                    }
 
-            // Job Recommendations
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 5 }) + fadeIn()
-                ) {
-                    JobRecommendationsModernSection(jobs = sampleRecommendedJobs)
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
+                        ) {
+                            JobStatsOverview(
+                                totalJobs = state.totalJobs,
+                                newJobsToday = state.newJobsToday,
+                                companiesHiring = state.companiesHiring
+                            )
+                        }
+                    }
 
-            // Companies Section
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 6 }) + fadeIn()
-                ) {
-                    CompaniesModernSection(companies = sampleCompanies.take(8))
-                }
-            }
+                    if (state.jobs.isNotEmpty()) {
+                        item {
+                            AnimatedVisibility(
+                                visible = isVisible,
+                                enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
+                            ) {
+                                FeaturedJobsSection(
+                                    jobs = state.jobs,
+                                    onJobSelected = onJobSelected,
+                                    onApply = onApply,
+                                    onSave = onSave
+                                )
+                            }
+                        }
+                    }
 
-            // Featured Employers
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 7 }) + fadeIn()
-                ) {
-                    FeaturedEmployersModernSection(companies = sampleFeaturedCompanies)
-                }
-            }
+                    if (state.recommendedJobs.isNotEmpty()) {
+                        item {
+                            AnimatedVisibility(
+                                visible = isVisible,
+                                enter = slideInVertically(initialOffsetY = { it / 5 }) + fadeIn()
+                            ) {
+                                JobRecommendationsModernSection(
+                                    jobs = state.recommendedJobs,
+                                    onJobSelected = onRecommendedSelected
+                                )
+                            }
+                        }
+                    }
 
-            // Industries
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 8 }) + fadeIn()
-                ) {
-                    IndustriesModernSection(categories = sampleCategories)
+                    if (state.companies.isNotEmpty()) {
+                        item {
+                            AnimatedVisibility(
+                                visible = isVisible,
+                                enter = slideInVertically(initialOffsetY = { it / 6 }) + fadeIn()
+                            ) {
+                                CompaniesModernSection(
+                                    companies = state.companies,
+                                    onCompanySelected = onCompanySelected
+                                )
+                            }
+                        }
+                    }
+
+                    if (state.featuredCompanies.isNotEmpty()) {
+                        item {
+                            AnimatedVisibility(
+                                visible = isVisible,
+                                enter = slideInVertically(initialOffsetY = { it / 7 }) + fadeIn()
+                            ) {
+                                FeaturedEmployersModernSection(
+                                    companies = state.featuredCompanies,
+                                    onCompanySelected = onFeaturedCompanySelected
+                                )
+                            }
+                        }
+                    }
+
+                    if (state.categories.isNotEmpty()) {
+                        item {
+                            AnimatedVisibility(
+                                visible = isVisible,
+                                enter = slideInVertically(initialOffsetY = { it / 8 }) + fadeIn()
+                            ) {
+                                IndustriesModernSection(
+                                    categories = state.categories,
+                                    onCategorySelected = onCategorySelected
+                                )
+                            }
+                        }
+                    }
+
+                    if (state.errorMessage != null && state.jobs.isNotEmpty()) {
+                        item {
+                            CandidateJobsInlineError(message = state.errorMessage, onRetry = onRefresh)
+                        }
+                    }
                 }
             }
         }
@@ -278,8 +353,10 @@ private fun CandidateJobListHeader() {
 private fun SearchAndFiltersSection(
     searchQuery: String,
     onSearchChange: (String) -> Unit,
-    selectedFilter: String,
-    onFilterChange: (String) -> Unit
+    selectedFilter: CandidateJobFilter,
+    filters: List<CandidateJobFilter>,
+    onFilterChange: (CandidateJobFilter) -> Unit,
+    onSearch: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -334,12 +411,12 @@ private fun SearchAndFiltersSection(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
                 contentPadding = PaddingValues(end = PTITSpacing.lg)
             ) {
-                items(getJobFilters()) { filter ->
+                items(filters) { filter ->
                     FilterChip(
                         onClick = { onFilterChange(filter) },
                         label = { 
                             Text(
-                                filter,
+                                filter.label,
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Medium
                                 )
@@ -360,6 +437,30 @@ private fun SearchAndFiltersSection(
                         )
                     )
                 }
+            }
+
+            Button(
+                onClick = onSearch,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(PTITSize.buttonMd),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PTITPrimary
+                ),
+                shape = PTITCornerRadius.md
+            ) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    modifier = Modifier.size(PTITSize.iconMd)
+                )
+                Spacer(Modifier.width(PTITSpacing.sm))
+                Text(
+                    "Tìm kiếm việc làm",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
             }
         }
     }
@@ -447,7 +548,12 @@ private fun StatItem(
 }
 
 @Composable
-private fun FeaturedJobsSection(jobs: List<JobItem>) {
+private fun FeaturedJobsSection(
+    jobs: List<JobListCardData>,
+    onJobSelected: (JobListCardData) -> Unit,
+    onApply: (JobListCardData) -> Unit,
+    onSave: (JobListCardData) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -459,15 +565,14 @@ private fun FeaturedJobsSection(jobs: List<JobItem>) {
             subtitle = "Những cơ hội việc làm hấp dẫn nhất",
             icon = Icons.Default.Star
         )
-        
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md),
-            modifier = Modifier.height(400.dp)
-        ) {
-            items(jobs) { job ->
-                JobCard(job = job)
+        Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)) {
+            jobs.take(6).forEach { job ->
+                JobListCard(
+                    job = job,
+                    onApply = onApply,
+                    onSave = onSave,
+                    onCardClick = onJobSelected
+                )
             }
         }
     }
@@ -610,7 +715,10 @@ private fun JobCard(job: JobItem) {
 
 // Modern sections to replace legacy components
 @Composable
-private fun JobRecommendationsModernSection(jobs: List<RecommendedJob>) {
+private fun JobRecommendationsModernSection(
+    jobs: List<RecommendedJob>,
+    onJobSelected: (RecommendedJob) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -628,19 +736,24 @@ private fun JobRecommendationsModernSection(jobs: List<RecommendedJob>) {
             contentPadding = PaddingValues(end = PTITSpacing.lg)
         ) {
             items(jobs) { job ->
-                RecommendedJobCard(job = job)
+                RecommendedJobCard(job = job, onClick = onJobSelected)
             }
         }
     }
 }
 
 @Composable
-private fun RecommendedJobCard(job: RecommendedJob) {
+private fun RecommendedJobCard(
+    job: RecommendedJob,
+    onClick: (RecommendedJob) -> Unit
+) {
     Surface(
         shape = PTITCornerRadius.lg,
         color = Color.White,
         shadowElevation = PTITElevation.md,
-        modifier = Modifier.width(280.dp)
+        modifier = Modifier
+            .width(280.dp)
+            .clickable { onClick(job) }
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -748,7 +861,10 @@ private fun RecommendedJobCard(job: RecommendedJob) {
 }
 
 @Composable
-private fun CompaniesModernSection(companies: List<CompanyItem>) {
+private fun CompaniesModernSection(
+    companies: List<CompanyItem>,
+    onCompanySelected: (CompanyItem) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -768,19 +884,24 @@ private fun CompaniesModernSection(companies: List<CompanyItem>) {
             modifier = Modifier.height(300.dp)
         ) {
             items(companies) { company ->
-                CompanyCard(company = company)
+                CompanyCard(company = company, onCompanySelected = onCompanySelected)
             }
         }
     }
 }
 
 @Composable
-private fun CompanyCard(company: CompanyItem) {
+private fun CompanyCard(
+    company: CompanyItem,
+    onCompanySelected: (CompanyItem) -> Unit
+) {
     Surface(
         shape = PTITCornerRadius.lg,
         color = Color.White,
         shadowElevation = PTITElevation.sm,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCompanySelected(company) }
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -842,7 +963,10 @@ private fun CompanyCard(company: CompanyItem) {
 }
 
 @Composable
-private fun FeaturedEmployersModernSection(companies: List<FeaturedCompany>) {
+private fun FeaturedEmployersModernSection(
+    companies: List<FeaturedCompany>,
+    onCompanySelected: (FeaturedCompany) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -859,19 +983,24 @@ private fun FeaturedEmployersModernSection(companies: List<FeaturedCompany>) {
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
         ) {
             companies.forEach { company ->
-                FeaturedEmployerCard(company = company)
+                FeaturedEmployerCard(company = company, onCompanySelected = onCompanySelected)
             }
         }
     }
 }
 
 @Composable
-private fun FeaturedEmployerCard(company: FeaturedCompany) {
+private fun FeaturedEmployerCard(
+    company: FeaturedCompany,
+    onCompanySelected: (FeaturedCompany) -> Unit
+) {
     Surface(
         shape = PTITCornerRadius.lg,
         color = Color.White,
         shadowElevation = PTITElevation.md,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCompanySelected(company) }
     ) {
         Row(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -970,7 +1099,10 @@ private fun FeaturedEmployerCard(company: FeaturedCompany) {
 }
 
 @Composable
-private fun IndustriesModernSection(categories: List<IndustryItem>) {
+private fun IndustriesModernSection(
+    categories: List<IndustryItem>,
+    onCategorySelected: (IndustryItem) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -990,19 +1122,24 @@ private fun IndustriesModernSection(categories: List<IndustryItem>) {
             modifier = Modifier.height(300.dp)
         ) {
             items(categories) { category ->
-                IndustryCard(category = category)
+                IndustryCard(category = category, onCategorySelected = onCategorySelected)
             }
         }
     }
 }
 
 @Composable
-private fun IndustryCard(category: IndustryItem) {
+private fun IndustryCard(
+    category: IndustryItem,
+    onCategorySelected: (IndustryItem) -> Unit
+) {
     Surface(
         shape = PTITCornerRadius.lg,
         color = Color.White,
         shadowElevation = PTITElevation.sm,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCategorySelected(category) }
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -1046,10 +1183,6 @@ private fun IndustryCard(category: IndustryItem) {
 }
 
 // Helper functions
-private fun getJobFilters(): List<String> {
-    return listOf("Tất cả", "Full-time", "Part-time", "Remote", "Thực tập", "Fresher", "Senior")
-}
-
 private fun getIndustryColor(id: Int): Color {
     return when (id % 6) {
         0 -> PTITPrimary
@@ -1060,8 +1193,97 @@ private fun getIndustryColor(id: Int): Color {
         else -> PTITError
     }
 }
+        @Composable
+        private fun CandidateJobsLoadingState() {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PTITPrimary)
+            }
+        }
 
-private fun getIndustryIcon(id: Int): androidx.compose.ui.graphics.vector.ImageVector {
+        @Composable
+        private fun CandidateJobsErrorState(message: String, onRetry: () -> Unit) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(PTITSpacing.xl),
+                    shape = PTITCornerRadius.lg,
+                    color = Color.White,
+                    shadowElevation = PTITElevation.lg
+                ) {
+                    Column(
+                        modifier = Modifier.padding(PTITSpacing.xl),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+                    ) {
+                        Text(
+                            text = "Không thể tải dữ liệu",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = PTITTextPrimary
+                            )
+                        )
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextSecondary),
+                            textAlign = TextAlign.Center
+                        )
+                        Button(
+                            onClick = onRetry,
+                            colors = ButtonDefaults.buttonColors(containerColor = PTITPrimary),
+                            shape = PTITCornerRadius.md
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null)
+                            Spacer(Modifier.width(PTITSpacing.sm))
+                            Text("Thử lại", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+        }
+
+        @Composable
+        private fun CandidateJobsInlineError(message: String, onRetry: () -> Unit) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = PTITSpacing.lg),
+                shape = PTITCornerRadius.md,
+                color = Color.White,
+                shadowElevation = PTITElevation.sm
+            ) {
+                Row(
+                    modifier = Modifier.padding(PTITSpacing.lg),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Không thể làm mới dữ liệu",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = PTITError
+                            )
+                        )
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodySmall.copy(color = PTITTextSecondary)
+                        )
+                    }
+                    TextButton(onClick = onRetry) {
+                        Text("Thử lại", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+
+        private fun getIndustryIcon(id: Int): androidx.compose.ui.graphics.vector.ImageVector {
     return when (id % 6) {
         0 -> Icons.Default.Computer
         1 -> Icons.Default.Campaign
@@ -1076,23 +1298,49 @@ private fun getIndustryIcon(id: Int): androidx.compose.ui.graphics.vector.ImageV
 fun CandidateJobListScreenPreview() {
     MaterialTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            CandidateJobListScreen()
+                    CandidateJobListScreen(
+                        state = CandidateJobListUiState(
+                            jobs = getSampleJobCardsForPreview(),
+                            recommendedJobs = getSampleRecommendedJobsForPreview(),
+                            companies = getSampleCompaniesForPreview(),
+                            featuredCompanies = getSampleFeaturedCompaniesForPreview(),
+                            categories = getSampleCategoriesForPreview(),
+                            totalJobs = 1240,
+                            newJobsToday = 32,
+                            companiesHiring = 85
+                        ),
+                        onSearchChange = {},
+                        onSearch = {},
+                        onFilterChange = {},
+                        onRefresh = {},
+                        onJobSelected = {},
+                        onApply = {},
+                        onSave = {},
+                        onRecommendedSelected = {},
+                        onCompanySelected = {},
+                        onFeaturedCompanySelected = {},
+                        onCategorySelected = {}
+                    )
         }
     }
 }
 
-private fun getSampleJobsForPreview(): List<JobItem> {
+        private fun getSampleJobCardsForPreview(): List<JobListCardData> {
     return List(6) { i ->
-        JobItem(
-            id = "job_$i",
-            title = "Lập trình viên Senior Android $i",
-            company = "Tech Solutions Inc.",
-            location = "Quận 1, TP.HCM",
-            salary = "25 - 40 triệu",
-            tags = listOf("Android", "Kotlin", "Senior"),
-            isTop = i % 2 == 0,
-            logo = "https://example.logo/tech.png",
-            region = "Miền Nam"
+                JobListCardData(
+                    id = i,
+                    backendId = "job_$i",
+                    title = "Lập trình viên Senior Android $i",
+                    company = "Tech Solutions Inc.",
+                    companyLogo = "https://example.logo/tech.png",
+                    salary = "25 - 40 triệu",
+                    location = "Quận 1, TP.HCM",
+                    experience = "3+ năm",
+                    postedTime = "Đăng ${i + 1} ngày trước",
+                    deadline = "${5 - (i % 3)} ngày",
+                    isUrgent = i % 2 == 0,
+                    isVerified = i % 3 == 0,
+                    tags = listOf("Android", "Kotlin", "Senior")
         )
     }
 }

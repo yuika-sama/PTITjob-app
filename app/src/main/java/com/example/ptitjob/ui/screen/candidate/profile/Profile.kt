@@ -76,7 +76,10 @@ data class PasswordFormData(
 @Composable
 fun ProfileScreen(
     user: UserProfile,
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onUpdateProfile: (EditFormData, (Boolean, String?) -> Unit) -> Unit = { _, cb -> cb(true, null) },
+    onChangePassword: (PasswordFormData, (Boolean, String?) -> Unit) -> Unit = { _, cb -> cb(true, null) },
+    onSettingsNavigate: () -> Unit = {}
 ) {
     var editDialogOpen by remember { mutableStateOf(false) }
     var passwordDialogOpen by remember { mutableStateOf(false) }
@@ -248,15 +251,18 @@ fun ProfileScreen(
             user = user,
             onDismiss = { editDialogOpen = false },
             onSave = { editData ->
-                scope.launch {
-                    isLoading = true
-                    delay(1500) // Simulate API call
-                    snackbarHostState.showSnackbar(
-                        message = "✅ Cập nhật hồ sơ thành công!",
-                        actionLabel = "OK"
-                    )
-                    isLoading = false
-                    editDialogOpen = false
+                // Delegate to provided callback (ViewModel route will pass real implementation)
+                isLoading = true
+                onUpdateProfile(editData) { success, message ->
+                    scope.launch {
+                        if (success) {
+                            snackbarHostState.showSnackbar(message = "✅ Cập nhật hồ sơ thành công!", actionLabel = "OK")
+                            editDialogOpen = false
+                        } else {
+                            snackbarHostState.showSnackbar(message = message ?: "Cập nhật thất bại", actionLabel = "OK")
+                        }
+                        isLoading = false
+                    }
                 }
             }
         )
@@ -266,15 +272,17 @@ fun ProfileScreen(
         PTITChangePasswordDialog(
             onDismiss = { passwordDialogOpen = false },
             onSave = { passwordData ->
-                scope.launch {
-                    isLoading = true
-                    delay(1500) // Simulate API call
-                    snackbarHostState.showSnackbar(
-                        message = "🔒 Đổi mật khẩu thành công!",
-                        actionLabel = "OK"
-                    )
-                    isLoading = false
-                    passwordDialogOpen = false
+                isLoading = true
+                onChangePassword(passwordData) { success, message ->
+                    scope.launch {
+                        if (success) {
+                            snackbarHostState.showSnackbar(message = "🔒 Đổi mật khẩu thành công!", actionLabel = "OK")
+                            passwordDialogOpen = false
+                        } else {
+                            snackbarHostState.showSnackbar(message = message ?: "Đổi mật khẩu thất bại", actionLabel = "OK")
+                        }
+                        isLoading = false
+                    }
                 }
             }
         )

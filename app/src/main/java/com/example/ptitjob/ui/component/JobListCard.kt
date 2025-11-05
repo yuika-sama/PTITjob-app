@@ -11,8 +11,11 @@ import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.LocationOn
@@ -34,6 +37,7 @@ import coil.compose.rememberAsyncImagePainter
 // --- Data Model ---
 data class JobListCardData(
     val id: Int,
+    val backendId: String = id.toString(),
     val title: String,
     val company: String,
     val companyLogo: String?,
@@ -51,8 +55,9 @@ data class JobListCardData(
 @Composable
 fun JobListCard(
     job: JobListCardData,
-    onApply: (Int) -> Unit,
-    onSave: (Int) -> Unit
+    onApply: (JobListCardData) -> Unit,
+    onSave: (JobListCardData) -> Unit,
+    onCardClick: (JobListCardData) -> Unit = {}
 ) {
     var isSaved by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -64,7 +69,7 @@ fun JobListCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Handle card click */ }
+            .clickable { onCardClick(job) }
             .hoverable(interactionSource),
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
@@ -108,11 +113,14 @@ fun JobListCard(
             ) {
                 SalaryInfo(salary = job.salary, isUrgent = job.isUrgent)
                 ActionButtons(
+                    job = job,
                     isSaved = isSaved,
-                    onApply = { onApply(job.id) },
+                    onApply = {
+                        onApply(job)
+                    },
                     onSave = {
                         isSaved = !isSaved
-                        onSave(job.id)
+                        onSave(job)
                     }
                 )
             }
@@ -154,7 +162,8 @@ private fun InfoRow(job: JobListCardData) {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
         InfoChip(icon = Icons.Default.LocationOn, text = job.location)
         job.experience?.let { InfoChip(text = it) }
-        InfoChip(icon = Icons.Default.DateRange, text = "Còn ${job.postedTime}")
+        job.deadline?.let { InfoChip(icon = Icons.Default.DateRange, text = "Còn $it") }
+        InfoChip(icon = Icons.Default.AccessTime, text = job.postedTime)
     }
 }
 
@@ -206,18 +215,23 @@ private fun SalaryInfo(salary: String, isUrgent: Boolean) {
 }
 
 @Composable
-private fun ActionButtons(isSaved: Boolean, onApply: () -> Unit, onSave: () -> Unit) {
+private fun ActionButtons(
+    job: JobListCardData,
+    isSaved: Boolean,
+    onApply: (JobListCardData) -> Unit,
+    onSave: (JobListCardData) -> Unit
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
-            onClick = onApply,
+            onClick = { onApply(job) },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009A3E)),
             modifier = Modifier.width(120.dp)
         ) {
             Text("Ứng tuyển", fontWeight = FontWeight.SemiBold)
         }
-        IconButton(onClick = onSave) {
+        IconButton(onClick = { onSave(job) }) {
             Icon(
-                imageVector = if (isSaved) Icons.Filled.Done else Icons.Default.Done,
+                imageVector = if (isSaved) Icons.Filled.Done else Icons.Default.BookmarkBorder,
                 contentDescription = "Lưu",
                 tint = if (isSaved) Color(0xFF009A3E) else MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -249,8 +263,8 @@ fun JobListCardPreview() {
         salary = "20 - 50 triệu",
         location = "Hà Nội",
         experience = "Không yêu cầu",
-        postedTime = "2 ngày",
-        deadline = "29/10/2025",
+        postedTime = "Đăng 2 ngày trước",
+        deadline = "5 ngày",
         isUrgent = true,
         isVerified = true,
         tags = listOf("Bất động sản", "Kinh doanh", "Hoa hồng cao")

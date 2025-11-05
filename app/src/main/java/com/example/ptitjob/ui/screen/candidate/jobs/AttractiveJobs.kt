@@ -37,6 +37,8 @@ import androidx.compose.material.icons.filled.Support
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -47,6 +49,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,6 +68,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ptitjob.ui.component.JobListCard
 import com.example.ptitjob.ui.component.JobListCardData
 import com.example.ptitjob.ui.theme.PTITCornerRadius
@@ -85,15 +90,44 @@ import com.example.ptitjob.ui.theme.PTITTextPrimary
 import com.example.ptitjob.ui.theme.PTITTextSecondary
 
 @Composable
-fun AttractiveJobsScreen() {
-    val mockAttractiveJobs = getSampleAttractiveJobs()
-    var searchQuery by remember { mutableStateOf("") }
-    var locationQuery by remember { mutableStateOf("") }
+fun AttractiveJobsRoute(
+    onBack: () -> Unit,
+    onJobSelected: (String) -> Unit,
+    onSaveJob: (JobListCardData) -> Unit = {},
+    viewModel: AttractiveJobsViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    AttractiveJobsScreen(
+        state = state,
+        onBack = onBack,
+        onSearchChange = viewModel::updateSearchQuery,
+        onLocationChange = viewModel::updateLocationQuery,
+        onSearch = viewModel::submitSearch,
+        onRefresh = viewModel::refresh,
+        onPageChange = viewModel::changePage,
+        onFilterToggle = viewModel::toggleQuickFilter,
+        onJobSelected = { data -> onJobSelected(data.backendId) },
+        onSave = onSaveJob
+    )
+}
+
+@Composable
+fun AttractiveJobsScreen(
+    state: AttractiveJobsUiState,
+    onBack: () -> Unit,
+    onSearchChange: (String) -> Unit,
+    onLocationChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onRefresh: () -> Unit,
+    onPageChange: (Int) -> Unit,
+    onFilterToggle: (AttractiveQuickFilter) -> Unit,
+    onJobSelected: (JobListCardData) -> Unit,
+    onSave: (JobListCardData) -> Unit
+) {
     var isVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
+    LaunchedEffect(Unit) { isVisible = true }
 
     Box(
         modifier = Modifier
@@ -106,109 +140,139 @@ fun AttractiveJobsScreen() {
                 )
             )
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
-        ) {
-            // Header Banner
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
+        when {
+            state.isLoading && state.jobs.isEmpty() -> AttractiveJobsLoadingState()
+            state.errorMessage != null && state.jobs.isEmpty() -> AttractiveJobsErrorState(
+                message = state.errorMessage,
+                onRetry = onRefresh,
+                onBack = onBack
+            )
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = PTITSpacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
                 ) {
-                    AttractiveJobsHeader()
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
+                        ) {
+                            AttractiveJobsHeader(onBack = onBack)
+                        }
+                    }
 
-            // Search Section
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
-                ) {
-                    AttractiveJobsSearchSection(
-                        searchQuery = searchQuery,
-                        locationQuery = locationQuery,
-                        onSearchChange = { searchQuery = it },
-                        onLocationChange = { locationQuery = it },
-                        onSearch = { /* TODO: Implement search */ }
-                    )
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
+                        ) {
+                            AttractiveJobsSearchSection(
+                                searchQuery = state.searchQuery,
+                                locationQuery = state.locationQuery,
+                                onSearchChange = onSearchChange,
+                                onLocationChange = onLocationChange,
+                                onSearch = onSearch
+                            )
+                        }
+                    }
 
-            // Quick Filters
-            item {
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
-                ) {
-                    QuickFiltersSection()
-                }
-            }
+                    item {
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
+                        ) {
+                            QuickFiltersSection(
+                                selectedFilters = state.selectedFilters,
+                                onFilterToggle = onFilterToggle
+                            )
+                        }
+                    }
 
-            // Results Summary
-            item {
-                ResultsSummary(totalJobs = mockAttractiveJobs.size)
-            }
+                    item {
+                        ResultsSummary(totalJobs = state.totalJobs)
+                    }
 
-            // Job List
-            items(mockAttractiveJobs) { job ->
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = PTITSpacing.lg),
-                        shape = PTITCornerRadius.lg,
-                        color = Color.White,
-                        shadowElevation = PTITElevation.md
-                    ) {
-                        JobListCard(
-                            job = job,
-                            onApply = { /* TODO */ },
-                            onSave = { /* TODO */ }
-                        )
+                    if (state.jobs.isEmpty()) {
+                        item { EmptyAttractiveJobsPlaceholder(onRetry = onRefresh) }
+                    } else {
+                        items(state.jobs) { job ->
+                            AnimatedVisibility(
+                                visible = isVisible,
+                                enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
+                            ) {
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = PTITSpacing.lg),
+                                    shape = PTITCornerRadius.lg,
+                                    color = Color.White,
+                                    shadowElevation = PTITElevation.md
+                                ) {
+                                    JobListCard(
+                                        job = job,
+                                        onApply = onJobSelected,
+                                        onSave = onSave,
+                                        onCardClick = onJobSelected
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (state.errorMessage != null && state.jobs.isNotEmpty()) {
+                        item { InlineAttractiveError(message = state.errorMessage, onRetry = onRefresh) }
+                    }
+
+                    if (state.totalPages > 1) {
+                        item {
+                            PaginationControls(
+                                currentPage = state.currentPage,
+                                totalPages = state.totalPages,
+                                onPageChange = onPageChange
+                            )
+                        }
                     }
                 }
-            }
-
-            // Pagination
-            item {
-                PaginationControls(
-                    currentPage = 1,
-                    totalPages = 18,
-                    onPageChange = { /* TODO */ }
-                )
             }
         }
     }
 }
 
 @Composable
-private fun AttractiveJobsHeader() {
+private fun AttractiveJobsHeader(onBack: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Transparent
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.xl),
+            modifier = Modifier.padding(horizontal = PTITSpacing.lg, vertical = PTITSpacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Title with gradient text effect
-            Text(
-                text = "Việc làm hấp dẫn",
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = PTITTextLight
-                ),
-                textAlign = TextAlign.Center
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Quay lại",
+                        tint = PTITTextLight
+                    )
+                }
+                Text(
+                    text = "Việc làm hấp dẫn",
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITTextLight
+                    )
+                )
+                Spacer(modifier = Modifier.size(PTITSize.iconLg))
+            }
 
             Spacer(Modifier.height(PTITSpacing.md))
-            
+
             Text(
                 text = "Khám phá những cơ hội việc làm hấp dẫn nhất với mức lương và phúc lợi vượt trội",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -220,8 +284,7 @@ private fun AttractiveJobsHeader() {
             )
 
             Spacer(Modifier.height(PTITSpacing.xl))
-            
-            // Stats Row
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xl),
                 modifier = Modifier.fillMaxWidth(),
@@ -419,7 +482,10 @@ private fun AttractiveJobsSearchSection(
 }
 
 @Composable
-private fun QuickFiltersSection() {
+private fun QuickFiltersSection(
+    selectedFilters: Set<AttractiveQuickFilter>,
+    onFilterToggle: (AttractiveQuickFilter) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -439,37 +505,32 @@ private fun QuickFiltersSection() {
             contentPadding = PaddingValues(end = PTITSpacing.lg)
         ) {
             items(getQuickFilters()) { filter ->
+                val isSelected = filter.filter in selectedFilters
                 FilterChip(
-                    onClick = { /* TODO */ },
-                    label = { 
+                    onClick = { onFilterToggle(filter.filter) },
+                    label = {
                         Text(
-                            filter.label,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium
-                            )
-                        ) 
+                            text = filter.label,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
                     },
-                    selected = false,
+                    selected = isSelected,
                     leadingIcon = {
                         Icon(
-                            filter.icon,
+                            imageVector = filter.icon,
                             contentDescription = null,
-                            modifier = Modifier.size(PTITSize.iconSm)
+                            tint = if (isSelected) PTITPrimary else PTITTextLight
                         )
                     },
                     colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color.White.copy(alpha = 0.9f),
-                        labelColor = PTITTextPrimary,
-                        iconColor = PTITPrimary,
-                        selectedContainerColor = PTITPrimary,
-                        selectedLabelColor = Color.White,
-                        selectedLeadingIconColor = Color.White
+                        containerColor = Color.White.copy(alpha = 0.2f),
+                        selectedContainerColor = PTITPrimary.copy(alpha = 0.2f),
+                        labelColor = PTITTextLight,
+                        selectedLabelColor = PTITTextLight
                     ),
                     border = FilterChipDefaults.filterChipBorder(
-                        selected = true,
                         enabled = true,
-                        borderColor = PTITNeutral200,
-                        selectedBorderColor = PTITPrimary
+                        selected = isSelected
                     )
                 )
             }
@@ -592,22 +653,132 @@ private fun PaginationControls(
     }
 }
 
+@Composable
+private fun AttractiveJobsLoadingState() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(color = PTITPrimary)
+    }
+}
+
+@Composable
+private fun AttractiveJobsErrorState(message: String, onRetry: () -> Unit, onBack: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Surface(
+            shape = PTITCornerRadius.lg,
+            color = Color.White,
+            shadowElevation = PTITElevation.lg,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PTITSpacing.xl)
+        ) {
+            Column(
+                modifier = Modifier.padding(PTITSpacing.xl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            ) {
+                Text(
+                    text = "Không thể tải việc làm hấp dẫn",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITTextPrimary
+                    )
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextSecondary),
+                    textAlign = TextAlign.Center
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)) {
+                    TextButton(onClick = onBack) { Text("Quay lại") }
+                    ElevatedButton(onClick = onRetry) { Text("Thử lại") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InlineAttractiveError(message: String, onRetry: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PTITSpacing.lg),
+        shape = PTITCornerRadius.md,
+        color = Color.White,
+        shadowElevation = PTITElevation.sm
+    ) {
+        Row(
+            modifier = Modifier.padding(PTITSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Không thể làm mới dữ liệu",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITPrimary
+                    )
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall.copy(color = PTITTextSecondary)
+                )
+            }
+            TextButton(onClick = onRetry) { Text("Thử lại") }
+        }
+    }
+}
+
+@Composable
+private fun EmptyAttractiveJobsPlaceholder(onRetry: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PTITSpacing.lg),
+        shape = PTITCornerRadius.lg,
+        color = Color.White,
+        shadowElevation = PTITElevation.sm
+    ) {
+        Column(
+            modifier = Modifier.padding(PTITSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+        ) {
+            Text(
+                text = "Chưa có việc làm phù hợp",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextPrimary
+                )
+            )
+            Text(
+                text = "Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác.",
+                style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextSecondary),
+                textAlign = TextAlign.Center
+            )
+            Button(onClick = onRetry) { Text("Làm mới") }
+        }
+    }
+}
+
 // Data classes for filters
 data class QuickFilter(
+    val filter: AttractiveQuickFilter,
     val label: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector
 )
 
 private fun getQuickFilters(): List<QuickFilter> {
     return listOf(
-        QuickFilter("Lương cao", Icons.AutoMirrored.Filled.TrendingUp),
-        QuickFilter("Remote", Icons.Default.Home),
-        QuickFilter("Part-time", Icons.Default.Schedule),
-        QuickFilter("Full-time", Icons.Default.Work),
-        QuickFilter("Startup", Icons.Default.Rocket),
-        QuickFilter("Công nghệ", Icons.Default.Computer),
-        QuickFilter("Marketing", Icons.Default.Campaign),
-        QuickFilter("Thiết kế", Icons.Default.Palette)
+        QuickFilter(AttractiveQuickFilter.HIGH_SALARY, "Lương cao", Icons.AutoMirrored.Filled.TrendingUp),
+        QuickFilter(AttractiveQuickFilter.REMOTE, "Remote", Icons.Default.Home),
+        QuickFilter(AttractiveQuickFilter.PART_TIME, "Part-time", Icons.Default.Schedule),
+        QuickFilter(AttractiveQuickFilter.FULL_TIME, "Full-time", Icons.Default.Work),
+        QuickFilter(AttractiveQuickFilter.STARTUP, "Startup", Icons.Default.Rocket),
+        QuickFilter(AttractiveQuickFilter.TECHNOLOGY, "Công nghệ", Icons.Default.Computer),
+        QuickFilter(AttractiveQuickFilter.MARKETING, "Marketing", Icons.Default.Campaign),
+        QuickFilter(AttractiveQuickFilter.DESIGN, "Thiết kế", Icons.Default.Palette)
     )
 }
 
@@ -615,20 +786,42 @@ private fun getQuickFilters(): List<QuickFilter> {
 @Composable
 fun AttractiveJobsScreenPreview() {
     MaterialTheme {
-        AttractiveJobsScreen()
+        AttractiveJobsScreen(
+            state = sampleAttractiveJobsState(),
+            onBack = {},
+            onSearchChange = {},
+            onLocationChange = {},
+            onSearch = {},
+            onRefresh = {},
+            onPageChange = {},
+            onFilterToggle = {},
+            onJobSelected = {},
+            onSave = {}
+        )
     }
+}
+
+private fun sampleAttractiveJobsState(): AttractiveJobsUiState {
+    val jobs = getSampleAttractiveJobs()
+    return AttractiveJobsUiState(
+        jobs = jobs,
+        totalJobs = jobs.size,
+        totalPages = 3,
+        selectedFilters = setOf(AttractiveQuickFilter.HIGH_SALARY)
+    )
 }
 
 private fun getSampleAttractiveJobs(): List<JobListCardData> {
     return listOf(
         JobListCardData(
             id = 1,
+            backendId = "1",
             title = "Senior Frontend Developer - React/Next.js",
             company = "CÔNG TY CÔNG NGHỆ DIGITEQ",
             companyLogo = null,
             salary = "25 - 40 triệu",
             location = "Hà Nội, TP.HCM",
-            experience = null,
+            experience = "3+ năm",
             deadline = "15 ngày",
             postedTime = "1 giờ trước",
             isUrgent = true,
@@ -637,12 +830,13 @@ private fun getSampleAttractiveJobs(): List<JobListCardData> {
         ),
         JobListCardData(
             id = 2,
+            backendId = "2",
             title = "Marketing Manager - Thương Hiệu Quốc Tế",
             company = "UNILEVER VIETNAM",
             companyLogo = null,
             salary = "Từ 30 triệu",
             location = "TP.HCM",
-            experience = null,
+            experience = "3+ năm",
             deadline = "20 ngày",
             postedTime = "2 giờ trước",
             isUrgent = false,
@@ -651,12 +845,13 @@ private fun getSampleAttractiveJobs(): List<JobListCardData> {
         ),
         JobListCardData(
             id = 3,
+            backendId = "3",
             title = "DevOps Engineer - Startup Fintech",
             company = "MOMO E-WALLET",
             companyLogo = null,
             salary = "35 - 55 triệu",
             location = "TP.HCM",
-            experience = null,
+            experience = "2+ năm",
             deadline = "25 ngày",
             postedTime = "30 phút trước",
             isUrgent = true,
@@ -665,12 +860,13 @@ private fun getSampleAttractiveJobs(): List<JobListCardData> {
         ),
         JobListCardData(
             id = 4,
+            backendId = "4",
             title = "UI/UX Designer - App Mobile",
             company = "VIETCOMBANK",
             companyLogo = null,
             salary = "20 - 35 triệu",
             location = "Hà Nội",
-            experience = null,
+            experience = "2+ năm",
             deadline = "10 ngày",
             postedTime = "45 phút trước",
             isUrgent = true,
@@ -679,12 +875,13 @@ private fun getSampleAttractiveJobs(): List<JobListCardData> {
         ),
         JobListCardData(
             id = 5,
+            backendId = "5",
             title = "Data Scientist - AI/ML",
             company = "FPT SOFTWARE",
             companyLogo = null,
             salary = "40 - 60 triệu",
             location = "Đà Nẵng, TP.HCM",
-            experience = null,
+            experience = "3+ năm",
             deadline = "30 ngày",
             postedTime = "3 giờ trước",
             isUrgent = false,

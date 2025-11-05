@@ -18,12 +18,12 @@ import com.example.ptitjob.ui.screen.candidate.companies.TopCompaniesScreen
 import com.example.ptitjob.ui.screen.candidate.companies.companyDetail.CompanyDetailScreen
 import com.example.ptitjob.ui.screen.candidate.home.CandidateDashboardRoute
 import com.example.ptitjob.ui.screen.candidate.home.QuickToolType
-import com.example.ptitjob.ui.screen.candidate.jobs.AttractiveJobsScreen
-import com.example.ptitjob.ui.screen.candidate.jobs.BestJobsScreen
-import com.example.ptitjob.ui.screen.candidate.jobs.CandidateJobListScreen
+import com.example.ptitjob.ui.screen.candidate.jobs.AttractiveJobsRoute
+import com.example.ptitjob.ui.screen.candidate.jobs.BestJobsRoute
+import com.example.ptitjob.ui.screen.candidate.jobs.CandidateJobListRoute
 import com.example.ptitjob.ui.screen.candidate.jobs.JobSearchRoute
-import com.example.ptitjob.ui.screen.candidate.jobs.jobDetail.JobDetailsScreen
-import com.example.ptitjob.ui.screen.candidate.profile.ProfileScreen
+import com.example.ptitjob.ui.screen.candidate.jobs.jobDetail.JobDetailsRoute
+import com.example.ptitjob.ui.screen.candidate.profile.ProfileRoute
 import com.example.ptitjob.ui.screen.candidate.profile.UserProfile
 import com.example.ptitjob.ui.screen.candidate.utilities.BHXHCalculatorScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.CompoundInterestScreen
@@ -106,7 +106,33 @@ fun CandidateNavGraph(
 
         // ===== JOBS SECTION =====
         composable(CandidateRoutes.JobsList.route) {
-            CandidateJobListScreen()
+            CandidateJobListRoute(
+                onJobSelected = { jobId ->
+                    navController.navigate(CandidateRoutes.JobDetail.createRoute(jobId)) {
+                        launchSingleTop = true
+                    }
+                },
+                onCompanySelected = { companyId ->
+                    navController.navigate(CandidateRoutes.CompanyDetail.createRoute(companyId)) {
+                        launchSingleTop = true
+                    }
+                },
+                onCategorySelected = { category ->
+                    val handle = navController.currentBackStackEntry?.savedStateHandle
+                    handle?.set(
+                        DASHBOARD_JOB_SEARCH_PAYLOAD,
+                        DashboardSearchPayload(
+                            keyword = null,
+                            categoryId = category.backendId,
+                            categoryName = category.name
+                        )
+                    )
+                    navController.navigate(CandidateRoutes.JobSearch.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
 
         composable(CandidateRoutes.JobSearch.route) {
@@ -121,25 +147,69 @@ fun CandidateNavGraph(
                 }
             }
 
-            JobSearchRoute(presetPayload = presetPayload)
+            JobSearchRoute(
+                presetPayload = presetPayload,
+                onBack = { navController.popBackStack() },
+                onNavigateToJob = { jobId ->
+                    navController.navigate(CandidateRoutes.JobDetail.createRoute(jobId)) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToCompany = { companyId ->
+                    navController.navigate(CandidateRoutes.CompanyDetail.createRoute(companyId)) {
+                        launchSingleTop = true
+                    }
+                },
+                onApplyToJob = { jobId ->
+                    navController.navigate(CandidateRoutes.JobDetail.createRoute(jobId)) {
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable(CandidateRoutes.BestJobs.route) {
-            BestJobsScreen()
+            BestJobsRoute(
+                onBack = { navController.popBackStack() },
+                onJobSelected = { jobId: String ->
+                    navController.navigate(CandidateRoutes.JobDetail.createRoute(jobId)) {
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable(CandidateRoutes.AttractiveJobs.route) {
-            AttractiveJobsScreen()
+            AttractiveJobsRoute(
+                onBack = { navController.popBackStack() },
+                onJobSelected = { jobId: String ->
+                    navController.navigate(CandidateRoutes.JobDetail.createRoute(jobId)) {
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
 
         composable(
             route = CandidateRoutes.JobDetail.route,
             arguments = listOf(navArgument("jobId") { type = NavType.StringType })
-        ) { _ ->
-            JobDetailsScreen(
-                initialJob = null,
-                initialIsLoading = true,
-                initialError = null
+        ) { backStackEntry ->
+            val currentJobId = backStackEntry.arguments?.getString("jobId")
+
+            JobDetailsRoute(
+                onBack = { navController.popBackStack() },
+                onNavigateToCompany = { companyId ->
+                    navController.navigate(CandidateRoutes.CompanyDetail.createRoute(companyId)) {
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToJob = { jobId ->
+                    if (jobId != currentJobId) {
+                        navController.navigate(CandidateRoutes.JobDetail.createRoute(jobId)) {
+                            launchSingleTop = true
+                        }
+                    }
+                }
             )
         }
 
@@ -268,23 +338,8 @@ fun CandidateNavGraph(
 
         // ===== PROFILE =====
         composable(CandidateRoutes.Profile.route) {
-            ProfileScreen(
-                user = UserProfile(
-                    id = "sample123",
-                    fullName = "Nguyễn Văn An",
-                    email = "nguyen.an@ptit.edu.vn",
-                    phoneNumber = "0987654321",
-                    studentId = "B20DCCN001",
-                    major = "Công nghệ thông tin",
-                    graduationYear = "2024",
-                    role = "Sinh viên",
-                    isActive = true,
-                    createdAt = "01/01/2024",
-                    avatarUrl = null,
-                    bio = "Sinh viên PTIT chuyên ngành CNTT",
-                    skills = listOf("Kotlin", "Android", "Compose"),
-                    achievements = listOf("Giải nhất cuộc thi lập trình PTIT 2023")
-                ),
+            // Use ProfileRoute which will load current user via ViewModel and repositories
+            ProfileRoute(
                 onBack = { navController.popBackStack() }
             )
         }

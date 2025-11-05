@@ -189,9 +189,11 @@ class JobSearchViewModel @Inject constructor(
     private fun JobDto.toUiJob(): UiJob {
         return UiJob(
             id = id.toIntOrNull() ?: id.hashCode(),
+            backendId = id,
             title = title,
             company = UiCompany(
                 id = companyId.toIntOrNull() ?: companyId.hashCode(),
+                backendId = companyId,
                 name = companyName,
                 logo = logoUrl.orEmpty(),
                 industry = categoryName,
@@ -214,12 +216,28 @@ class JobSearchViewModel @Inject constructor(
         )
     }
 
-    private fun String.splitToList(): List<String> =
-        lineSequence()
-            .map { it.trim().trimStart('-', '*', '•').trim() }
+    private fun String.splitToList(): List<String> {
+        if (isBlank()) return emptyList()
+        val sanitized = this
+            .replace("&nbsp;", " ")
+            .replace(Regex("(?i)<br\\s*/?>"), "\n")
+            .replace(Regex("(?i)</p>"), "\n")
+            .replace(Regex("(?i)</li>"), "\n")
+            .replace(Regex("(?i)<li[^>]*>"), "\n")
+            .replace(Regex("<[^>]+>"), " ")
+
+        return sanitized
+            .split('\n', ';')
+            .map { segment ->
+                segment
+                    .trim()
+                    .removePrefix("•")
+                    .trimStart('-', '*')
+                    .trim()
+            }
             .filter { it.isNotBlank() }
-            .toList()
-            .ifEmpty { listOf(this) }
+            .ifEmpty { listOf(sanitized.trim()) }
+    }
 
     private fun formatSalary(min: Double, max: Double, currency: String): String {
         if (min <= 0 && max <= 0) return "Thỏa thuận"

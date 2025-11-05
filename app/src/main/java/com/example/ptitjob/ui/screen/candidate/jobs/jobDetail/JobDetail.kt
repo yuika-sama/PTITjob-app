@@ -3,16 +3,57 @@ package com.example.ptitjob.ui.screen.candidate.jobs.jobDetail
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,30 +66,71 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material3.HorizontalDivider
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ptitjob.data.model.JobDetailsPageData
-import com.example.ptitjob.ui.component.*
-import com.example.ptitjob.ui.theme.*
+import com.example.ptitjob.ui.component.JobApplicationDialog
+import com.example.ptitjob.ui.component.JobInfo
+import com.example.ptitjob.ui.component.JobListCard
+import com.example.ptitjob.ui.component.JobListCardData
+import com.example.ptitjob.ui.theme.PTITCornerRadius
+import com.example.ptitjob.ui.theme.PTITElevation
+import com.example.ptitjob.ui.theme.PTITError
+import com.example.ptitjob.ui.theme.PTITGradientEnd
+import com.example.ptitjob.ui.theme.PTITGradientMiddle
+import com.example.ptitjob.ui.theme.PTITGradientStart
+import com.example.ptitjob.ui.theme.PTITInfo
+import com.example.ptitjob.ui.theme.PTITNeutral100
+import com.example.ptitjob.ui.theme.PTITNeutral200
+import com.example.ptitjob.ui.theme.PTITNeutral50
+import com.example.ptitjob.ui.theme.PTITPrimary
+import com.example.ptitjob.ui.theme.PTITSecondary
+import com.example.ptitjob.ui.theme.PTITSize
+import com.example.ptitjob.ui.theme.PTITSpacing
+import com.example.ptitjob.ui.theme.PTITSuccess
+import com.example.ptitjob.ui.theme.PTITTextLight
+import com.example.ptitjob.ui.theme.PTITTextPrimary
+import com.example.ptitjob.ui.theme.PTITTextSecondary
+import com.example.ptitjob.ui.theme.PTITWarning
+
+@Composable
+fun JobDetailsRoute(
+    onBack: () -> Unit,
+    onNavigateToCompany: (String) -> Unit,
+    onNavigateToJob: (String) -> Unit,
+    viewModel: JobDetailsViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    JobDetailsScreen(
+        state = state,
+        onBack = onBack,
+        onRetry = viewModel::refresh,
+        onToggleSave = viewModel::toggleSave,
+        onOpenApply = viewModel::openApplicationDialog,
+        onCloseApply = viewModel::closeApplicationDialog,
+        onCompanySelected = onNavigateToCompany,
+        onRelatedJobSelected = onNavigateToJob
+    )
+}
+
+private const val RELATED_JOBS_DISPLAY_LIMIT = 3
 
 @Composable
 fun JobDetailsScreen(
-    initialJob: JobDetailsPageData?,
-    initialIsLoading: Boolean,
-    initialError: String?
+    state: JobDetailsUiState,
+    onBack: () -> Unit,
+    onRetry: () -> Unit,
+    onToggleSave: () -> Unit,
+    onOpenApply: () -> Unit,
+    onCloseApply: () -> Unit,
+    onCompanySelected: (String) -> Unit,
+    onRelatedJobSelected: (String) -> Unit
 ) {
-    var job by remember { mutableStateOf(initialJob) }
-    var isLoading by remember { mutableStateOf(initialIsLoading) }
-    var error by remember { mutableStateOf(initialError) }
-    var isSaved by remember { mutableStateOf(false) }
-    var isApplicationModalOpen by remember { mutableStateOf(false) }
     var isVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        isVisible = true
+    LaunchedEffect(state.job?.id) {
+        isVisible = state.job != null
     }
 
     Box(
@@ -62,115 +144,111 @@ fun JobDetailsScreen(
                 )
             )
     ) {
+        val job = state.job
         when {
-            isLoading -> {
-                JobDetailLoadingState()
-            }
-            error != null -> {
-                JobDetailErrorState(
-                    message = error.toString(),
-                    onRetry = { error = null },
-                    onGoBack = { /* TODO: Navigation logic */ }
-                )
-            }
+            state.isLoading && job == null -> JobDetailLoadingState()
+            state.errorMessage != null && job == null -> JobDetailErrorState(
+                message = state.errorMessage,
+                onRetry = onRetry,
+                onGoBack = onBack
+            )
             job != null -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = PTITSpacing.xl),
                     verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
                 ) {
-                    // Header Section
                     item {
                         AnimatedVisibility(
                             visible = isVisible,
                             enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
                         ) {
                             JobDetailHeader(
-                                job = job!!,
-                                isSaved = isSaved,
-                                onSaveJob = { isSaved = !isSaved },
-                                onApplyJob = { isApplicationModalOpen = true },
-                                onGoBack = { /* TODO: Navigation */ }
+                                job = job,
+                                isSaved = state.isSaved,
+                                onSaveJob = onToggleSave,
+                                onApplyJob = onOpenApply,
+                                onGoBack = onBack
                             )
                         }
                     }
 
-                    // Quick Info Cards
                     item {
                         AnimatedVisibility(
                             visible = isVisible,
                             enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn()
                         ) {
-                            JobQuickInfoSection(job = job!!)
+                            JobQuickInfoSection(job = job)
                         }
                     }
 
-                    // Job Description
                     item {
                         AnimatedVisibility(
                             visible = isVisible,
                             enter = slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()
                         ) {
-                            JobDescriptionSection(job = job!!)
+                            JobDescriptionSection(job = job)
                         }
                     }
 
-                    // Requirements
                     item {
                         AnimatedVisibility(
                             visible = isVisible,
                             enter = slideInVertically(initialOffsetY = { it / 4 }) + fadeIn()
                         ) {
-                            JobRequirementsSection(job = job!!)
+                            JobRequirementsSection(job = job)
                         }
                     }
 
-                    // Benefits
                     item {
                         AnimatedVisibility(
                             visible = isVisible,
                             enter = slideInVertically(initialOffsetY = { it / 5 }) + fadeIn()
                         ) {
-                            JobBenefitsSection(job = job!!)
+                            JobBenefitsSection(job = job)
                         }
                     }
 
-                    // Company Info
                     item {
                         AnimatedVisibility(
                             visible = isVisible,
                             enter = slideInVertically(initialOffsetY = { it / 6 }) + fadeIn()
                         ) {
-                            CompanyInfoSection(job = job!!)
+                            CompanyInfoSection(
+                                job = job,
+                                company = state.company,
+                                onCompanySelected = onCompanySelected
+                            )
                         }
                     }
 
-                    // Related Jobs
                     item {
                         AnimatedVisibility(
                             visible = isVisible,
                             enter = slideInVertically(initialOffsetY = { it / 7 }) + fadeIn()
                         ) {
-                            RelatedJobsSection()
+                            RelatedJobsSection(
+                                jobs = state.relatedJobs,
+                                onJobSelected = { related -> onRelatedJobSelected(related.backendId) }
+                            )
                         }
                     }
                 }
 
-                // Floating Action Buttons
                 FloatingActionSection(
-                    isSaved = isSaved,
-                    onSaveJob = { isSaved = !isSaved },
-                    onApplyJob = { isApplicationModalOpen = true }
+                    isSaved = state.isSaved,
+                    onSaveJob = onToggleSave,
+                    onApplyJob = onOpenApply
                 )
             }
         }
 
-        // Application Modal
-        if (isApplicationModalOpen && job != null) {
+        if (state.isApplicationDialogVisible && state.job != null) {
+            val info = state.job
             JobApplicationDialog(
                 open = true,
-                onClose = { isApplicationModalOpen = false },
-                job = JobInfo(id = job!!.id, title = job!!.title, companyName = job!!.companyName)
+                onClose = onCloseApply,
+                job = JobInfo(id = info.id, title = info.title, companyName = info.companyName)
             )
         }
     }
@@ -381,9 +459,9 @@ private fun JobQuickInfoSection(job: JobDetailsPageData) {
                     color = PTITInfo
                 )
                 QuickInfoItem(
-                    icon = Icons.Default.AccessTime,
-                    title = "Kinh nghiệm",
-                    value = job.experience,
+                    icon = Icons.Default.Work,
+                    title = "Hình thức",
+                    value = job.jobType,
                     color = PTITWarning
                 )
             }
@@ -401,10 +479,16 @@ private fun JobQuickInfoSection(job: JobDetailsPageData) {
                     color = PTITError
                 )
                 QuickInfoItem(
-                    icon = Icons.Default.Work,
-                    title = "Cấp bậc",
-                    value = "Senior",
+                    icon = Icons.Default.Category,
+                    title = "Ngành nghề",
+                    value = job.categoryName,
                     color = PTITSecondary
+                )
+                QuickInfoItem(
+                    icon = Icons.Default.AccessTime,
+                    title = "Đăng tuyển",
+                    value = job.createdAt,
+                    color = PTITInfo
                 )
             }
         }
@@ -531,14 +615,39 @@ private fun JobBenefitsSection(job: JobDetailsPageData) {
 }
 
 @Composable
-private fun CompanyInfoSection(job: JobDetailsPageData) {
+private fun CompanyInfoSection(
+    job: JobDetailsPageData,
+    company: JobCompanyInfo?,
+    onCompanySelected: (String) -> Unit
+) {
     SectionCard(title = "Thông tin công ty") {
         Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)) {
-            Text("Công ty: ${job.companyName}", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = "Công ty: ${company?.name ?: job.companyName}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            company?.size?.takeIf { it.isNotBlank() }?.let {
+                Text("Quy mô: $it", style = MaterialTheme.typography.bodyLarge)
+            }
             Text("Lĩnh vực: ${job.categoryName}", style = MaterialTheme.typography.bodyLarge)
-            Text("Địa điểm: ${job.locationName}", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = "Địa điểm: ${company?.address ?: job.locationName}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            company?.website?.takeIf { it.isNotBlank() }?.let {
+                Text("Website: $it", style = MaterialTheme.typography.bodyLarge)
+            }
+            company?.email?.takeIf { it.isNotBlank() }?.let {
+                Text("Email: $it", style = MaterialTheme.typography.bodyLarge)
+            }
+            company?.description?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextSecondary)
+                )
+            }
             Spacer(modifier = Modifier.height(PTITSpacing.sm))
-            OutlinedButton(onClick = { /* TODO: navigate to company profile */ }) {
+            OutlinedButton(onClick = { onCompanySelected(company?.id ?: job.companyId) }) {
                 Icon(Icons.Default.Business, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Xem trang công ty")
@@ -548,17 +657,33 @@ private fun CompanyInfoSection(job: JobDetailsPageData) {
 }
 
 @Composable
-private fun RelatedJobsSection() {
+private fun RelatedJobsSection(
+    jobs: List<JobListCardData>,
+    onJobSelected: (JobListCardData) -> Unit
+) {
     SectionCard(title = "Công việc liên quan") {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "🔍 Đang tìm kiếm công việc liên quan...\n\nChúng tôi sẽ gợi ý những công việc phù hợp với bạn!",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    lineHeight = 22.sp
-                ),
-                color = PTITTextSecondary,
-                textAlign = TextAlign.Center
-            )
+        if (jobs.isEmpty()) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "🔍 Đang tìm kiếm công việc liên quan...\n\nChúng tôi sẽ gợi ý những công việc phù hợp với bạn!",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        lineHeight = 22.sp
+                    ),
+                    color = PTITTextSecondary,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)) {
+                jobs.take(RELATED_JOBS_DISPLAY_LIMIT).forEach { relatedJob ->
+                    JobListCard(
+                        job = relatedJob,
+                        onApply = { onJobSelected(relatedJob) },
+                        onSave = { /* TODO: integrate saved jobs */ },
+                        onCardClick = onJobSelected
+                    )
+                }
+            }
         }
     }
 }
@@ -749,9 +874,18 @@ private fun FloatingActionSection(
 fun JobDetailsScreenPreview() {
     MaterialTheme {
         JobDetailsScreen(
-            initialJob = sampleJobDetailsData,
-            initialIsLoading = false,
-            initialError = null
+            state = JobDetailsUiState(
+                job = sampleJobDetailsData,
+                company = sampleCompanyInfo,
+                relatedJobs = sampleRelatedJobs()
+            ),
+            onBack = {},
+            onRetry = {},
+            onToggleSave = {},
+            onOpenApply = {},
+            onCloseApply = {},
+            onCompanySelected = {},
+            onRelatedJobSelected = {}
         )
     }
 }
@@ -792,3 +926,33 @@ val sampleJobDetailsData = JobDetailsPageData(
         "Cơ hội du lịch, team building định kỳ"
     ).joinToString("\n")
 )
+
+private val sampleCompanyInfo = JobCompanyInfo(
+    id = "comp1",
+    name = "Global Tech Solutions",
+    description = "Doanh nghiệp công nghệ tập trung vào các giải pháp di động.",
+    size = "500-1000 nhân viên",
+    address = "Quận 1, TP. Hồ Chí Minh",
+    website = "https://globaltech.vn",
+    email = "contact@globaltech.vn",
+    logoUrl = null,
+    jobCount = 42
+)
+
+private fun sampleRelatedJobs(): List<JobListCardData> = List(3) { index ->
+    JobListCardData(
+        id = index,
+        backendId = "job_rel_$index",
+        title = "Android Developer Level ${index + 1}",
+        company = "Innovative Apps Co.",
+        companyLogo = null,
+        salary = "${15 + index * 2} - ${25 + index * 2} triệu",
+        location = "TP. Hồ Chí Minh",
+        experience = "Đang cập nhật",
+        postedTime = "Đăng ${index + 1} ngày trước",
+        deadline = "${5 - index} ngày",
+        isUrgent = index % 2 == 0,
+        isVerified = index % 2 == 0,
+        tags = listOf("Android", "Kotlin", "Compose")
+    )
+}
