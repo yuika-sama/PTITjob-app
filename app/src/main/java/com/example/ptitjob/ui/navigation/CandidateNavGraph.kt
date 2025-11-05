@@ -11,8 +11,8 @@ import com.example.ptitjob.ui.screen.auth.ForgotPasswordRoute
 import com.example.ptitjob.ui.screen.auth.LoginRoute
 import com.example.ptitjob.ui.screen.auth.SignUpRoute
 import com.example.ptitjob.ui.screen.candidate.aiService.AIServicesMenu
-import com.example.ptitjob.ui.screen.candidate.aiService.CvEvaluationScreen
-import com.example.ptitjob.ui.screen.candidate.aiService.InterviewEmulateScreen
+import com.example.ptitjob.ui.screen.candidate.aiService.InterviewEmulateRoute
+import com.example.ptitjob.ui.screen.candidate.aiService.CvEvaluationRoute
 import com.example.ptitjob.ui.screen.candidate.companies.CompaniesScreen
 import com.example.ptitjob.ui.screen.candidate.companies.TopCompaniesScreen
 import com.example.ptitjob.ui.screen.candidate.companies.companyDetail.CompanyDetailScreen
@@ -34,6 +34,7 @@ import com.example.ptitjob.ui.screen.candidate.utilities.UtilitiesMenu
 import com.example.ptitjob.data.model.Company
 import com.example.ptitjob.ui.screen.test.RouteTesterScreen
 import com.example.ptitjob.ui.navigation.DashboardSearchPayload
+import com.example.ptitjob.ui.screen.test.NavbarDemoScreen
 
 /**
  * Navigation Graph cho Candidate
@@ -262,11 +263,11 @@ fun CandidateNavGraph(
         }
 
         composable(CandidateRoutes.CVEvaluation.route) {
-            CvEvaluationScreen()
+            CvEvaluationRoute(onBack = { navController.popBackStack() })
         }
 
         composable(CandidateRoutes.InterviewEmulate.route) {
-            InterviewEmulateScreen()
+            InterviewEmulateRoute(onBack = { navController.popBackStack() })
         }
 
         // ===== UTILITIES/CALCULATORS SECTION =====
@@ -350,6 +351,13 @@ fun CandidateNavGraph(
                 onNavigate = { route ->
                     navController.navigate(route) { launchSingleTop = true }
                 },
+                onBack = { navController.navigateUp() }
+            )
+        }
+
+        // ===== DEV/TEST - NAVBAR DEMO =====
+        composable(CandidateRoutes.NavbarDemo.route) {
+            NavbarDemoScreen(
                 onBack = { navController.navigateUp() }
             )
         }

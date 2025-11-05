@@ -208,16 +208,9 @@ fun JobSearchScreen(
 
     LaunchedEffect(Unit) { isVisible = true }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(PTITGradientStart, PTITGradientMiddle, PTITGradientEnd),
-                    startY = 0f,
-                    endY = 1000f
-                )
-            )
+    // Use PTITScreenContainer for consistent layout and background
+    com.example.ptitjob.ui.component.PTITScreenContainer(
+        hasGradientBackground = true
     ) {
         Column(
             modifier = Modifier

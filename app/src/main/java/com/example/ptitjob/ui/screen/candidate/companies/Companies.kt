@@ -132,16 +132,9 @@ fun CompaniesScreen() {
         exit = slideOutVertically() + fadeOut()
     ) {
         if (selectedCompany == null) {
-            Box(    
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(PTITGradientStart, PTITGradientMiddle, PTITGradientEnd),
-                            startY = 0f,
-                            endY = 400f
-                        )
-                    )
+            // Use PTITScreenContainer to handle layout properly with navbar
+            com.example.ptitjob.ui.component.PTITScreenContainer(
+                hasGradientBackground = true
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()

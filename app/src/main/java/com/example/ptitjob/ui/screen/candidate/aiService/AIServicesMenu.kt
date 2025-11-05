@@ -1,15 +1,13 @@
 package com.example.ptitjob.ui.screen.candidate.aiService
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ptitjob.ui.component.PTITScreenContainer
 import com.example.ptitjob.ui.theme.*
 
 data class AIServiceItem(
@@ -31,6 +30,7 @@ data class AIServiceItem(
 /**
  * Menu chính cho AI Services
  * Hiển thị các dịch vụ AI cho candidate
+ * Updated to work with new PTIT navbar layout
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +39,7 @@ fun AIServicesMenu(
     onNavigateToInterviewEmulate: () -> Unit,
     onBack: () -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
     val aiServices = listOf(
         AIServiceItem(
             title = "📄 Đánh giá CV",
@@ -58,35 +59,12 @@ fun AIServicesMenu(
         )
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "🤖 AI Services",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = PTITTextPrimary
-                )
-            )
-        }
-    ) { paddingValues ->
+    PTITScreenContainer(
+        hasGradientBackground = true,
+        snackbarHostState = snackbarHostState
+    ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(PTITSpacing.md),
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
         ) {
@@ -94,75 +72,85 @@ fun AIServicesMenu(
                 // Header info card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = (PTITCornerRadius.md),
+                    shape = PTITCornerRadius.md,
                     colors = CardDefaults.cardColors(
                         containerColor = PTITPrimary.copy(alpha = 0.08f)
                     )
                 ) {
-                    Row(
-                        modifier = Modifier.padding(PTITSpacing.md),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.padding(PTITSpacing.md)
                     ) {
                         Text(
-                            text = "✨",
-                            fontSize = 32.sp,
-                            modifier = Modifier.padding(end = PTITSpacing.sm)
+                            text = "🚀 Dịch vụ AI thông minh",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PTITPrimary
                         )
-                        Column {
-                            Text(
-                                text = "Công nghệ AI tiên tiến",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = PTITTextPrimary,
-                                lineHeight = 20.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Hỗ trợ bạn cải thiện CV và kỹ năng phỏng vấn",
-                                fontSize = 13.sp,
-                                color = PTITTextSecondary,
-                                lineHeight = 18.sp
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(PTITSpacing.xs))
+                        Text(
+                            text = "Sử dụng trí tuệ nhân tạo để nâng cao hiệu quả tìm việc và phát triển nghề nghiệp của bạn",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PTITTextSecondary
+                        )
                     }
                 }
             }
 
             items(aiServices) { service ->
-                AIServiceCard(service = service)
+                AIServiceCard(
+                    service = service
+                )
+            }
+
+            item {
+                // Footer info
+                Card(
+                    modifier = Modifier.fillMaxWidth(), shape = PTITCornerRadius.md,
+                    colors = CardDefaults.cardColors(
+                        containerColor = PTITSuccess.copy(alpha = 0.08f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(PTITSpacing.md)
+                    ) {
+                        Text(
+                            text = "💡 Mẹo sử dụng",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PTITSuccess
+                        )
+                        Spacer(modifier = Modifier.height(PTITSpacing.xs))
+                        Text(
+                            text = "• Chuẩn bị CV ở định dạng PDF để có kết quả đánh giá tốt nhất\n• Luyện tập phỏng vấn thường xuyên để tự tin hơn\n• Áp dụng gợi ý của AI để cải thiện hồ sơ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PTITTextSecondary
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AIServiceCard(
     service: AIServiceItem,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { service.onClick() },
-        shape = (PTITCornerRadius.md),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = PTITElevation.sm
-        )
-    ) {
+    Card(modifier = modifier
+        .fillMaxWidth(), shape = PTITCornerRadius.md, colors = CardDefaults.cardColors(
+        containerColor = Color.White
+    ), elevation = CardDefaults.cardElevation(
+        defaultElevation = PTITElevation.sm
+    ), onClick = service.onClick) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(PTITSpacing.md),
+            modifier = Modifier.fillMaxWidth().padding(PTITSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Icon container with gradient effect
             Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip((PTITCornerRadius.md))
+                modifier = Modifier.size(60.dp).clip(PTITCornerRadius.md)
                     .background(service.color.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {

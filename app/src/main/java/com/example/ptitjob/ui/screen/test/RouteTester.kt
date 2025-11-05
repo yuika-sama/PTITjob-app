@@ -73,6 +73,9 @@ fun RouteTesterScreen(
         ),
         "Profile" to listOf(
             RouteItem("Profile", CandidateRoutes.Profile.route)
+        ),
+        "Demo/Test" to listOf(
+            RouteItem("Navbar Demo", CandidateRoutes.NavbarDemo.route)
         )
     )
 

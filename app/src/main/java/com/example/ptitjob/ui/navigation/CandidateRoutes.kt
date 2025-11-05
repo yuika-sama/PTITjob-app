@@ -42,6 +42,7 @@ sealed class CandidateRoutes(val route: String) {
 
     // Dev/Test
     object RouteTester : CandidateRoutes("candidate/route-tester")
+    object NavbarDemo : CandidateRoutes("candidate/navbar-demo")
 }
 
 /**

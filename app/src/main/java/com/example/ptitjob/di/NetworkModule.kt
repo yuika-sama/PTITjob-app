@@ -2,6 +2,8 @@ package com.example.ptitjob.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.ptitjob.BuildConfig
+import com.example.ptitjob.data.api.ai.AiServiceApi
 import com.example.ptitjob.data.api.auth.*
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -21,8 +23,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    
-    private const val BASE_URL = "http://10.0.2.2:5000/api/"
     private const val TIMEOUT = 30L
     
     @Provides
@@ -94,12 +94,24 @@ object NetworkModule {
             .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
             .build()
     }
-    
+
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
+    @MainApiRetrofit
+    fun provideMainRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.API_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @AiApiRetrofit
+    fun provideAiRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.AI_API_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
@@ -109,49 +121,55 @@ object NetworkModule {
     
     @Provides
     @Singleton
-    fun provideAuthApi(retrofit: Retrofit): AuthApi {
+    fun provideAuthApi(@MainApiRetrofit retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
     }
     
     @Provides
     @Singleton
-    fun provideUserApi(retrofit: Retrofit): UserApi {
+    fun provideUserApi(@MainApiRetrofit retrofit: Retrofit): UserApi {
         return retrofit.create(UserApi::class.java)
     }
     
     @Provides
     @Singleton
-    fun provideJobApi(retrofit: Retrofit): JobApi {
+    fun provideJobApi(@MainApiRetrofit retrofit: Retrofit): JobApi {
         return retrofit.create(JobApi::class.java)
     }
     
     @Provides
     @Singleton
-    fun provideCompanyApi(retrofit: Retrofit): CompanyApi {
+    fun provideCompanyApi(@MainApiRetrofit retrofit: Retrofit): CompanyApi {
         return retrofit.create(CompanyApi::class.java)
     }
     
     @Provides
     @Singleton
-    fun provideJobApplicationApi(retrofit: Retrofit): JobApplicationApi {
+    fun provideJobApplicationApi(@MainApiRetrofit retrofit: Retrofit): JobApplicationApi {
         return retrofit.create(JobApplicationApi::class.java)
     }
     
     @Provides
     @Singleton
-    fun provideResumeApi(retrofit: Retrofit): ResumeApi {
+    fun provideResumeApi(@MainApiRetrofit retrofit: Retrofit): ResumeApi {
         return retrofit.create(ResumeApi::class.java)
     }
     
     @Provides
     @Singleton
-    fun provideJobCategoryApi(retrofit: Retrofit): JobCategoryApi {
+    fun provideJobCategoryApi(@MainApiRetrofit retrofit: Retrofit): JobCategoryApi {
         return retrofit.create(JobCategoryApi::class.java)
     }
     
     @Provides
     @Singleton
-    fun provideLocationApi(retrofit: Retrofit): LocationApi {
+    fun provideLocationApi(@MainApiRetrofit retrofit: Retrofit): LocationApi {
         return retrofit.create(LocationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiServiceApi(@AiApiRetrofit retrofit: Retrofit): AiServiceApi {
+        return retrofit.create(AiServiceApi::class.java)
     }
 }

@@ -6,19 +6,16 @@ import androidx.navigation.compose.rememberNavController
 import com.example.ptitjob.ui.component.PTITAppContainer
 
 /**
- * Main Container Screen cho Candidate
- * Sử dụng PTITAppContainer mới với Bottom Navigation và layout cải tiến
- * 
- * @deprecated Use PTITCandidateApp instead for better layout management
+ * PTIT App Main Screen với Bottom Navigation mới
+ * Sử dụng PTITAppContainer để quản lý layout và navigation
  */
 @Composable
-fun CandidateMainScreen(
+fun PTITCandidateApp(
     navController: NavHostController = rememberNavController()
 ) {
-    // Redirect to the new PTIT App Container for consistent theming
     PTITAppContainer(
         navController = navController,
-        hasGradientBackground = false // Let individual screens handle their backgrounds
+        hasGradientBackground = false // Let individual screens handle their own backgrounds
     ) {
         CandidateNavGraph(navController = navController)
     }

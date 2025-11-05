@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,21 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-parcelize")
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+fun resolveBaseUrl(key: String, defaultValue: String): String {
+    val raw = localProperties.getProperty(key)?.takeIf { it.isNotBlank() } ?: defaultValue
+    return if (raw.endsWith("/")) raw else "$raw/"
+}
+
+val primaryApiUrl = resolveBaseUrl("API_URL", "http://10.0.2.2:5000/api/")
+val aiApiUrl = resolveBaseUrl("AI_API_URL", "http://10.0.2.2:8000/api/")
 
 android {
     namespace = "com.example.ptitjob"
@@ -21,7 +38,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Base API URL for Retrofit (10.0.2.2 points to host machine from Android emulator)
-        buildConfigField("String", "API_URL", "\"http://10.0.2.2:5000/\"")
+    buildConfigField("String", "API_URL", "\"$primaryApiUrl\"")
+    buildConfigField("String", "AI_API_URL", "\"$aiApiUrl\"")
     }
 
     buildTypes {

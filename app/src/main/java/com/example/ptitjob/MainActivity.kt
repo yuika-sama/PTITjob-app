@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import com.example.ptitjob.ui.theme.PtitjobTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.navigation.compose.rememberNavController
+import com.example.ptitjob.ui.component.PTITAppContainer
 import com.example.ptitjob.ui.navigation.CandidateNavGraph
 import com.example.ptitjob.ui.navigation.CandidateRoutes
 
@@ -18,10 +19,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             PtitjobTheme {
                 val navController = rememberNavController()
-                CandidateNavGraph(
-                    navController = navController,
-                    startDestination = CandidateRoutes.RouteTester.route
-                )
+                PTITAppContainer(navController) {
+                    CandidateNavGraph(
+                        navController = navController,
+                        startDestination = CandidateRoutes.RouteTester.route
+                    )
+                }
             }
         }
     }

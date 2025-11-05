@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,12 +66,12 @@ fun CandidateDashboardRoute(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onRefresh = viewModel::refreshDashboard,
-    onSearchRequest = onNavigateToJobSearch,
+        onSearchRequest = onNavigateToJobSearch,
         onJobSelected = onNavigateToJobDetail,
         onViewAllJobs = { onNavigateToJobSearch(null) },
         onCompanySelected = onNavigateToCompanyDetail,
         onViewAllCompanies = onNavigateToCompanies,
-    onCategorySelected = onNavigateToJobSearch,
+        onCategorySelected = onNavigateToJobSearch,
         onViewAllCategories = onNavigateToIndustries,
         onToolSelected = onNavigateToTool
     )
@@ -94,107 +93,85 @@ fun CandidateDashboardScreen(
     onToolSelected: (QuickToolType) -> Unit
 ) {
     var selectedTimeFilter by rememberSaveable { mutableStateOf("Tất cả") }
-    val timeFilters = listOf("Tất cả", "Hôm nay", "Tuần này", "Tháng này")
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.Transparent
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(PTITGradientStart, PTITGradientMiddle, PTITGradientEnd),
-                        startY = 0f,
-                        endY = 800f
-                    )
-                )
+    com.example.ptitjob.ui.component.PTITScreenContainer(
+        hasGradientBackground = true,
+        snackbarHostState = snackbarHostState
+    ) {
+        if (uiState.isLoading && uiState.featuredJobs.isEmpty() &&
+            uiState.topCompanies.isEmpty() && uiState.hotIndustries.isEmpty()
         ) {
-            if (uiState.isLoading && uiState.featuredJobs.isEmpty() &&
-                uiState.topCompanies.isEmpty() && uiState.hotIndustries.isEmpty()
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = PTITPrimary)
+                CircularProgressIndicator(color = PTITPrimary)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    DashboardHeader(
+                        categories = uiState.searchCategories,
+                        locations = uiState.searchLocations,
+                        onSearchRequest = onSearchRequest,
+                        onCategorySelected = onCategorySelected,
+                        onRefresh = onRefresh
+                    )
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    item {
-                        DashboardHeader(
-                            categories = uiState.searchCategories,
-                            locations = uiState.searchLocations,
-                            onSearchRequest = onSearchRequest,
-                            onCategorySelected = onCategorySelected,
-                            onRefresh = onRefresh
+
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                PTITBackgroundLight,
+                                PTITCornerRadius.xl,
+                            )
+                            .padding(PTITSpacing.lg)
+                    ) {
+                        DashboardStatsSection(uiState.stats)
+
+                        Spacer(Modifier.height(PTITSpacing.xl))
+
+                        FeaturedJobsSection(
+                            jobs = uiState.featuredJobs,
+                            isLoading = uiState.isLoading,
+                            onJobClick = onJobSelected,
+                            onViewAll = onViewAllJobs
                         )
-                    }
 
-                    item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    PTITBackgroundLight,
-                                    PTITCornerRadius.xl,
-                                )
-                                .padding(PTITSpacing.lg)
-                        ) {
-                            DashboardStatsSection(uiState.stats)
+                        Spacer(Modifier.height(PTITSpacing.xl))
 
-                            Spacer(Modifier.height(PTITSpacing.xl))
+                        TopCompaniesSection(
+                            companies = uiState.topCompanies,
+                            isLoading = uiState.isLoading,
+                            onCompanyClick = onCompanySelected,
+                            onViewAll = onViewAllCompanies
+                        )
 
-                            TimeFilterSection(
-                                selectedFilter = selectedTimeFilter,
-                                filters = timeFilters,
-                                onFilterChange = { selectedTimeFilter = it }
-                            )
+                        Spacer(Modifier.height(PTITSpacing.xl))
 
-                            Spacer(Modifier.height(PTITSpacing.lg))
-
-                            FeaturedJobsSection(
-                                jobs = uiState.featuredJobs,
-                                isLoading = uiState.isLoading,
-                                onJobClick = onJobSelected,
-                                onViewAll = onViewAllJobs
-                            )
-
-                            Spacer(Modifier.height(PTITSpacing.xl))
-
-                            TopCompaniesSection(
-                                companies = uiState.topCompanies,
-                                isLoading = uiState.isLoading,
-                                onCompanyClick = onCompanySelected,
-                                onViewAll = onViewAllCompanies
-                            )
-
-                            Spacer(Modifier.height(PTITSpacing.xl))
-
-                            HotIndustriesSection(
-                                categories = uiState.hotIndustries,
-                                isLoading = uiState.isLoading,
-                                onCategoryClick = { industry, index ->
-                                    val category = uiState.searchCategories.getOrNull(index)
-                                    val targetId = category?.id ?: industry.id.toString()
-                                    onCategorySelected(
-                                        DashboardSearchPayload(
-                                            categoryId = targetId,
-                                            categoryName = category?.name ?: industry.name
-                                        )
+                        HotIndustriesSection(
+                            categories = uiState.hotIndustries,
+                            isLoading = uiState.isLoading,
+                            onCategoryClick = { industry, index ->
+                                val category = uiState.searchCategories.getOrNull(index)
+                                val targetId = category?.id ?: industry.id.toString()
+                                onCategorySelected(
+                                    DashboardSearchPayload(
+                                        categoryId = targetId,
+                                        categoryName = category?.name ?: industry.name
                                     )
-                                },
-                                onViewAll = onViewAllCategories
-                            )
+                                )
+                            },
+                            onViewAll = onViewAllCategories
+                        )
 
-                            Spacer(Modifier.height(PTITSpacing.xl))
+                        Spacer(Modifier.height(PTITSpacing.xl))
 
-                            QuickToolsSection(onToolSelected = onToolSelected)
-                        }
+                        QuickToolsSection(onToolSelected = onToolSelected)
                     }
                 }
             }
@@ -218,7 +195,6 @@ private fun DashboardHeader(
             .padding(PTITSpacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Welcome Section
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -264,10 +240,9 @@ private fun DashboardHeader(
                 }
             }
         }
-        
+
         PTITSpacing.xl.let { Spacer(Modifier.height(it)) }
-        
-        // Enhanced Search Bar
+
         DashboardSearchBar(
             categories = categories,
             locations = locations,
@@ -491,9 +466,9 @@ private fun TimeFilterSection(
                 color = PTITTextPrimary
             )
         )
-        
+
         PTITSpacing.md.let { Spacer(Modifier.height(it)) }
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
@@ -540,7 +515,7 @@ private fun FeaturedJobsSection(
                 )
             }
         }
-        
+
         PTITSpacing.md.let { Spacer(Modifier.height(it)) }
 
         when {
@@ -601,20 +576,6 @@ private fun FeaturedJobCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-//                Surface(
-//                    shape = PTITCornerRadius.sm,
-//                    color = PTITSuccess.copy(alpha = 0.1f)
-//                ) {
-//                    Text(
-//                        text = if (job.isUrgent) "⚡ GẤP" else "📋 MỚI",
-//                        style = MaterialTheme.typography.labelSmall.copy(
-//                            fontWeight = FontWeight.Bold,
-//                            color = if (job.isUrgent) PTITError else PTITSuccess
-//                        ),
-//                        modifier = Modifier.padding(horizontal = PTITSpacing.sm, vertical = PTITSpacing.xs)
-//                    )
-//                }
-                
                 IconButton(
                     onClick = onBookmark,
                     modifier = Modifier.size(32.dp)
@@ -627,7 +588,7 @@ private fun FeaturedJobCard(
                     )
                 }
             }
-            
+
             Text(
                 text = job.title,
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -637,7 +598,7 @@ private fun FeaturedJobCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
@@ -655,7 +616,7 @@ private fun FeaturedJobCard(
                     )
                 )
             }
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
@@ -673,9 +634,9 @@ private fun FeaturedJobCard(
                     )
                 )
             }
-            
-            HorizontalDivider(color = PTITNeutral300)
-            
+
+            Divider(color = PTITNeutral300, thickness = 1.dp)
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -688,7 +649,7 @@ private fun FeaturedJobCard(
                         color = PTITSuccess
                     )
                 )
-                
+
                 Button(
                     onClick = { /* TODO: Apply */ },
                     colors = ButtonDefaults.buttonColors(
@@ -737,7 +698,7 @@ private fun TopCompaniesSection(
                 )
             }
         }
-        
+
         PTITSpacing.md.let { Spacer(Modifier.height(it)) }
 
         when {
@@ -810,7 +771,7 @@ private fun TopCompanyCard(
                     )
                 }
             }
-            
+
             Text(
                 text = company.name,
                 style = MaterialTheme.typography.titleSmall.copy(
@@ -821,20 +782,6 @@ private fun TopCompanyCard(
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
-
-//            Surface(
-//                shape = PTITCornerRadius.sm,
-//                color = PTITInfo.copy(alpha = 0.1f)
-//            ) {
-//                Text(
-//                    text = "${company.jobCount} việc làm",
-//                    style = MaterialTheme.typography.labelSmall.copy(
-//                        fontWeight = FontWeight.Medium,
-//                        color = PTITInfo
-//                    ),
-//                    modifier = Modifier.padding(horizontal = PTITSpacing.sm, vertical = PTITSpacing.xs)
-//                )
-//            }
         }
     }
 }
@@ -867,7 +814,7 @@ private fun HotIndustriesSection(
                 )
             }
         }
-        
+
         PTITSpacing.md.let { Spacer(Modifier.height(it)) }
 
         when {
@@ -915,7 +862,7 @@ private fun IndustryCard(
 ) {
     val colors = listOf(PTITPrimary, PTITSecondary, PTITSuccess, PTITWarning)
     val color = colors[category.id % colors.size]
-    
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -942,7 +889,7 @@ private fun IndustryCard(
                     )
                 }
             }
-            
+
             Text(
                 text = category.name,
                 style = MaterialTheme.typography.titleSmall.copy(
@@ -952,14 +899,6 @@ private fun IndustryCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            
-//            Text(
-//                text = "${category.jobCount} việc làm",
-//                style = MaterialTheme.typography.bodySmall.copy(
-//                    fontWeight = FontWeight.Medium,
-//                    color = color
-//                )
-//            )
         }
     }
 }
@@ -974,9 +913,9 @@ private fun QuickToolsSection(onToolSelected: (QuickToolType) -> Unit) {
                 color = PTITTextPrimary
             )
         )
-        
+
         PTITSpacing.md.let { Spacer(Modifier.height(it)) }
-        
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
@@ -1022,7 +961,7 @@ private fun QuickToolCard(tool: QuickTool, onClick: () -> Unit) {
                     )
                 }
             }
-            
+
             Text(
                 text = tool.title,
                 style = MaterialTheme.typography.titleSmall.copy(
@@ -1033,7 +972,7 @@ private fun QuickToolCard(tool: QuickTool, onClick: () -> Unit) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Text(
                 text = tool.description,
                 style = MaterialTheme.typography.bodySmall.copy(
