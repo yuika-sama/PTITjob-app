@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ptitjob.ui.theme.*
 
 data class UtilityItem(
@@ -27,6 +28,23 @@ data class UtilityItem(
     val color: Color,
     val onClick: () -> Unit
 )
+
+// --- Route Component for ViewModel Integration ---
+@Composable
+fun UtilitiesScreenRoute(
+    onNavigateToCalculator: (String) -> Unit,
+    onBack: () -> Unit,
+    viewModel: UtilitiesViewModel = hiltViewModel()
+) {
+    UtilitiesMenu(
+        onNavigateToBHXH = { onNavigateToCalculator("bhxh_calculator") },
+        onNavigateToPersonalIncomeTax = { onNavigateToCalculator("tax_calculator") },
+        onNavigateToSalaryCalculator = { onNavigateToCalculator("salary_calculator") },
+        onNavigateToUnemploymentInsurance = { onNavigateToCalculator("unemployment_calculator") },
+        onNavigateToCompoundInterest = { onNavigateToCalculator("compound_interest") },
+        onBack = onBack
+    )
+}
 
 /**
  * Menu chính cho Utilities/Calculators

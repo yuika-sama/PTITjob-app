@@ -2,6 +2,10 @@ package com.example.ptitjob.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -34,6 +38,8 @@ import com.example.ptitjob.ui.screen.candidate.utilities.UtilitiesMenu
 import com.example.ptitjob.data.model.Company
 import com.example.ptitjob.ui.screen.test.RouteTesterScreen
 import com.example.ptitjob.ui.navigation.DashboardSearchPayload
+import com.example.ptitjob.ui.screen.candidate.utilities.SalaryCalculatorRoute
+import com.example.ptitjob.ui.screen.candidate.utilities.UtilitiesViewModel
 import com.example.ptitjob.ui.screen.test.NavbarDemoScreen
 
 /**
@@ -320,8 +326,15 @@ fun CandidateNavGraph(
         }
 
         composable(CandidateRoutes.SalaryCalculator.route) {
+
+            val viewModel: UtilitiesViewModel = hiltViewModel()
+            val uiState by viewModel.salaryState.collectAsStateWithLifecycle()
             SalaryCalculatorScreen(
-                onBack = { navController.popBackStack() }
+                uiState = uiState,
+                onInputChange = viewModel::updateSalaryInput,
+                onCalculate = viewModel::calculateSalary,
+                onClearResult = viewModel::clearSalaryResult,
+                onBack = {navController.popBackStack()}
             )
         }
 

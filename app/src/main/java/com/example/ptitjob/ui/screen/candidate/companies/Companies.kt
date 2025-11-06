@@ -100,6 +100,9 @@ import com.example.ptitjob.ui.theme.PTITPrimary
 import com.example.ptitjob.ui.theme.PTITSecondary
 import com.example.ptitjob.ui.theme.PTITSize
 import com.example.ptitjob.ui.theme.PTITSpacing
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import com.example.ptitjob.ui.theme.PTITTextLight
 import com.example.ptitjob.ui.theme.PTITTextPrimary
 import com.example.ptitjob.ui.theme.PTITTextSecondary
@@ -109,20 +112,20 @@ import com.example.ptitjob.ui.theme.PTITTextSecondary
  * ========================= */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CompaniesScreen() {
+fun CompaniesScreen(
+    viewModel: CompaniesViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    
     var selectedCompany by remember { mutableStateOf<Company?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var searchTerm by remember { mutableStateOf("") }
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
 
-    val allCompanies = remember { getSampleCompanies() }
-    val filteredCompanies = remember(searchTerm, allCompanies) {
-        if (searchTerm.isBlank()) allCompanies
-        else allCompanies.filter { c ->
-            c.name.contains(searchTerm, true) ||
-                    (c.address?.contains(searchTerm, true) == true) ||
-                    c.industry.contains(searchTerm, true)
+    // Handle error messages
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            // Show error snackbar or dialog
+            // You can implement snackbar here if needed
         }
     }
 
@@ -141,8 +144,8 @@ fun CompaniesScreen() {
                 ) {
                     item {
                         CompaniesHeader(
-                            searchTerm = searchTerm,
-                            onSearchTermChange = { searchTerm = it },
+                            searchTerm = searchQuery,
+                            onSearchTermChange = viewModel::searchCompanies,
                             viewMode = viewMode,
                             onViewModeChange = { viewMode = it }
                         )
@@ -160,28 +163,25 @@ fun CompaniesScreen() {
                                 .padding(PTITSpacing.lg)
                         ) {
                             when {
-                                isLoading -> {
-                                    repeat(6) {
-                                        SkeletonCompanyCard()
-                                        Spacer(Modifier.height(PTITSpacing.md))
-                                    }
+                                uiState.isLoading -> {
+                                    LoadingSection()
                                 }
-                                error != null -> {
-                                    ErrorState(message = error!!, onRetry = { error = null })
+                                uiState.errorMessage != null -> {
+                                    ErrorState(message = uiState.errorMessage!!, onRetry = viewModel::refresh)
                                 }
                                 else -> {
-                                    ResultsHeader(count = filteredCompanies.size, searchTerm = searchTerm)
+                                    ResultsHeader(count = uiState.filteredCompanies.size, searchTerm = searchQuery)
                                     Spacer(Modifier.height(PTITSpacing.lg))
 
-                                    if (filteredCompanies.isEmpty()) {
-                                        EmptyState(searchTerm = searchTerm)
+                                    if (uiState.filteredCompanies.isEmpty()) {
+                                        EmptyState(searchTerm = searchQuery)
                                     } else {
                                         when (viewMode) {
                                             ViewMode.LIST -> {
                                                 Column(
                                                     verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
                                                 ) {
-                                                    filteredCompanies.forEach { company ->
+                                                    uiState.filteredCompanies.forEach { company ->
                                                         CompanyCard(
                                                             company = company,
                                                             onClick = { selectedCompany = company }
@@ -196,7 +196,7 @@ fun CompaniesScreen() {
                                                     verticalArrangement = Arrangement.spacedBy(PTITSpacing.md),
                                                     modifier = Modifier.height(800.dp)
                                                 ) {
-                                                    items(filteredCompanies, key = { it.id }) { company ->
+                                                    items(uiState.filteredCompanies, key = { it.id }) { company ->
                                                         CompanyGridCard(
                                                             company = company,
                                                             onClick = { selectedCompany = company }
@@ -989,3 +989,14 @@ private fun getSampleCompanies() = listOf(
         jobCount = 60
     )
 )
+
+/**
+ * Loading section with skeleton cards
+ */
+@Composable
+private fun LoadingSection() {
+    repeat(6) {
+        SkeletonCompanyCard()
+        Spacer(Modifier.height(PTITSpacing.md))
+    }
+}

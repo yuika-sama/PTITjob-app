@@ -32,7 +32,8 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotFound404Screen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onNavigateHome: () -> Unit = {}
 ) {
     var isVisible by remember { mutableStateOf(false) }
     

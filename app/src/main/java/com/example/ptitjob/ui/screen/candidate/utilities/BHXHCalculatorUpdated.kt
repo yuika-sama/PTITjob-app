@@ -1,15 +1,11 @@
 package com.example.ptitjob.ui.screen.candidate.utilities
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,13 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,17 +25,17 @@ import com.example.ptitjob.ui.theme.*
 
 // --- Route Component with ViewModel Integration ---
 @Composable
-fun SalaryCalculatorRoute(
+fun BHXHCalculatorRoute(
     onBack: () -> Unit,
     viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.salaryState.collectAsStateWithLifecycle()
+    val uiState by viewModel.bhxhState.collectAsStateWithLifecycle()
     
-    SalaryCalculatorScreen(
+    BHXHCalculatorScreen(
         uiState = uiState,
-        onInputChange = viewModel::updateSalaryInput,
-        onCalculate = viewModel::calculateSalary,
-        onClearResult = viewModel::clearSalaryResult,
+        onInputChange = viewModel::updateBHXHInput,
+        onCalculate = viewModel::calculateBHXH,
+        onClearResult = viewModel::clearBHXHResult,
         onBack = onBack
     )
 }
@@ -52,9 +43,9 @@ fun SalaryCalculatorRoute(
 // --- Main Screen Component ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SalaryCalculatorScreen(
-    uiState: CalculatorUiState<SalaryInput>,
-    onInputChange: (SalaryInput) -> Unit,
+fun BHXHCalculatorScreen(
+    uiState: CalculatorUiState<BHXHInput>,
+    onInputChange: (BHXHInput) -> Unit,
     onCalculate: () -> Unit,
     onClearResult: () -> Unit,
     onBack: () -> Unit
@@ -64,7 +55,7 @@ fun SalaryCalculatorScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Tính lương Gross - Net",
+                        text = "Tính BHXH",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
@@ -79,7 +70,7 @@ fun SalaryCalculatorScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = PTITPrimary,
+                    containerColor = PTITInfo,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -107,7 +98,21 @@ fun SalaryCalculatorScreen(
             ) {
                 // --- Header Banner ---
                 item {
-                    SalaryCalculateButton(
+                    BHXHHeaderBanner()
+                }
+
+                // --- Input Form ---
+                item {
+                    BHXHInputForm(
+                        input = uiState.input,
+                        validationErrors = uiState.validationErrors,
+                        onInputChange = onInputChange
+                    )
+                }
+
+                // --- Calculate Button ---
+                item {
+                    BHXHCalculateButton(
                         isLoading = uiState.isLoading,
                         onCalculate = onCalculate
                     )
@@ -122,11 +127,10 @@ fun SalaryCalculatorScreen(
 
                 // --- Results ---
                 if (uiState.hasResult) {
-                    val result = uiState.result as SalaryCalculationResult
+                    val result = uiState.result as BHXHResult
                     item {
-                        SalaryResultCard(
+                        BHXHResultCard(
                             result = result,
-                            calculationType = uiState.input.calculationType,
                             onClearResult = onClearResult
                         )
                     }
@@ -134,57 +138,46 @@ fun SalaryCalculatorScreen(
 
                 // --- Information Section ---
                 item {
-                    SalaryInformationSection()
+                    BHXHInformationSection()
                 }
             }
         }
     }
 }
 
-// --- Calculator Type Selector ---
+// --- Header Banner Component ---
 @Composable
-private fun SalaryCalculatorTypeSelector(
-    selectedType: SalaryCalculationType,
-    onTypeChange: (SalaryCalculationType) -> Unit
-) {
+private fun BHXHHeaderBanner() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = PTITSurfaceLight),
         elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(PTITSpacing.md)
+                .padding(PTITSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Chọn loại tính toán",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = PTITTextPrimary,
-                modifier = Modifier.padding(bottom = PTITSpacing.sm)
+            Icon(
+                imageVector = Icons.Default.HealthAndSafety,
+                contentDescription = null,
+                tint = PTITInfo,
+                modifier = Modifier.size(48.dp)
             )
-            
-            SalaryCalculationType.values().forEach { type ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTypeChange(type) }
-                        .padding(vertical = PTITSpacing.xs),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = selectedType == type,
-                        onClick = { onTypeChange(type) },
-                        colors = RadioButtonDefaults.colors(selectedColor = PTITPrimary)
-                    )
-                    Text(
-                        text = type.displayName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PTITTextPrimary,
-                        modifier = Modifier.padding(start = PTITSpacing.xs)
-                    )
-                }
+            Spacer(modifier = Modifier.width(PTITSpacing.md))
+            Column {
+                Text(
+                    text = "Tính toán BHXH",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextPrimary
+                )
+                Text(
+                    text = "Ước tính mức hưởng bảo hiểm xã hội",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PTITTextSecondary
+                )
             }
         }
     }
@@ -192,10 +185,10 @@ private fun SalaryCalculatorTypeSelector(
 
 // --- Input Form Component ---
 @Composable
-private fun SalaryInputForm(
-    input: SalaryInput,
+private fun BHXHInputForm(
+    input: BHXHInput,
     validationErrors: List<String>,
-    onInputChange: (SalaryInput) -> Unit
+    onInputChange: (BHXHInput) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -215,40 +208,65 @@ private fun SalaryInputForm(
                 color = PTITTextPrimary
             )
 
-            // Salary Input
+            // Monthly Salary Input
             OutlinedTextField(
-                value = input.inputSalary,
-                onValueChange = { onInputChange(input.copy(inputSalary = it)) },
-                label = { 
-                    Text(when (input.calculationType) {
-                        SalaryCalculationType.GROSS_TO_NET -> "Lương GROSS (VNĐ)"
-                        SalaryCalculationType.NET_TO_GROSS -> "Lương NET mong muốn (VNĐ)"
-                    })
-                },
+                value = input.monthlyGrossSalary,
+                onValueChange = { onInputChange(input.copy(monthlyGrossSalary = it)) },
+                label = { Text("Lương tháng gộp (VNĐ)") },
                 placeholder = { Text("Ví dụ: 15000000") },
                 leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PTITPrimary,
-                    focusedLabelColor = PTITPrimary
+                    focusedBorderColor = PTITInfo,
+                    focusedLabelColor = PTITInfo
                 )
             )
 
-            // Dependents Input
+            // Contribution Months Input
             OutlinedTextField(
-                value = input.dependents,
-                onValueChange = { onInputChange(input.copy(dependents = it)) },
-                label = { Text("Số người phụ thuộc") },
-                placeholder = { Text("0") },
-                leadingIcon = { Icon(Icons.Default.People, contentDescription = null) },
+                value = input.contributionMonths,
+                onValueChange = { onInputChange(input.copy(contributionMonths = it)) },
+                label = { Text("Số tháng đóng BHXH") },
+                placeholder = { Text("Ví dụ: 120") },
+                leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PTITPrimary,
-                    focusedLabelColor = PTITPrimary
+                    focusedBorderColor = PTITInfo,
+                    focusedLabelColor = PTITInfo
                 )
             )
 
-            // Region Selection
+            // Insurance Type Selection
+            Text(
+                text = "Loại bảo hiểm xã hội",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = PTITTextPrimary
+            )
+            
+            BHXHType.values().forEach { type ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onInputChange(input.copy(insuranceType = type)) }
+                        .padding(vertical = PTITSpacing.xs),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = input.insuranceType == type,
+                        onClick = { onInputChange(input.copy(insuranceType = type)) },
+                        colors = RadioButtonDefaults.colors(selectedColor = PTITInfo)
+                    )
+                    Text(
+                        text = type.displayName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PTITTextPrimary,
+                        modifier = Modifier.padding(start = PTITSpacing.xs)
+                    )
+                }
+            }
+
+            // Region Level Selection
             Text(
                 text = "Vùng lương tối thiểu",
                 style = MaterialTheme.typography.bodyMedium,
@@ -262,31 +280,27 @@ private fun SalaryInputForm(
             ) {
                 (1..4).forEach { region ->
                     FilterChip(
-                        selected = input.region == region,
-                        onClick = { onInputChange(input.copy(region = region)) },
+                        selected = input.regionLevel == region,
+                        onClick = { onInputChange(input.copy(regionLevel = region)) },
                         label = { Text("Vùng $region") },
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // Unemployment Insurance Checkbox
-            Row(
+            // Dependents Input
+            OutlinedTextField(
+                value = input.dependents,
+                onValueChange = { onInputChange(input.copy(dependents = it)) },
+                label = { Text("Số người phụ thuộc") },
+                placeholder = { Text("0") },
+                leadingIcon = { Icon(Icons.Default.People, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = input.hasUnemploymentInsurance,
-                    onCheckedChange = { onInputChange(input.copy(hasUnemploymentInsurance = it)) },
-                    colors = CheckboxDefaults.colors(checkedColor = PTITPrimary)
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PTITInfo,
+                    focusedLabelColor = PTITInfo
                 )
-                Text(
-                    text = "Đóng bảo hiểm thất nghiệp",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PTITTextPrimary,
-                    modifier = Modifier.padding(start = PTITSpacing.xs)
-                )
-            }
+            )
 
             // Validation Errors
             if (validationErrors.isNotEmpty()) {
@@ -323,7 +337,7 @@ private fun SalaryInputForm(
 
 // --- Calculate Button Component ---
 @Composable
-private fun SalaryCalculateButton(
+private fun BHXHCalculateButton(
     isLoading: Boolean,
     onCalculate: () -> Unit
 ) {
@@ -334,7 +348,7 @@ private fun SalaryCalculateButton(
             .fillMaxWidth()
             .height(56.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = PTITPrimary,
+            containerColor = PTITInfo,
             contentColor = Color.White
         )
     ) {
@@ -351,7 +365,7 @@ private fun SalaryCalculateButton(
             )
             Spacer(modifier = Modifier.width(PTITSpacing.sm))
             Text(
-                text = "Tính toán",
+                text = "Tính BHXH",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -361,16 +375,15 @@ private fun SalaryCalculateButton(
 
 // --- Result Card Component ---
 @Composable
-private fun SalaryResultCard(
-    result: SalaryCalculationResult,
-    calculationType: SalaryCalculationType,
+private fun BHXHResultCard(
+    result: BHXHResult,
     onClearResult: () -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(true) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PTITSuccess.copy(alpha = 0.1f)),
+        colors = CardDefaults.cardColors(containerColor = PTITInfo.copy(alpha = 0.1f)),
         elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
@@ -385,17 +398,17 @@ private fun SalaryResultCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Kết quả tính toán",
+                    text = "Kết quả tính BHXH",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PTITSuccess
+                    color = PTITInfo
                 )
                 Row {
                     IconButton(onClick = { isExpanded = !isExpanded }) {
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = null,
-                            tint = PTITSuccess
+                            tint = PTITInfo
                         )
                     }
                     IconButton(onClick = onClearResult) {
@@ -413,65 +426,87 @@ private fun SalaryResultCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
                 ) {
-                    Divider(color = PTITSuccess.copy(alpha = 0.3f))
+                    Divider(color = PTITInfo.copy(alpha = 0.3f))
 
                     // Main Results
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = PTITInfo.copy(alpha = 0.05f))
                     ) {
-                        Column {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(PTITSpacing.md),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
-                                text = "Lương GROSS",
+                                text = "Tổng số tiền BHXH dự kiến",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = PTITTextSecondary
+                                color = PTITTextSecondary,
+                                textAlign = TextAlign.Center
                             )
                             Text(
-                                text = formatCurrency(result.grossSalary),
-                                style = MaterialTheme.typography.titleLarge,
+                                text = formatCurrency(result.totalAmount.toLong()),
+                                style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = PTITPrimary
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "Lương NET",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = PTITTextSecondary
-                            )
-                            Text(
-                                text = formatCurrency(result.netSalary),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = PTITSuccess
+                                color = PTITInfo,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
 
                     Divider(color = PTITNeutral200)
 
-                    // Breakdown
-                    Text(
-                        text = "Chi tiết khấu trừ",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = PTITTextPrimary
-                    )
+                    // Detailed Information
+                    BHXHDetailRow("Lương trung bình", formatCurrency(result.averageSalary.toLong()))
+                    BHXHDetailRow("Tổng số tháng đóng", "${result.totalMonths} tháng")
+                    BHXHDetailRow("Loại BHXH", result.calculationType.displayName)
 
-                    SalaryBreakdownItem("BHXH (8%)", result.socialInsurance)
-                    SalaryBreakdownItem("BHYT (1.5%)", result.healthInsurance)
-                    if (result.unemploymentInsurance > 0) {
-                        SalaryBreakdownItem("BHTN (1%)", result.unemploymentInsurance)
-                    }
-                    SalaryBreakdownItem("Thuế TNCN", result.personalIncomeTax)
-                    
                     Divider(color = PTITNeutral200)
-                    
-                    SalaryBreakdownItem(
-                        "Tổng khấu trừ", 
-                        result.totalDeductions,
-                        isTotal = true
-                    )
+
+                    // Periods Information
+                    if (result.periods.isNotEmpty()) {
+                        Text(
+                            text = "Chi tiết thời gian đóng",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PTITTextPrimary
+                        )
+                        
+                        result.periods.forEach { period ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = PTITNeutral50)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(PTITSpacing.sm)
+                                ) {
+                                    Text(
+                                        text = "Giai đoạn ${period.startYear} - ${period.endYear ?: "hiện tại"}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PTITTextPrimary
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Số tháng: ${period.months}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = PTITTextSecondary
+                                        )
+                                        Text(
+                                            text = "Lương: ${formatCurrency(period.averageSalary)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = PTITTextSecondary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -479,10 +514,9 @@ private fun SalaryResultCard(
 }
 
 @Composable
-private fun SalaryBreakdownItem(
+private fun BHXHDetailRow(
     label: String,
-    amount: Long,
-    isTotal: Boolean = false
+    value: String
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -491,15 +525,14 @@ private fun SalaryBreakdownItem(
     ) {
         Text(
             text = label,
-            style = if (isTotal) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal,
+            style = MaterialTheme.typography.bodyMedium,
             color = PTITTextPrimary
         )
         Text(
-            text = formatCurrency(amount),
-            style = if (isTotal) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal,
-            color = if (isTotal) PTITError else PTITTextSecondary
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = PTITTextSecondary
         )
     }
 }
@@ -536,10 +569,10 @@ private fun ErrorCard(message: String) {
 
 // --- Information Section ---
 @Composable
-private fun SalaryInformationSection() {
+private fun BHXHInformationSection() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PTITInfo.copy(alpha = 0.1f)),
+        colors = CardDefaults.cardColors(containerColor = PTITWarning.copy(alpha = 0.1f)),
         elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
     ) {
         Column(
@@ -554,58 +587,32 @@ private fun SalaryInformationSection() {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
-                    tint = PTITInfo,
+                    tint = PTITWarning,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Thông tin tham khảo",
+                    text = "Thông tin quan trọng",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PTITInfo,
+                    color = PTITWarning,
                     modifier = Modifier.padding(start = PTITSpacing.sm)
                 )
             }
             
             Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Tỷ lệ đóng bảo hiểm 2025:\n")
-                    }
-                    append("  - BHXH: 8% lương đóng bảo hiểm\n")
-                    append("  - BHYT: 1.5% lương đóng bảo hiểm\n")
-                    append("  - BHTN: 1% lương đóng bảo hiểm\n\n")
-                    
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Giảm trừ thuế TNCN:\n")
-                    }
-                    append("  - Bản thân: 11.000.000 VNĐ/tháng\n")
-                    append("  - Người phụ thuộc: 4.400.000 VNĐ/người/tháng\n\n")
-                    
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Lưu ý: ")
-                    }
-                    append("Kết quả tính toán chỉ mang tính chất tham khảo")
-                },
+                text = """
+                • Điều kiện hưởng lương hưu:
+                  - Nam: đủ 60 tuổi và có ít nhất 20 năm đóng BHXH
+                  - Nữ: đủ 55 tuổi và có ít nhất 20 năm đóng BHXH
+                
+                • Mức hưởng BHXH = 45% + 2% x số năm đóng vượt quá 15 năm
+                • Tối đa 75% lương đóng BHXH trung bình
+                
+                • Lưu ý: Kết quả chỉ mang tính chất ước tính, tham khảo
+                """.trimIndent(),
                 style = MaterialTheme.typography.bodySmall,
                 color = PTITTextSecondary
             )
         }
-    }
-}
-
-
-// --- Preview ---
-@Preview(showBackground = true, widthDp = 1200, heightDp = 2000)
-@Composable
-fun SalaryCalculatorScreenPreview() {
-    MaterialTheme {
-        // Preview with some default state
-        SalaryCalculatorScreen(
-            uiState = CalculatorUiState(input = SalaryInput()),
-            onInputChange = {},
-            onCalculate = {},
-            onClearResult = {},
-            onBack = {}
-        )
     }
 }

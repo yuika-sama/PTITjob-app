@@ -1,15 +1,10 @@
 package com.example.ptitjob.ui.screen.candidate.utilities
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,33 +13,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ptitjob.ui.screen.candidate.utilities.calculations.UnemploymentInsuranceCalculator
 import com.example.ptitjob.ui.screen.candidate.utilities.calculations.formatCurrency
 import com.example.ptitjob.ui.screen.candidate.utilities.models.*
 import com.example.ptitjob.ui.theme.*
 
 // --- Route Component with ViewModel Integration ---
 @Composable
-fun SalaryCalculatorRoute(
+fun UnemploymentInsuranceRoute(
     onBack: () -> Unit,
     viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.salaryState.collectAsStateWithLifecycle()
+    val uiState by viewModel.unemploymentState.collectAsStateWithLifecycle()
     
-    SalaryCalculatorScreen(
+    UnemploymentInsuranceScreen(
         uiState = uiState,
-        onInputChange = viewModel::updateSalaryInput,
-        onCalculate = viewModel::calculateSalary,
-        onClearResult = viewModel::clearSalaryResult,
+        onInputChange = viewModel::updateUnemploymentInput,
+        onCalculate = viewModel::calculateUnemployment,
+        onClearResult = viewModel::clearUnemploymentResult,
         onBack = onBack
     )
 }
@@ -52,9 +44,9 @@ fun SalaryCalculatorRoute(
 // --- Main Screen Component ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SalaryCalculatorScreen(
-    uiState: CalculatorUiState<SalaryInput>,
-    onInputChange: (SalaryInput) -> Unit,
+fun UnemploymentInsuranceScreen(
+    uiState: CalculatorUiState<UnemploymentInput>,
+    onInputChange: (UnemploymentInput) -> Unit,
     onCalculate: () -> Unit,
     onClearResult: () -> Unit,
     onBack: () -> Unit
@@ -64,7 +56,7 @@ fun SalaryCalculatorScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Tính lương Gross - Net",
+                        text = "Bảo hiểm thất nghiệp",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
@@ -107,7 +99,21 @@ fun SalaryCalculatorScreen(
             ) {
                 // --- Header Banner ---
                 item {
-                    SalaryCalculateButton(
+                    UnemploymentHeaderBanner()
+                }
+
+                // --- Input Form ---
+                item {
+                    UnemploymentInputForm(
+                        input = uiState.input,
+                        validationErrors = uiState.validationErrors,
+                        onInputChange = onInputChange
+                    )
+                }
+
+                // --- Calculate Button ---
+                item {
+                    UnemploymentCalculateButton(
                         isLoading = uiState.isLoading,
                         onCalculate = onCalculate
                     )
@@ -122,80 +128,74 @@ fun SalaryCalculatorScreen(
 
                 // --- Results ---
                 if (uiState.hasResult) {
-                    val result = uiState.result as SalaryCalculationResult
+                    val result = uiState.result as UnemploymentResult
                     item {
-                        SalaryResultCard(
+                        UnemploymentResultCard(
                             result = result,
-                            calculationType = uiState.input.calculationType,
                             onClearResult = onClearResult
                         )
                     }
                 }
 
-                // --- Information Section ---
+                // --- Benefits Information ---
                 item {
-                    SalaryInformationSection()
+                    UnemploymentBenefitsInformation()
+                }
+
+                // --- Requirements Information ---
+                item {
+                    UnemploymentRequirementsInformation()
                 }
             }
         }
     }
 }
 
-// --- Calculator Type Selector ---
+// --- Header Banner Component ---
 @Composable
-private fun SalaryCalculatorTypeSelector(
-    selectedType: SalaryCalculationType,
-    onTypeChange: (SalaryCalculationType) -> Unit
-) {
+private fun UnemploymentHeaderBanner() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = PTITSurfaceLight),
         elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(PTITSpacing.md)
+                .padding(PTITSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Chọn loại tính toán",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = PTITTextPrimary,
-                modifier = Modifier.padding(bottom = PTITSpacing.sm)
+            Icon(
+                imageVector = Icons.Default.Security,
+                contentDescription = null,
+                tint = PTITPrimary,
+                modifier = Modifier.size(48.dp)
             )
-            
-            SalaryCalculationType.values().forEach { type ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onTypeChange(type) }
-                        .padding(vertical = PTITSpacing.xs),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = selectedType == type,
-                        onClick = { onTypeChange(type) },
-                        colors = RadioButtonDefaults.colors(selectedColor = PTITPrimary)
-                    )
-                    Text(
-                        text = type.displayName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PTITTextPrimary,
-                        modifier = Modifier.padding(start = PTITSpacing.xs)
-                    )
-                }
+            Spacer(modifier = Modifier.width(PTITSpacing.md))
+            Column {
+                Text(
+                    text = "Bảo hiểm thất nghiệp",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextPrimary
+                )
+                Text(
+                    text = "Tính toán trợ cấp thất nghiệp theo quy định mới nhất",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PTITTextSecondary
+                )
             }
         }
     }
 }
 
 // --- Input Form Component ---
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SalaryInputForm(
-    input: SalaryInput,
+private fun UnemploymentInputForm(
+    input: UnemploymentInput,
     validationErrors: List<String>,
-    onInputChange: (SalaryInput) -> Unit
+    onInputChange: (UnemploymentInput) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -209,22 +209,17 @@ private fun SalaryInputForm(
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
         ) {
             Text(
-                text = "Thông tin đầu vào",
+                text = "Thông tin tính toán",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = PTITTextPrimary
             )
 
-            // Salary Input
+            // Average Salary Input
             OutlinedTextField(
-                value = input.inputSalary,
-                onValueChange = { onInputChange(input.copy(inputSalary = it)) },
-                label = { 
-                    Text(when (input.calculationType) {
-                        SalaryCalculationType.GROSS_TO_NET -> "Lương GROSS (VNĐ)"
-                        SalaryCalculationType.NET_TO_GROSS -> "Lương NET mong muốn (VNĐ)"
-                    })
-                },
+                value = input.averageSalary,
+                onValueChange = { onInputChange(input.copy(averageSalary = it)) },
+                label = { Text("Lương bình quân 6 tháng (VNĐ)") },
                 placeholder = { Text("Ví dụ: 15000000") },
                 leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
@@ -234,13 +229,27 @@ private fun SalaryInputForm(
                 )
             )
 
-            // Dependents Input
+            // Contribution Months Input
             OutlinedTextField(
-                value = input.dependents,
-                onValueChange = { onInputChange(input.copy(dependents = it)) },
-                label = { Text("Số người phụ thuộc") },
-                placeholder = { Text("0") },
-                leadingIcon = { Icon(Icons.Default.People, contentDescription = null) },
+                value = input.contributionMonths,
+                onValueChange = { onInputChange(input.copy(contributionMonths = it)) },
+                label = { Text("Số tháng đóng BHTN") },
+                placeholder = { Text("12") },
+                leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PTITPrimary,
+                    focusedLabelColor = PTITPrimary
+                )
+            )
+
+            // Age Input
+            OutlinedTextField(
+                value = input.currentAge,
+                onValueChange = { onInputChange(input.copy(currentAge = it)) },
+                label = { Text("Tuổi") },
+                placeholder = { Text("30") },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PTITPrimary,
@@ -249,42 +258,56 @@ private fun SalaryInputForm(
             )
 
             // Region Selection
-            Text(
-                text = "Vùng lương tối thiểu",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = PTITTextPrimary
-            )
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+            var regionExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = regionExpanded,
+                onExpandedChange = { regionExpanded = it }
             ) {
-                (1..4).forEach { region ->
-                    FilterChip(
-                        selected = input.region == region,
-                        onClick = { onInputChange(input.copy(region = region)) },
-                        label = { Text("Vùng $region") },
-                        modifier = Modifier.weight(1f)
+                OutlinedTextField(
+                    value = "Vùng ${input.regionLevel.coerceIn(1,4)}",
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Vùng lương tối thiểu") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = regionExpanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PTITPrimary,
+                        focusedLabelColor = PTITPrimary
                     )
+                )
+                ExposedDropdownMenu(
+                    expanded = regionExpanded,
+                    onDismissRequest = { regionExpanded = false }
+                ) {
+                    (1..4).forEach { region ->
+                        DropdownMenuItem(
+                            text = { Text("Vùng $region") },
+                            onClick = {
+                                onInputChange(input.copy(regionLevel = region))
+                                regionExpanded = false
+                            }
+                        )
+                    }
                 }
             }
 
-            // Unemployment Insurance Checkbox
+            // Job Training Checkbox
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
-                    checked = input.hasUnemploymentInsurance,
-                    onCheckedChange = { onInputChange(input.copy(hasUnemploymentInsurance = it)) },
+                    checked = input.hasVocationalTraining,
+                    onCheckedChange = { onInputChange(input.copy(hasVocationalTraining = it)) },
                     colors = CheckboxDefaults.colors(checkedColor = PTITPrimary)
                 )
                 Text(
-                    text = "Đóng bảo hiểm thất nghiệp",
+                    text = "Tham gia học nghề/đào tạo kỹ năng",
                     style = MaterialTheme.typography.bodyMedium,
                     color = PTITTextPrimary,
-                    modifier = Modifier.padding(start = PTITSpacing.xs)
+                    modifier = Modifier.padding(start = PTITSpacing.sm)
                 )
             }
 
@@ -323,7 +346,7 @@ private fun SalaryInputForm(
 
 // --- Calculate Button Component ---
 @Composable
-private fun SalaryCalculateButton(
+private fun UnemploymentCalculateButton(
     isLoading: Boolean,
     onCalculate: () -> Unit
 ) {
@@ -351,7 +374,7 @@ private fun SalaryCalculateButton(
             )
             Spacer(modifier = Modifier.width(PTITSpacing.sm))
             Text(
-                text = "Tính toán",
+                text = "Tính trợ cấp",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -361,16 +384,15 @@ private fun SalaryCalculateButton(
 
 // --- Result Card Component ---
 @Composable
-private fun SalaryResultCard(
-    result: SalaryCalculationResult,
-    calculationType: SalaryCalculationType,
+private fun UnemploymentResultCard(
+    result: UnemploymentResult,
     onClearResult: () -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(true) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PTITSuccess.copy(alpha = 0.1f)),
+        colors = CardDefaults.cardColors(containerColor = PTITPrimary.copy(alpha = 0.1f)),
         elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
@@ -388,14 +410,14 @@ private fun SalaryResultCard(
                     text = "Kết quả tính toán",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PTITSuccess
+                    color = PTITPrimary
                 )
                 Row {
                     IconButton(onClick = { isExpanded = !isExpanded }) {
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = null,
-                            tint = PTITSuccess
+                            tint = PTITPrimary
                         )
                     }
                     IconButton(onClick = onClearResult) {
@@ -413,65 +435,94 @@ private fun SalaryResultCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
                 ) {
-                    Divider(color = PTITSuccess.copy(alpha = 0.3f))
+                    Divider(color = PTITPrimary.copy(alpha = 0.3f))
 
-                    // Main Results
+                    // Main Results Summary
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
                             Text(
-                                text = "Lương GROSS",
+                                text = "Trợ cấp hàng tháng",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = PTITTextSecondary
                             )
                             Text(
-                                text = formatCurrency(result.grossSalary),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = PTITPrimary
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "Lương NET",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = PTITTextSecondary
-                            )
-                            Text(
-                                text = formatCurrency(result.netSalary),
+                                text = formatCurrency(result.monthlyBenefit),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = PTITSuccess
                             )
                         }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Tổng số tháng",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PTITTextPrimary
+                            )
+                            Text(
+                                text = "${result.monthlyBenefit} tháng",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = PTITPrimary
+                            )
+                        }
+                    }
+
+                    // Total Benefit
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = PTITSuccess.copy(alpha = 0.1f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(PTITSpacing.md),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Tổng trợ cấp dự kiến",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PTITTextSecondary
+                            )
+                            Text(
+                                text = formatCurrency(result.totalBenefit),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PTITSuccess,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
                     Divider(color = PTITNeutral200)
 
-                    // Breakdown
+                    // Details
                     Text(
-                        text = "Chi tiết khấu trừ",
+                        text = "Chi tiết tính toán",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = PTITTextPrimary
                     )
 
-                    SalaryBreakdownItem("BHXH (8%)", result.socialInsurance)
-                    SalaryBreakdownItem("BHYT (1.5%)", result.healthInsurance)
-                    if (result.unemploymentInsurance > 0) {
-                        SalaryBreakdownItem("BHTN (1%)", result.unemploymentInsurance)
+                    // Display basic result fields (model provides limited fields)
+                    UnemploymentDetailRow("Trợ cấp hàng tháng (ước tính)", formatCurrency(result.monthlyBenefit))
+                    UnemploymentDetailRow("Thời gian tối đa nhận trợ cấp", "${result.maxDuration} tháng")
+                    UnemploymentDetailRow("Tổng trợ cấp dự kiến", formatCurrency(result.totalBenefit))
+                    UnemploymentDetailRow("Tình trạng đủ điều kiện", result.eligibilityStatus.displayName)
+                    if (result.requirements.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Yêu cầu/ghi chú:",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PTITTextPrimary
+                        )
+                        result.requirements.forEach { req ->
+                            UnemploymentDetailRow("-", req)
+                        }
                     }
-                    SalaryBreakdownItem("Thuế TNCN", result.personalIncomeTax)
-                    
-                    Divider(color = PTITNeutral200)
-                    
-                    SalaryBreakdownItem(
-                        "Tổng khấu trừ", 
-                        result.totalDeductions,
-                        isTotal = true
-                    )
                 }
             }
         }
@@ -479,10 +530,10 @@ private fun SalaryResultCard(
 }
 
 @Composable
-private fun SalaryBreakdownItem(
+private fun UnemploymentDetailRow(
     label: String,
-    amount: Long,
-    isTotal: Boolean = false
+    value: String,
+    isHighlight: Boolean = false
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -491,15 +542,15 @@ private fun SalaryBreakdownItem(
     ) {
         Text(
             text = label,
-            style = if (isTotal) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal,
+            style = if (isHighlight) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isHighlight) FontWeight.Bold else FontWeight.Normal,
             color = PTITTextPrimary
         )
         Text(
-            text = formatCurrency(amount),
-            style = if (isTotal) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal,
-            color = if (isTotal) PTITError else PTITTextSecondary
+            text = value,
+            style = if (isHighlight) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isHighlight) FontWeight.Bold else FontWeight.Normal,
+            color = if (isHighlight) PTITPrimary else PTITTextSecondary
         )
     }
 }
@@ -534,9 +585,53 @@ private fun ErrorCard(message: String) {
     }
 }
 
-// --- Information Section ---
+// --- Benefits Information ---
 @Composable
-private fun SalaryInformationSection() {
+private fun UnemploymentBenefitsInformation() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = PTITSuccess.copy(alpha = 0.1f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(PTITSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MonetizationOn,
+                    contentDescription = null,
+                    tint = PTITSuccess,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = "Mức trợ cấp thất nghiệp",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PTITSuccess,
+                    modifier = Modifier.padding(start = PTITSpacing.sm)
+                )
+            }
+            
+            Text(
+                text = "• 60% lương bình quân 6 tháng gần nhất\n" +
+                        "• Tối đa 5 lần mức lương tối thiểu vùng\n" +
+                        "• Thời gian hưởng: 3-12 tháng tùy số tháng đóng BHTN\n" +
+                        "• Tham gia học nghề có thể kéo dài thêm 1-3 tháng",
+                style = MaterialTheme.typography.bodySmall,
+                color = PTITTextSecondary
+            )
+        }
+    }
+}
+
+// --- Requirements Information ---
+@Composable
+private fun UnemploymentRequirementsInformation() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = PTITInfo.copy(alpha = 0.1f)),
@@ -552,60 +647,29 @@ private fun SalaryInformationSection() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info,
+                    imageVector = Icons.Default.AssignmentTurnedIn,
                     contentDescription = null,
                     tint = PTITInfo,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Thông tin tham khảo",
+                    text = "Điều kiện hưởng BHTN",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = PTITInfo,
                     modifier = Modifier.padding(start = PTITSpacing.sm)
                 )
             }
+
             
             Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Tỷ lệ đóng bảo hiểm 2025:\n")
-                    }
-                    append("  - BHXH: 8% lương đóng bảo hiểm\n")
-                    append("  - BHYT: 1.5% lương đóng bảo hiểm\n")
-                    append("  - BHTN: 1% lương đóng bảo hiểm\n\n")
-                    
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Giảm trừ thuế TNCN:\n")
-                    }
-                    append("  - Bản thân: 11.000.000 VNĐ/tháng\n")
-                    append("  - Người phụ thuộc: 4.400.000 VNĐ/người/tháng\n\n")
-                    
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Lưu ý: ")
-                    }
-                    append("Kết quả tính toán chỉ mang tính chất tham khảo")
-                },
-                style = MaterialTheme.typography.bodySmall,
+                text = "• Đóng BHTN đủ 12 tháng trở lên trong 24 tháng gần nhất\n" +
+                        "• Chấm dứt hợp đồng lao động không phải do lỗi của người lao động\n" +
+                        "• Đã nộp hồ sơ tại trung tâm dịch vụ việc làm\n" +
+                        "• Chưa tìm được việc làm phù hợp sau 15 ngày",
+                style = MaterialTheme.typography.bodyMedium,
                 color = PTITTextSecondary
             )
         }
-    }
-}
-
-
-// --- Preview ---
-@Preview(showBackground = true, widthDp = 1200, heightDp = 2000)
-@Composable
-fun SalaryCalculatorScreenPreview() {
-    MaterialTheme {
-        // Preview with some default state
-        SalaryCalculatorScreen(
-            uiState = CalculatorUiState(input = SalaryInput()),
-            onInputChange = {},
-            onCalculate = {},
-            onClearResult = {},
-            onBack = {}
-        )
     }
 }
