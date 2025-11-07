@@ -38,8 +38,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Base API URL for Retrofit (10.0.2.2 points to host machine from Android emulator)
-    buildConfigField("String", "API_URL", "\"$primaryApiUrl\"")
-    buildConfigField("String", "AI_API_URL", "\"$aiApiUrl\"")
+        buildConfigField("String", "API_URL", "\"$primaryApiUrl\"")
+        buildConfigField("String", "AI_API_URL", "\"$aiApiUrl\"")
     }
 
     buildTypes {
@@ -63,6 +63,13 @@ android {
         compose = true
         buildConfig= true
     }
+}
+
+// Exclude legacy Sceneform + old Kotlin Android Extensions to avoid duplicate classes
+configurations.configureEach {
+    exclude(group = "com.google.ar.sceneform", module = "sceneform-base")
+    exclude(group = "com.google.ar.sceneform", module = "assets")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-android-extensions-runtime")
 }
 
 dependencies {
@@ -118,4 +125,8 @@ dependencies {
 
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.foundation:foundation-layout")
+
+    // Sceneform for 3D/AR rendering (maintained)
+    // Use a version available on Maven Central and rely on its transitive modules (core, ux)
+    implementation("com.gorisse.thomas.sceneform:sceneform:1.23.0")
 }

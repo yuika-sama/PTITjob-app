@@ -1,11 +1,11 @@
 package com.example.ptitjob.ui.screen.candidate.utilities
 
 import androidx.compose.runtime.Composable
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.ptitjob.ui.screen.candidate.experience3d.CareerFair3DScreen
 
 /**
  * Comprehensive navigation handler for all Utility Calculators
@@ -20,6 +20,7 @@ object UtilityRoutes {
     const val SALARY_CALCULATOR = "salary_calculator"
     const val UNEMPLOYMENT_INSURANCE = "unemployment_insurance"
     const val COMPOUND_INTEREST = "compound_interest"
+    const val CAREER_FAIR_3D = "career_fair_3d"
     const val NOT_FOUND = "not_found"
 }
 
@@ -50,6 +51,9 @@ fun UtilitiesNavigation(
                 },
                 onNavigateToCompoundInterest = {
                     navController.navigate(UtilityRoutes.COMPOUND_INTEREST)
+                },
+                onNavigateToCareerFair3D = {
+                    navController.navigate(UtilityRoutes.CAREER_FAIR_3D)
                 },
                 onBack = onBack
             )
@@ -86,6 +90,13 @@ fun UtilitiesNavigation(
         // Compound Interest Calculator
         composable(UtilityRoutes.COMPOUND_INTEREST) {
             CompoundInterestRoute(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Career Fair 3D immersive space
+        composable(UtilityRoutes.CAREER_FAIR_3D) {
+            CareerFair3DScreen(
                 onBack = { navController.popBackStack() }
             )
         }
@@ -135,6 +146,7 @@ object UtilityNavigationHelper {
             "SALARYCALCULATOR" -> UtilityRoutes.SALARY_CALCULATOR
             "UNEMPLOYMENTINSURANCE" -> UtilityRoutes.UNEMPLOYMENT_INSURANCE
             "COMPOUNDINTEREST" -> UtilityRoutes.COMPOUND_INTEREST
+            "CAREERFAIR3D" -> UtilityRoutes.CAREER_FAIR_3D
             else -> UtilityRoutes.NOT_FOUND
         }
     }
@@ -149,6 +161,7 @@ object UtilityNavigationHelper {
             UtilityRoutes.SALARY_CALCULATOR -> "Tính lương NET/GROSS"
             UtilityRoutes.UNEMPLOYMENT_INSURANCE -> "Bảo hiểm thất nghiệp"
             UtilityRoutes.COMPOUND_INTEREST -> "Lãi suất kép"
+            UtilityRoutes.CAREER_FAIR_3D -> "Sảnh việc làm 3D"
             else -> "Calculator"
         }
     }

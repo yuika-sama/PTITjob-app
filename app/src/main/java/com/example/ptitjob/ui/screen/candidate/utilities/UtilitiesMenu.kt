@@ -33,6 +33,7 @@ data class UtilityItem(
 @Composable
 fun UtilitiesScreenRoute(
     onNavigateToCalculator: (String) -> Unit,
+    onNavigateToAIService: (String) -> Unit,
     onBack: () -> Unit,
     viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
@@ -42,13 +43,17 @@ fun UtilitiesScreenRoute(
         onNavigateToSalaryCalculator = { onNavigateToCalculator("salary_calculator") },
         onNavigateToUnemploymentInsurance = { onNavigateToCalculator("unemployment_calculator") },
         onNavigateToCompoundInterest = { onNavigateToCalculator("compound_interest") },
+        onNavigateToCareerFair3D = { onNavigateToCalculator("career_fair_3d") },
+        onNavigateToCVEvaluation = { onNavigateToAIService("cv_evaluation") },
+        onNavigateToInterviewEmulate = { onNavigateToAIService("interview_emulate") },
         onBack = onBack
     )
 }
 
 /**
  * Menu chính cho Utilities/Calculators
- * Hiển thị tất cả các công cụ tính toán cho candidate
+ * Hiển thị tất cả các công cụ tính toán và tiện ích cho candidate
+ * Bao gồm cả các tính năng AI và trải nghiệm 3D
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,11 +63,40 @@ fun UtilitiesMenu(
     onNavigateToSalaryCalculator: () -> Unit,
     onNavigateToUnemploymentInsurance: () -> Unit,
     onNavigateToCompoundInterest: () -> Unit,
+    onNavigateToCareerFair3D: () -> Unit,
+    onNavigateToCVEvaluation: () -> Unit = {},
+    onNavigateToInterviewEmulate: () -> Unit = {},
     onBack: () -> Unit
 ) {
     val utilities = listOf(
+        // Tính năng AI Services
         UtilityItem(
-            title = "📋 Tính BHXH",
+            title = "🤖 Đánh giá CV",
+            description = "Sử dụng AI để phân tích và đưa ra nhận xét về CV của bạn",
+            icon = "📄",
+            color = PTITSecondary,
+            onClick = onNavigateToCVEvaluation
+        ),
+        UtilityItem(
+            title = "🎤 Mô phỏng phỏng vấn",
+            description = "Luyện tập phỏng vấn với AI và nhận phản hồi",
+            icon = "�",
+            color = PTITPrimary,
+            onClick = onNavigateToInterviewEmulate
+        ),
+        
+        // Tính năng 3D
+        UtilityItem(
+            title = "🌐 Sảnh việc làm 3D",
+            description = "Trải nghiệm hội chợ nghề nghiệp ảo với dữ liệu cố định",
+            icon = "🧭",
+            color = PTITPrimaryDark,
+            onClick = onNavigateToCareerFair3D
+        ),
+        
+        // Các công cụ tính toán
+        UtilityItem(
+            title = "�📋 Tính BHXH",
             description = "Tính toán bảo hiểm xã hội, bảo hiểm y tế",
             icon = "🏥",
             color = PTITInfo,
@@ -86,14 +120,14 @@ fun UtilitiesMenu(
             title = "🛡️ Bảo hiểm thất nghiệp",
             description = "Tính toán trợ cấp thất nghiệp",
             icon = "🤝",
-            color = PTITSecondary,
+            color = PTITSecondary.copy(alpha = 0.8f),
             onClick = onNavigateToUnemploymentInsurance
         ),
         UtilityItem(
             title = "📈 Lãi suất kép",
             description = "Tính toán lãi suất kép và đầu tư",
             icon = "💹",
-            color = PTITPrimary,
+            color = PTITPrimary.copy(alpha = 0.9f),
             onClick = onNavigateToCompoundInterest
         )
     )
@@ -103,7 +137,7 @@ fun UtilitiesMenu(
             TopAppBar(
                 title = {
                     Text(
-                        text = "🧮 Công cụ hỗ trợ",
+                        text = "🧮 Công cụ & Tiện ích",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
@@ -132,7 +166,7 @@ fun UtilitiesMenu(
         ) {
             item {
                 Text(
-                    text = "Các công cụ tính toán giúp bạn lập kế hoạch tài chính tốt hơn",
+                    text = "Tổng hợp các công cụ AI, tính toán tài chính và trải nghiệm ảo giúp bạn trong hành trình tìm việc",
                     fontSize = 14.sp,
                     color = PTITTextSecondary,
                     lineHeight = 20.sp,

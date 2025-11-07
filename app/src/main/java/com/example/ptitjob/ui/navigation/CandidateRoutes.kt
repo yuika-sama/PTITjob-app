@@ -36,6 +36,9 @@ sealed class CandidateRoutes(val route: String) {
     object SalaryCalculator : CandidateRoutes("candidate/salary-calculator")
     object UnemploymentInsurance : CandidateRoutes("candidate/unemployment-insurance")
     object CompoundInterest : CandidateRoutes("candidate/compound-interest")
+
+    // Immersive experiences
+    object CareerFair3D : CandidateRoutes("candidate/career-fair-3d")
     
     // Profile
     object Profile : CandidateRoutes("candidate/profile")
@@ -68,14 +71,14 @@ enum class CandidateBottomNavItem(
         title = "Công ty",
         icon = "🏢"
     ),
-    AI_SERVICES(
-        route = CandidateRoutes.AIServicesMenu.route,
-        title = "AI",
-        icon = "🤖"
-    ),
     UTILITIES(
         route = CandidateRoutes.UtilitiesMenu.route,
         title = "Công cụ",
-        icon = "🧮"
+        icon = "�"
+    ),
+    PROFILE(
+        route = CandidateRoutes.Profile.route,
+        title = "Cá nhân",
+        icon = "👤"
     )
 }

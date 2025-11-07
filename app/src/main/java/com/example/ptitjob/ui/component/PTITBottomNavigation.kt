@@ -21,12 +21,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -88,10 +88,10 @@ fun PTITBottomNavigation(
             unselectedIcon = Icons.Outlined.Work
         ),
         BottomNavItem(
-            route = CandidateRoutes.AIServicesMenu.route,
-            label = "AI Services",
-            selectedIcon = Icons.Filled.Psychology,
-            unselectedIcon = Icons.Outlined.Psychology
+            route = CandidateRoutes.UtilitiesMenu.route,
+            label = "Utilities",
+            selectedIcon = Icons.Filled.Build,
+            unselectedIcon = Icons.Outlined.Build
         ),
         BottomNavItem(
             route = CandidateRoutes.Companies.route,
@@ -252,8 +252,14 @@ private fun isRouteSelected(currentRoute: String?, targetRoute: String): Boolean
                                          currentRoute == CandidateRoutes.BestJobs.route ||
                                          currentRoute == CandidateRoutes.AttractiveJobs.route ||
                                          currentRoute.startsWith("job_detail")
-        CandidateRoutes.AIServicesMenu.route -> currentRoute.startsWith("ai_") ||
-                                              currentRoute == CandidateRoutes.AIServicesMenu.route ||
+        CandidateRoutes.UtilitiesMenu.route -> currentRoute.startsWith("utilities") ||
+                                              currentRoute == CandidateRoutes.UtilitiesMenu.route ||
+                                              currentRoute == CandidateRoutes.BHXHCalculator.route ||
+                                              currentRoute == CandidateRoutes.PersonalIncomeTax.route ||
+                                              currentRoute == CandidateRoutes.SalaryCalculator.route ||
+                                              currentRoute == CandidateRoutes.UnemploymentInsurance.route ||
+                                              currentRoute == CandidateRoutes.CompoundInterest.route ||
+                                              currentRoute == CandidateRoutes.CareerFair3D.route ||
                                               currentRoute == CandidateRoutes.CVEvaluation.route ||
                                               currentRoute == CandidateRoutes.InterviewEmulate.route
         CandidateRoutes.Companies.route -> currentRoute.startsWith("compan") ||
@@ -296,7 +302,7 @@ private fun PTITBottomNavigationPreview() {
                 listOf(
                     Triple("Dashboard", Icons.Filled.Dashboard, true),
                     Triple("Jobs", Icons.Outlined.Work, false),
-                    Triple("AI Services", Icons.Outlined.Psychology, false),
+                    Triple("Utilities", Icons.Outlined.Build, false),
                     Triple("Companies", Icons.Outlined.Business, false),
                     Triple("Profile", Icons.Outlined.Person, false)
                 ).forEach { (label, icon, isSelected) ->

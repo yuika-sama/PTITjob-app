@@ -8,7 +8,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -32,7 +31,7 @@ import com.example.ptitjob.ui.screen.candidate.jobs.CandidateJobListRoute
 import com.example.ptitjob.ui.screen.candidate.jobs.JobSearchRoute
 import com.example.ptitjob.ui.screen.candidate.jobs.jobDetail.JobDetailsRoute
 import com.example.ptitjob.ui.screen.candidate.profile.ProfileRoute
-import com.example.ptitjob.ui.screen.candidate.profile.UserProfile
+import com.example.ptitjob.ui.screen.candidate.experience3d.CareerFair3DScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.BHXHCalculatorScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.CompoundInterestScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.PersonalIncomeTaxScreen
@@ -40,14 +39,7 @@ import com.example.ptitjob.ui.screen.candidate.utilities.SalaryCalculatorScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.UnemploymentInsuranceScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.UtilitiesMenu
 import com.example.ptitjob.data.model.Company
-import com.example.ptitjob.ui.screen.test.RouteTesterScreen
-import com.example.ptitjob.ui.navigation.DashboardSearchPayload
-import com.example.ptitjob.ui.screen.candidate.utilities.SalaryCalculatorRoute
 import com.example.ptitjob.ui.screen.candidate.utilities.UtilitiesViewModel
-import com.example.ptitjob.ui.screen.test.NavbarDemoScreen
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-
 /**
  * Navigation Graph cho Candidate
  * Quản lý tất cả routes và navigation cho ứng viên với authentication check
@@ -408,7 +400,32 @@ fun CandidateNavGraph(
                             restoreState = true
                         }
                     },
+                    onNavigateToCareerFair3D = {
+                        navController.navigate(CandidateRoutes.CareerFair3D.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToCVEvaluation = {
+                        navController.navigate(CandidateRoutes.CVEvaluation.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToInterviewEmulate = {
+                        navController.navigate(CandidateRoutes.InterviewEmulate.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onBack = { navController.navigateUp() }
+                )
+            }
+        }
+
+        composable(CandidateRoutes.CareerFair3D.route) {
+            ProtectedRoute(isAuthenticated, navController) {
+                CareerFair3DScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
@@ -472,26 +489,6 @@ fun CandidateNavGraph(
                             launchSingleTop = true
                         }
                     }
-                )
-            }
-        }
-
-        // ===== DEV/TEST ROUTES =====
-        composable(CandidateRoutes.RouteTester.route) {
-            ProtectedRoute(isAuthenticated, navController) {
-                RouteTesterScreen(
-                    onNavigate = { route ->
-                        navController.navigate(route) { launchSingleTop = true }
-                    },
-                    onBack = { navController.navigateUp() }
-                )
-            }
-        }
-
-        composable(CandidateRoutes.NavbarDemo.route) {
-            ProtectedRoute(isAuthenticated, navController) {
-                NavbarDemoScreen(
-                    onBack = { navController.navigateUp() }
                 )
             }
         }
