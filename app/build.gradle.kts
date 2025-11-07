@@ -21,6 +21,7 @@ fun resolveBaseUrl(key: String, defaultValue: String): String {
     return if (raw.endsWith("/")) raw else "$raw/"
 }
 
+//val primaryApiUrl = resolveBaseUrl("API_URL", "http://10.0.2.2:5000/api/")
 val primaryApiUrl = resolveBaseUrl("API_URL", "http://10.0.2.2:5000/api/")
 val aiApiUrl = resolveBaseUrl("AI_API_URL", "http://10.0.2.2:8000/api/")
 
