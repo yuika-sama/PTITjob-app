@@ -1,5 +1,6 @@
 package com.example.ptitjob.data.repository
 
+import android.content.SharedPreferences
 import com.example.ptitjob.data.api.auth.AuthApi
 import com.example.ptitjob.data.api.dto.ApiResponse
 import com.example.ptitjob.data.api.dto.AuthResponse
@@ -17,7 +18,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class AuthRepository @Inject constructor(
-    private val authApi: AuthApi
+    private val authApi: AuthApi,
+    private val sharedPreferences: SharedPreferences
 ) {
     
     suspend fun login(email: String, password: String): Result<ApiResponse<AuthResponse>> {
@@ -89,6 +91,63 @@ class AuthRepository @Inject constructor(
                 }
             } catch (e: Exception) {
                 Result.failure(e)
+            }
+        }
+    }
+    
+    suspend fun logout(): Result<ApiResponse<Any>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Get refresh token from SharedPreferences
+                val refreshToken = sharedPreferences.getString("refreshToken", null)
+                
+                var apiResult: Result<ApiResponse<Any>> = Result.success(
+                    ApiResponse(
+                        success = true,
+                        message = "Đăng xuất thành công",
+                        data = null
+                    )
+                )
+                
+                if (!refreshToken.isNullOrEmpty()) {
+                    // Call logout API with refresh token
+                    apiResult = logout(refreshToken)
+                }
+                
+                // Clear stored tokens and user data regardless of API result
+                sharedPreferences.edit().apply {
+                    remove("accessToken")
+                    remove("refreshToken")
+                    remove("ptitjob_user")
+                    apply()
+                }
+                
+                // Return success even if API call failed, as local data is cleared
+                Result.success(
+                    ApiResponse(
+                        success = true,
+                        message = "Đăng xuất thành công",
+                        data = null
+                    )
+                )
+                
+            } catch (e: Exception) {
+                // Even if logout API fails, clear local data
+                sharedPreferences.edit().apply {
+                    remove("accessToken")
+                    remove("refreshToken")
+                    remove("ptitjob_user")
+                    apply()
+                }
+                
+                // Return success as local data is cleared
+                Result.success(
+                    ApiResponse(
+                        success = true,
+                        message = "Đăng xuất thành công",
+                        data = null
+                    )
+                )
             }
         }
     }

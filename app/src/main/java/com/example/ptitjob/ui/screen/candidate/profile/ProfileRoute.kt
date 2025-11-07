@@ -4,10 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun ProfileRoute(
     onBack: () -> Unit = {},
+    onLogout: () -> Unit = {},
     vm: ProfileViewModel = hiltViewModel()
 ) {
     val user by vm.userState.collectAsState(initial = null)
@@ -26,6 +28,16 @@ fun ProfileRoute(
                 cb(success, message)
             }
         }
+
+    val handleLogout: () -> Unit = {
+        vm.logout { success, message ->
+            if (success) {
+                onLogout() // Navigate back to login
+            }
+            // If logout fails, we might want to show an error message
+            // but for now we'll let the UI handle it
+        }
+    }
 
     // Render the ProfileScreen with real callbacks
     ProfileScreen(
@@ -48,6 +60,7 @@ fun ProfileRoute(
         onBack = onBack,
         onUpdateProfile = { editData, callback -> handleUpdate(editData, callback) },
         onChangePassword = { passData, callback -> handleChangePassword(passData, callback) },
-        onSettingsNavigate = { /* TODO: route to settings screen if exists */ }
+        onSettingsNavigate = { /* TODO: route to settings screen if exists */ },
+        onLogout = handleLogout
     )
 }

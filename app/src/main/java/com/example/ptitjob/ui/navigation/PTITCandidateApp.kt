@@ -1,6 +1,7 @@
 package com.example.ptitjob.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.ptitjob.ui.component.PTITAppContainer
@@ -13,10 +14,16 @@ import com.example.ptitjob.ui.component.PTITAppContainer
 fun PTITCandidateApp(
     navController: NavHostController = rememberNavController()
 ) {
+    val viewModel: CandidateNavGraphViewModel = hiltViewModel()
+
+    // Redirect to the new PTIT App Container for consistent theming
     PTITAppContainer(
         navController = navController,
-        hasGradientBackground = false // Let individual screens handle their own backgrounds
+        hasGradientBackground = false // Let     individual screens handle their backgrounds
     ) {
-        CandidateNavGraph(navController = navController)
+        CandidateNavGraph(
+            navController = navController,
+            authRepository = viewModel.authRepository
+        )
     }
 }

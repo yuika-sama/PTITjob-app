@@ -79,7 +79,8 @@ fun ProfileScreen(
     onBack: () -> Unit = {},
     onUpdateProfile: (EditFormData, (Boolean, String?) -> Unit) -> Unit = { _, cb -> cb(true, null) },
     onChangePassword: (PasswordFormData, (Boolean, String?) -> Unit) -> Unit = { _, cb -> cb(true, null) },
-    onSettingsNavigate: () -> Unit = {}
+    onSettingsNavigate: () -> Unit = {},
+    onLogout: () -> Unit = {},
 ) {
     var editDialogOpen by remember { mutableStateOf(false) }
     var passwordDialogOpen by remember { mutableStateOf(false) }
@@ -240,6 +241,14 @@ fun ProfileScreen(
                 // Footer spacing
                 item {
                     Spacer(modifier = Modifier.height(PTITSpacing.xl))
+                }
+
+                item {
+                    Button(onClick = onLogout, colors = ButtonDefaults.buttonColors(containerColor = PTITError)) {
+                        Icon(imageVector = Icons.Default.Logout, contentDescription = "Đăng xuất")
+                        Spacer(modifier = Modifier.width(PTITSpacing.sm))
+                        Text(text = "Đăng xuất", style = Typography.bodyMedium)
+                    }
                 }
             }
         }

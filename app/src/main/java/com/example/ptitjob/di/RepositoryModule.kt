@@ -1,5 +1,6 @@
 package com.example.ptitjob.di
 
+import android.content.SharedPreferences
 import com.example.ptitjob.data.api.auth.*
 import com.example.ptitjob.data.repository.*
 import dagger.Module
@@ -14,8 +15,11 @@ object RepositoryModule {
     
     @Provides
     @Singleton
-    fun provideAuthRepository(authApi: AuthApi): AuthRepository {
-        return AuthRepository(authApi)
+    fun provideAuthRepository(
+        authApi: AuthApi,
+        sharedPreferences: SharedPreferences
+    ): AuthRepository {
+        return AuthRepository(authApi, sharedPreferences)
     }
     
     @Provides

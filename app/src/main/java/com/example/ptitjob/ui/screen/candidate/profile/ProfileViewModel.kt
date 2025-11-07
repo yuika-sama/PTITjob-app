@@ -135,6 +135,30 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun logout(onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            try {
+                val result = authRepository.logout()
+                result.fold(
+                    onSuccess = { 
+                        // Clear user state
+                        _userState.value = null
+                        onResult(true, null)
+                    },
+                    onFailure = { err ->
+                        onResult(false, err.message ?: "Đăng xuất thất bại")
+                    }
+                )
+            } catch (e: Exception) {
+                onResult(false, e.message ?: "Lỗi khi đăng xuất")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     suspend fun getUserResumes(): Result<List<com.example.ptitjob.data.api.dto.ResumeDto>> {
         val currentUser = _userState.value ?: return Result.failure(Exception("Không có người dùng"))
         val userId = currentUser.id.toIntOrNull()
