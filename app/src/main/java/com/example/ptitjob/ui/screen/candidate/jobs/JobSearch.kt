@@ -294,83 +294,115 @@ private fun JobSearchHeader(onBack: () -> Unit) {
         color = Color.Transparent
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.xl),
+            modifier = Modifier.padding(
+                horizontal = PTITSpacing.lg,
+                vertical = PTITSpacing.xl
+            ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Back button with improved styling
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Quay lại",
-                        tint = PTITTextLight
-                    )
+                Surface(
+                    onClick = onBack,
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.2f),
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Quay lại",
+                            tint = PTITTextLight,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
 
+            Spacer(Modifier.height(PTITSpacing.lg))
+
+            // Enhanced logo with gradient background
             Surface(
                 shape = CircleShape,
-                color = Color.White.copy(alpha = 0.15f),
-                modifier = Modifier.size(PTITSize.avatarXl)
+                color = Color.Transparent,
+                modifier = Modifier.size(100.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    PTITPrimary.copy(alpha = 0.3f),
+                                    PTITSecondary.copy(alpha = 0.2f),
+                                    Color.White.copy(alpha = 0.1f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
-                        Icons.Default.SearchOff,
+                        Icons.Default.Search,
                         contentDescription = null,
                         tint = PTITTextLight,
-                        modifier = Modifier.size(PTITSize.iconXl)
+                        modifier = Modifier.size(48.dp)
                     )
                 }
             }
 
             Spacer(Modifier.height(PTITSpacing.lg))
 
+            // Improved title with responsive text size
             Text(
                 text = "Tìm kiếm việc làm",
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = PTITTextLight
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = PTITTextLight,
+                    fontSize = 28.sp
                 ),
                 textAlign = TextAlign.Center
             )
 
             Spacer(Modifier.height(PTITSpacing.sm))
 
+            // Enhanced subtitle with better line height
             Text(
                 text = "Khám phá hàng nghìn cơ hội việc làm phù hợp với kỹ năng và kinh nghiệm của bạn",
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = MaterialTheme.typography.bodyLarge.copy(
                     color = PTITTextLight.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 22.sp
                 ),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = PTITSpacing.lg)
+                modifier = Modifier.padding(horizontal = PTITSpacing.md)
             )
 
             Spacer(Modifier.height(PTITSpacing.xl))
 
+            // Responsive stats cards
             Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xl),
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SearchStatCard(
-                    title = "123,456+",
+                    title = "10K+",
                     subtitle = "Việc làm",
                     icon = Icons.Default.Work,
                     modifier = Modifier.weight(1f)
                 )
                 SearchStatCard(
-                    title = "5,678+",
+                    title = "500+",
                     subtitle = "Công ty",
                     icon = Icons.Default.Business,
                     modifier = Modifier.weight(1f)
                 )
                 SearchStatCard(
-                    title = "99%",
-                    subtitle = "Phù hợp",
+                    title = "95%",
+                    subtitle = "Hài lòng",
                     icon = Icons.AutoMirrored.Filled.TrendingUp,
                     modifier = Modifier.weight(1f)
                 )
@@ -388,41 +420,63 @@ private fun SearchStatCard(
 ) {
     Surface(
         modifier = modifier,
-        shape = PTITCornerRadius.lg,
-        color = Color.White.copy(alpha = 0.15f),
-        tonalElevation = PTITElevation.xs
+        shape = PTITCornerRadius.xl,
+        color = Color.White.copy(alpha = 0.18f),
+        tonalElevation = PTITElevation.sm,
+        shadowElevation = PTITElevation.xs
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.lg),
+            modifier = Modifier.padding(
+                horizontal = PTITSpacing.md,
+                vertical = PTITSpacing.lg
+            ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
+            // Enhanced icon with gradient background
             Surface(
                 shape = CircleShape,
-                color = PTITInfo.copy(alpha = 0.2f),
-                modifier = Modifier.size(PTITSize.iconXl)
+                color = Color.Transparent,
+                modifier = Modifier.size(48.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    PTITPrimary.copy(alpha = 0.2f),
+                                    PTITSecondary.copy(alpha = 0.15f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = PTITTextLight,
-                        modifier = Modifier.size(PTITSize.iconLg)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
+            
+            // Responsive title with better typography
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineSmall.copy(
+                style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = PTITTextLight
+                    color = PTITTextLight,
+                    fontSize = 20.sp
                 )
             )
+            
+            // Enhanced subtitle
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = PTITTextLight.copy(alpha = 0.8f),
-                    fontWeight = FontWeight.Medium
+                    color = PTITTextLight.copy(alpha = 0.85f),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp
                 ),
                 textAlign = TextAlign.Center
             )
@@ -441,40 +495,52 @@ private fun AdvancedSearchSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = PTITSpacing.lg),
-        shape = PTITCornerRadius.lg,
+        shape = PTITCornerRadius.xl,
         color = Color.White,
-        shadowElevation = PTITElevation.lg
+        shadowElevation = PTITElevation.lg,
+        tonalElevation = PTITElevation.sm
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
         ) {
+            // Enhanced header with gradient accent
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = null,
-                    tint = PTITPrimary,
-                    modifier = Modifier.size(PTITSize.iconLg)
-                )
+                Surface(
+                    shape = CircleShape,
+                    color = PTITPrimary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = PTITPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
                 Text(
                     text = "Tìm kiếm nâng cao",
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = PTITTextPrimary
                     )
                 )
             }
 
+            // Enhanced search input
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
                 placeholder = {
                     Text(
                         "Nhập từ khóa: tên công việc, công ty, kỹ năng...",
-                        color = PTITTextSecondary
+                        color = PTITTextSecondary,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 },
                 leadingIcon = {
@@ -486,105 +552,135 @@ private fun AdvancedSearchSection(
                 },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onSearchChange("") }) {
-                            Icon(
-                                Icons.Default.Clear,
-                                contentDescription = "Clear",
-                                tint = PTITTextSecondary
-                            )
+                        Surface(
+                            onClick = { onSearchChange("") },
+                            shape = CircleShape,
+                            color = PTITError.copy(alpha = 0.1f),
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Xóa",
+                                    tint = PTITError,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = PTITCornerRadius.md,
+                shape = PTITCornerRadius.lg,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PTITPrimary,
-                    unfocusedBorderColor = PTITNeutral200
+                    unfocusedBorderColor = PTITNeutral200,
+                    focusedContainerColor = PTITPrimary.copy(alpha = 0.02f),
+                    unfocusedContainerColor = PTITNeutral50
                 )
             )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
-                modifier = Modifier.fillMaxWidth()
+            // Enhanced filter buttons with responsive layout
+            Column(
+                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
-                OutlinedButton(
-                    onClick = { /* TODO: Location filter */ },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = PTITSecondary
-                    ),
-                    border = BorderStroke(1.dp, PTITSecondary),
-                    shape = PTITCornerRadius.md
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(PTITSize.iconSm)
+                    EnhancedFilterButton(
+                        icon = Icons.Default.LocationOn,
+                        text = "Địa điểm",
+                        color = PTITSecondary,
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* TODO: Location filter */ }
                     )
-                    Spacer(Modifier.width(PTITSpacing.xs))
-                    Text("Địa điểm", fontWeight = FontWeight.Medium)
-                }
-
-                OutlinedButton(
-                    onClick = { /* TODO: Salary filter */ },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = PTITSuccess
-                    ),
-                    border = BorderStroke(1.dp, PTITSuccess),
-                    shape = PTITCornerRadius.md
-                ) {
-                    Icon(
-                        Icons.Default.AttachMoney,
-                        contentDescription = null,
-                        modifier = Modifier.size(PTITSize.iconSm)
+                    EnhancedFilterButton(
+                        icon = Icons.Default.AttachMoney,
+                        text = "Mức lương",
+                        color = PTITSuccess,
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* TODO: Salary filter */ }
                     )
-                    Spacer(Modifier.width(PTITSpacing.xs))
-                    Text("Mức lương", fontWeight = FontWeight.Medium)
                 }
-
-                OutlinedButton(
-                    onClick = { /* TODO: Experience filter */ },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = PTITInfo
-                    ),
-                    border = BorderStroke(1.dp, PTITInfo),
-                    shape = PTITCornerRadius.md
-                ) {
-                    Icon(
-                        Icons.Default.WorkHistory,
-                        contentDescription = null,
-                        modifier = Modifier.size(PTITSize.iconSm)
-                    )
-                    Spacer(Modifier.width(PTITSpacing.xs))
-                    Text("Kinh nghiệm", fontWeight = FontWeight.Medium)
-                }
+                
+                EnhancedFilterButton(
+                    icon = Icons.Default.WorkHistory,
+                    text = "Kinh nghiệm",
+                    color = PTITInfo,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { /* TODO: Experience filter */ }
+                )
             }
 
+            // Enhanced search button with gradient
             Button(
                 onClick = onSearch,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(PTITSize.buttonMd),
+                    .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PTITPrimary
                 ),
-                shape = PTITCornerRadius.md
+                shape = PTITCornerRadius.lg,
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = PTITElevation.md,
+                    pressedElevation = PTITElevation.lg
+                )
             ) {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = null,
-                    modifier = Modifier.size(PTITSize.iconMd)
-                )
-                Spacer(Modifier.width(PTITSpacing.sm))
-                Text(
-                    "Tìm kiếm việc làm",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.SemiBold
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
                     )
-                )
+                    Text(
+                        "Tìm kiếm việc làm",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun EnhancedFilterButton(
+    icon: ImageVector,
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(48.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = color,
+            containerColor = color.copy(alpha = 0.05f)
+        ),
+        border = BorderStroke(1.5.dp, color.copy(alpha = 0.3f)),
+        shape = PTITCornerRadius.lg
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
@@ -599,47 +695,76 @@ private fun QuickSearchSuggestions(
             .padding(horizontal = PTITSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
     ) {
-        Text(
-            text = "🔥 Tìm kiếm phổ biến",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = PTITTextLight
+        // Enhanced section header
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = PTITWarning.copy(alpha = 0.2f),
+                modifier = Modifier.size(32.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        "🔥",
+                        fontSize = 16.sp
+                    )
+                }
+            }
+            Text(
+                text = "Tìm kiếm phổ biến",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextLight
+                )
             )
-        )
+        }
 
+        // Enhanced suggestions with better styling
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
             contentPadding = PaddingValues(end = PTITSpacing.lg)
         ) {
             items(getQuickSearchSuggestions()) { suggestion ->
-                SuggestionChip(
+                Surface(
                     onClick = { onSuggestionSelected(suggestion.text) },
-                    label = {
+                    shape = PTITCornerRadius.lg,
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = PTITElevation.sm,
+                    tonalElevation = PTITElevation.xs
+                ) {
+                    Row(
+                        modifier = Modifier.padding(
+                            horizontal = PTITSpacing.md,
+                            vertical = PTITSpacing.sm
+                        ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = suggestion.color.copy(alpha = 0.1f),
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    suggestion.icon,
+                                    contentDescription = null,
+                                    tint = suggestion.color,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
                         Text(
                             suggestion.text,
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold,
+                                color = PTITTextPrimary
                             )
                         )
-                    },
-                    icon = {
-                        Icon(
-                            suggestion.icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(PTITSize.iconSm)
-                        )
-                    },
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = Color.White.copy(alpha = 0.9f),
-                        labelColor = PTITTextPrimary,
-                        iconContentColor = suggestion.color
-                    ),
-                    border = SuggestionChipDefaults.suggestionChipBorder(
-                        enabled = true,
-                        borderColor = PTITNeutral200,
-                        disabledBorderColor = Color.Transparent
-                    )
-                )
+                    }
+                }
             }
         }
     }
@@ -658,15 +783,16 @@ private fun FiltersSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = PTITSpacing.lg),
-        shape = PTITCornerRadius.lg,
+        shape = PTITCornerRadius.xl,
         color = Color.White,
-        shadowElevation = PTITElevation.md
+        shadowElevation = PTITElevation.md,
+        tonalElevation = PTITElevation.sm
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
         ) {
-            // Header
+            // Enhanced header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -676,16 +802,24 @@ private fun FiltersSection(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
                 ) {
-                    Icon(
-                        Icons.Default.FilterList,
-                        contentDescription = null,
-                        tint = PTITPrimary,
-                        modifier = Modifier.size(PTITSize.iconMd)
-                    )
+                    Surface(
+                        shape = CircleShape,
+                        color = PTITPrimary.copy(alpha = 0.1f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.FilterList,
+                                contentDescription = null,
+                                tint = PTITPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                     Text(
                         text = "Bộ lọc tìm kiếm",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
                             color = PTITTextPrimary
                         )
                     )
@@ -693,7 +827,7 @@ private fun FiltersSection(
                         Surface(
                             shape = CircleShape,
                             color = PTITPrimary,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(28.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
@@ -709,91 +843,120 @@ private fun FiltersSection(
                 }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (currentFilters.isNotEmpty()) {
-                        TextButton(
+                        Surface(
                             onClick = onClearAll,
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = PTITError
-                            )
+                            shape = PTITCornerRadius.md,
+                            color = PTITError.copy(alpha = 0.1f)
                         ) {
-                            Text("Xóa tất cả", fontWeight = FontWeight.Medium)
+                            Text(
+                                "Xóa tất cả",
+                                color = PTITError,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(
+                                    horizontal = PTITSpacing.md,
+                                    vertical = PTITSpacing.sm
+                                )
+                            )
                         }
                     }
 
-                    IconButton(onClick = onToggleFilters) {
-                        Icon(
-                            if (showFilters) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (showFilters) "Ẩn bộ lọc" else "Hiện bộ lọc",
-                            tint = PTITPrimary
-                        )
+                    Surface(
+                        onClick = onToggleFilters,
+                        shape = CircleShape,
+                        color = PTITPrimary.copy(alpha = 0.1f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                if (showFilters) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (showFilters) "Ẩn bộ lọc" else "Hiện bộ lọc",
+                                tint = PTITPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
 
-            // Applied filters
+            // Enhanced applied filters
             if (currentFilters.isNotEmpty()) {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
                     verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
                 ) {
                     currentFilters.forEach { filter ->
-                        InputChip(
-                            selected = true,
+                        Surface(
                             onClick = { onRemoveFilter(filter) },
-                            label = {
+                            shape = PTITCornerRadius.lg,
+                            color = PTITPrimary.copy(alpha = 0.1f),
+                            border = BorderStroke(1.dp, PTITPrimary.copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(
+                                    horizontal = PTITSpacing.md,
+                                    vertical = PTITSpacing.sm
+                                ),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+                            ) {
                                 Text(
                                     filter,
                                     style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PTITPrimary
                                     )
                                 )
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Bỏ lọc $filter",
+                                Surface(
+                                    shape = CircleShape,
+                                    color = PTITPrimary,
                                     modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            colors = InputChipDefaults.inputChipColors(
-                                containerColor = PTITPrimary.copy(alpha = 0.1f),
-                                labelColor = PTITPrimary,
-                                trailingIconColor = PTITPrimary,
-                                selectedContainerColor = PTITPrimary,
-                                selectedLabelColor = Color.White,
-                                selectedTrailingIconColor = Color.White
-                            )
-                        )
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = "Bỏ lọc $filter",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            // Options
+            // Enhanced filter options
             AnimatedVisibility(visible = showFilters) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.xl)
                 ) {
-                    FilterCategory(
+                    EnhancedFilterCategory(
                         title = "Mức lương",
                         icon = Icons.Default.AttachMoney,
+                        color = PTITSuccess,
                         options = listOf("Dưới 10 triệu", "10-15 triệu", "15-25 triệu", "25-40 triệu", "Trên 40 triệu"),
                         selectedOptions = currentFilters.filter { it.contains("triệu") },
                         onOptionToggle = { /* TODO connect state */ }
                     )
 
-                    FilterCategory(
+                    EnhancedFilterCategory(
                         title = "Kinh nghiệm",
                         icon = Icons.Default.WorkHistory,
+                        color = PTITInfo,
                         options = listOf("Fresher", "1-2 năm", "2-5 năm", "5+ năm"),
                         selectedOptions = currentFilters.filter { it.contains("năm") || it == "Fresher" },
                         onOptionToggle = { /* TODO connect state */ }
                     )
 
-                    FilterCategory(
+                    EnhancedFilterCategory(
                         title = "Hình thức làm việc",
                         icon = Icons.Default.Work,
+                        color = PTITSecondary,
                         options = listOf("Full-time", "Part-time", "Remote", "Freelance"),
                         selectedOptions = currentFilters.filter { it in listOf("Full-time", "Part-time", "Remote", "Freelance") },
                         onOptionToggle = { /* TODO connect state */ }
@@ -824,7 +987,7 @@ private fun FilterCategory(
                 imageVector = icon,
                 contentDescription = null,
                 tint = PTITSecondary,
-                modifier = Modifier.size(PTITSize.iconMd)
+                modifier = Modifier.size(20.dp)
             )
             Text(
                 text = title,
@@ -864,6 +1027,84 @@ private fun FilterCategory(
                         selectedBorderColor = PTITPrimary
                     )
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EnhancedFilterCategory(
+    title: String,
+    icon: ImageVector,
+    color: Color,
+    options: List<String>,
+    selectedOptions: List<String>,
+    onOptionToggle: (String) -> Unit
+) {
+    Surface(
+        shape = PTITCornerRadius.lg,
+        color = color.copy(alpha = 0.05f)
+    ) {
+        Column(
+            modifier = Modifier.padding(PTITSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = color.copy(alpha = 0.1f),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = color,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITTextPrimary
+                    )
+                )
+            }
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+            ) {
+                options.forEach { option ->
+                    val isSelected = option in selectedOptions
+                    Surface(
+                        onClick = { onOptionToggle(option) },
+                        shape = PTITCornerRadius.lg,
+                        color = if (isSelected) color else Color.White,
+                        border = BorderStroke(
+                            width = 1.5.dp,
+                            color = if (isSelected) color else PTITNeutral200
+                        )
+                    ) {
+                        Text(
+                            text = option,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isSelected) Color.White else PTITTextPrimary
+                            ),
+                            modifier = Modifier.padding(
+                                horizontal = PTITSpacing.md,
+                                vertical = PTITSpacing.sm
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -1016,38 +1257,52 @@ private fun ModernJobCard(
     onCompanySelected: (UiCompany) -> Unit
 ) {
     Surface(
-        shape = PTITCornerRadius.lg,
+        shape = PTITCornerRadius.xl,
         color = PTITNeutral50,
         tonalElevation = PTITElevation.sm,
+        shadowElevation = PTITElevation.md,
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onViewDetail(job) }
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            modifier = Modifier.padding(PTITSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
         ) {
+            // Enhanced header with company info
             Row(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
                 verticalAlignment = Alignment.Top
             ) {
-                // Logo
+                // Enhanced company logo
                 Surface(
-                    shape = PTITCornerRadius.md,
+                    shape = PTITCornerRadius.lg,
                     color = Color.White,
-                    modifier = Modifier.size(PTITSize.avatarLg)
+                    shadowElevation = PTITElevation.xs,
+                    modifier = Modifier.size(64.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        PTITPrimary.copy(alpha = 0.1f),
+                                        PTITSecondary.copy(alpha = 0.05f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             Icons.Default.Business,
                             contentDescription = null,
-                            tint = PTITTextSecondary,
-                            modifier = Modifier.size(PTITSize.iconLg)
+                            tint = PTITPrimary,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
 
-                // Info
+                // Enhanced job info
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
@@ -1056,35 +1311,50 @@ private fun ModernJobCard(
                         text = job.title,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = PTITTextPrimary
+                            color = PTITTextPrimary,
+                            lineHeight = 24.sp
                         ),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    Text(
-                        text = job.company.name,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = PTITSecondary,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        modifier = Modifier.clickable { onCompanySelected(job.company) }
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+                    Surface(
+                        onClick = { onCompanySelected(job.company) },
+                        shape = PTITCornerRadius.sm,
+                        color = PTITSecondary.copy(alpha = 0.1f)
                     ) {
-                        JobInfoItem(
-                            icon = Icons.Default.AttachMoney,
-                            text = job.salary,
-                            color = PTITSuccess
+                        Text(
+                            text = job.company.name,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = PTITSecondary,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            modifier = Modifier.padding(
+                                horizontal = PTITSpacing.sm,
+                                vertical = PTITSpacing.xs
+                            )
                         )
-                        JobInfoItem(
-                            icon = Icons.Default.LocationOn,
-                            text = job.location,
-                            color = PTITInfo
-                        )
-                        JobInfoItem(
+                    }
+
+                    // Enhanced job details with better icons
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+                        ) {
+                            EnhancedJobInfoItem(
+                                icon = Icons.Default.AttachMoney,
+                                text = job.salary,
+                                color = PTITSuccess
+                            )
+                            EnhancedJobInfoItem(
+                                icon = Icons.Default.LocationOn,
+                                text = job.location,
+                                color = PTITInfo
+                            )
+                        }
+                        EnhancedJobInfoItem(
                             icon = Icons.Default.AccessTime,
                             text = job.experience,
                             color = PTITWarning
@@ -1092,79 +1362,154 @@ private fun ModernJobCard(
                     }
                 }
 
-                // Save
-                IconButton(
-                    onClick = { onSave(job) }
-                ) {
-                    Icon(
-                        Icons.Default.BookmarkBorder,
-                        contentDescription = "Save job",
-                        tint = PTITTextSecondary
-                    )
-                }
+//                // Enhanced save button
+//                Surface(
+//                    onClick = { onSave(job) },
+//                    shape = CircleShape,
+//                    color = PTITNeutral100,
+//                    modifier = Modifier.size(40.dp)
+//                ) {
+//                    Box(contentAlignment = Alignment.Center) {
+//                        Icon(
+//                            Icons.Default.BookmarkBorder,
+//                            contentDescription = "Lưu việc làm",
+//                            tint = PTITTextSecondary,
+//                            modifier = Modifier.size(20.dp)
+//                        )
+//                    }
+//                }
             }
 
-            // Tags
+            // Enhanced tags section
             if (!job.tags.isNullOrEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
                 ) {
                     items(job.tags.take(4)) { tag ->
                         Surface(
-                            shape = PTITCornerRadius.sm,
-                            color = getTagColor(tag).copy(alpha = 0.1f)
+                            shape = PTITCornerRadius.md,
+                            color = getTagColor(tag).copy(alpha = 0.1f),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = getTagColor(tag).copy(alpha = 0.3f)
+                            )
                         ) {
                             Text(
                                 text = tag.name,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = getTagColor(tag),
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.SemiBold
                                 ),
                                 modifier = Modifier.padding(
-                                    horizontal = PTITSpacing.sm,
-                                    vertical = PTITSpacing.xs
+                                    horizontal = PTITSpacing.md,
+                                    vertical = PTITSpacing.sm
                                 )
                             )
+                        }
+                    }
+                    if (job.tags.size > 4) {
+                        item {
+                            Surface(
+                                shape = PTITCornerRadius.md,
+                                color = PTITNeutral100
+                            ) {
+                                Text(
+                                    text = "+${job.tags.size - 4}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = PTITTextSecondary,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    modifier = Modifier.padding(
+                                        horizontal = PTITSpacing.md,
+                                        vertical = PTITSpacing.sm
+                                    )
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Actions
+            // Enhanced action buttons
             Row(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
                     onClick = { onApply(job) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PTITPrimary
                     ),
-                    shape = PTITCornerRadius.md
+                    shape = PTITCornerRadius.md,
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = PTITElevation.sm,
+                        pressedElevation = PTITElevation.md
+                    )
                 ) {
                     Text(
                         "Ứng tuyển",
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
                     )
                 }
 
                 OutlinedButton(
                     onClick = { onViewDetail(job) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = PTITPrimary
+                        contentColor = PTITPrimary,
+                        containerColor = PTITPrimary.copy(alpha = 0.05f)
                     ),
-                    border = BorderStroke(1.dp, PTITPrimary),
+                    border = BorderStroke(1.5.dp, PTITPrimary),
                     shape = PTITCornerRadius.md
                 ) {
                     Text(
-                        "Xem chi tiết",
-                        fontWeight = FontWeight.SemiBold
+                        "Chi tiết",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EnhancedJobInfoItem(
+    icon: ImageVector,
+    text: String,
+    color: Color
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = color.copy(alpha = 0.1f),
+            modifier = Modifier.size(20.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = PTITTextSecondary,
+                fontWeight = FontWeight.Medium
+            )
+        )
     }
 }
 
@@ -1182,7 +1527,7 @@ private fun JobInfoItem(
             imageVector = icon,
             contentDescription = null,
             tint = color,
-            modifier = Modifier.size(PTITSize.iconSm)
+            modifier = Modifier.size(16.dp)
         )
         Text(
             text = text,
@@ -1200,55 +1545,74 @@ private fun ModernPaginationControls(
     totalPages: Int,
     onPageChange: (Int) -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        shape = PTITCornerRadius.xl,
+        color = PTITNeutral50,
+        tonalElevation = PTITElevation.xs,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        IconButton(
-            onClick = { onPageChange(currentPage - 1) },
-            enabled = currentPage > 1,
-            modifier = Modifier
-                .background(
-                    if (currentPage > 1) PTITPrimary.copy(alpha = 0.1f) else PTITNeutral100,
-                    CircleShape
-                )
-                .size(PTITSize.buttonMd)
+        Row(
+            modifier = Modifier.padding(PTITSpacing.lg),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Trang trước",
-                tint = if (currentPage > 1) PTITPrimary else PTITTextSecondary
-            )
-        }
+            // Enhanced previous button
+            Surface(
+                onClick = { onPageChange(currentPage - 1) },
+                enabled = currentPage > 1,
+                shape = CircleShape,
+                color = if (currentPage > 1) PTITPrimary.copy(alpha = 0.1f) else PTITNeutral100,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Trang trước",
+                        tint = if (currentPage > 1) PTITPrimary else PTITTextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
 
-        Spacer(Modifier.width(PTITSpacing.lg))
+            Spacer(Modifier.width(PTITSpacing.xl))
 
-        Text(
-            text = "Trang $currentPage / $totalPages",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                color = PTITTextPrimary
-            )
-        )
-
-        Spacer(Modifier.width(PTITSpacing.lg))
-
-        IconButton(
-            onClick = { onPageChange(currentPage + 1) },
-            enabled = currentPage < totalPages,
-            modifier = Modifier
-                .background(
-                    if (currentPage < totalPages) PTITPrimary.copy(alpha = 0.1f) else PTITNeutral100,
-                    CircleShape
+            // Enhanced page indicator
+            Surface(
+                shape = PTITCornerRadius.lg,
+                color = PTITPrimary.copy(alpha = 0.1f)
+            ) {
+                Text(
+                    text = "Trang $currentPage / $totalPages",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITPrimary
+                    ),
+                    modifier = Modifier.padding(
+                        horizontal = PTITSpacing.lg,
+                        vertical = PTITSpacing.md
+                    )
                 )
-                .size(PTITSize.buttonMd)
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Trang sau",
-                tint = if (currentPage < totalPages) PTITPrimary else PTITTextSecondary
-            )
+            }
+
+            Spacer(Modifier.width(PTITSpacing.xl))
+
+            // Enhanced next button
+            Surface(
+                onClick = { onPageChange(currentPage + 1) },
+                enabled = currentPage < totalPages,
+                shape = CircleShape,
+                color = if (currentPage < totalPages) PTITPrimary.copy(alpha = 0.1f) else PTITNeutral100,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Trang sau",
+                        tint = if (currentPage < totalPages) PTITPrimary else PTITTextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -1262,47 +1626,78 @@ private fun EmptySearchState(onClearFilters: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
     ) {
+        // Enhanced empty state icon
         Surface(
             shape = CircleShape,
             color = PTITNeutral100,
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier.size(120.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                PTITInfo.copy(alpha = 0.1f),
+                                PTITNeutral100
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     Icons.Default.SearchOff,
                     contentDescription = null,
                     tint = PTITTextSecondary,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(48.dp)
                 )
             }
         }
 
         Text(
             text = "Không tìm thấy việc làm phù hợp 😕",
-            style = MaterialTheme.typography.titleLarge.copy(
+            style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = PTITTextPrimary
             ),
             textAlign = TextAlign.Center
         )
 
-        Text(
-            text = "Đừng lo lắng! Hãy thử:\n\n• Thay đổi từ khóa tìm kiếm.\n• Xóa bớt bộ lọc.\n• Mở rộng địa điểm tìm kiếm.",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = PTITTextSecondary,
-                lineHeight = 24.sp
-            ),
-            textAlign = TextAlign.Center
-        )
+        Surface(
+            shape = PTITCornerRadius.lg,
+            color = PTITNeutral50
+        ) {
+            Text(
+                text = "Đừng lo lắng! Hãy thử:\n\n• Thay đổi từ khóa tìm kiếm\n• Xóa bớt bộ lọc\n• Mở rộng địa điểm tìm kiếm\n• Thử với từ khóa khác",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = PTITTextSecondary,
+                    lineHeight = 24.sp
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(PTITSpacing.lg)
+            )
+        }
 
         Button(
             onClick = onClearFilters,
             colors = ButtonDefaults.buttonColors(
                 containerColor = PTITPrimary
             ),
-            shape = PTITCornerRadius.md
+            shape = PTITCornerRadius.lg,
+            modifier = Modifier.height(48.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = PTITElevation.sm
+            )
         ) {
-            Text("Xóa bộ lọc", fontWeight = FontWeight.SemiBold)
+            Icon(
+                Icons.Default.Clear,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(PTITSpacing.sm))
+            Text(
+                "Xóa bộ lọc",
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -1316,53 +1711,78 @@ private fun ErrorState(message: String, onRetry: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
     ) {
+        // Enhanced error icon
         Surface(
             shape = CircleShape,
             color = PTITError.copy(alpha = 0.1f),
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier.size(120.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                PTITError.copy(alpha = 0.2f),
+                                PTITError.copy(alpha = 0.05f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     Icons.Default.Error,
                     contentDescription = null,
                     tint = PTITError,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(48.dp)
                 )
             }
         }
 
         Text(
             text = "Oops! Có lỗi xảy ra 😓",
-            style = MaterialTheme.typography.titleLarge.copy(
+            style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = PTITTextPrimary
             ),
             textAlign = TextAlign.Center
         )
 
-        Text(
-            text = "$message\n\nVui lòng thử lại sau ít phút nhé!",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = PTITTextSecondary,
-                lineHeight = 22.sp
-            ),
-            textAlign = TextAlign.Center
-        )
+        Surface(
+            shape = PTITCornerRadius.lg,
+            color = PTITError.copy(alpha = 0.05f)
+        ) {
+            Text(
+                text = "$message\n\nVui lòng thử lại sau ít phút nhé!",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = PTITTextSecondary,
+                    lineHeight = 22.sp
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(PTITSpacing.lg)
+            )
+        }
 
         Button(
             onClick = onRetry,
             colors = ButtonDefaults.buttonColors(
                 containerColor = PTITError
             ),
-            shape = PTITCornerRadius.md
+            shape = PTITCornerRadius.lg,
+            modifier = Modifier.height(48.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = PTITElevation.sm
+            )
         ) {
             Icon(
                 Icons.Default.Refresh,
                 contentDescription = null,
-                modifier = Modifier.size(PTITSize.iconSm)
+                modifier = Modifier.size(18.dp)
             )
             Spacer(Modifier.width(PTITSpacing.sm))
-            Text("Thử lại", fontWeight = FontWeight.SemiBold)
+            Text(
+                "Thử lại",
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

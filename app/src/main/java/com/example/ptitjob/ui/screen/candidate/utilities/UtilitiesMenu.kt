@@ -80,7 +80,7 @@ fun UtilitiesMenu(
         UtilityItem(
             title = "🎤 Mô phỏng phỏng vấn",
             description = "Luyện tập phỏng vấn với AI và nhận phản hồi",
-            icon = "�",
+            icon = "🎤",
             color = PTITPrimary,
             onClick = onNavigateToInterviewEmulate
         ),
@@ -96,7 +96,7 @@ fun UtilitiesMenu(
         
         // Các công cụ tính toán
         UtilityItem(
-            title = "�📋 Tính BHXH",
+            title = "📋 Tính BHXH",
             description = "Tính toán bảo hiểm xã hội, bảo hiểm y tế",
             icon = "🏥",
             color = PTITInfo,

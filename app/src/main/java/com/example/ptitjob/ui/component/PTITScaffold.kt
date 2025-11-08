@@ -45,7 +45,7 @@ fun shouldShowBottomNav(currentRoute: String?): Boolean {
     if (currentRoute == null) return false
     
     // Hide bottom nav for auth screens
-    val authRoutes = listOf("login", "signup", "forgot_password")
+    val authRoutes = listOf("login", "signup", "forgot-password")
     if (authRoutes.any { currentRoute.contains(it, ignoreCase = true) }) {
         return false
     }

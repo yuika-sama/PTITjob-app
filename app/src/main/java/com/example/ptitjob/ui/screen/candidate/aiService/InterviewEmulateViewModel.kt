@@ -10,7 +10,6 @@ import com.example.ptitjob.data.repository.AiServiceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,31 +41,65 @@ class InterviewEmulateViewModel @Inject constructor(
                 )
             }
 
-            val result = aiServiceRepository.startInterview(file)
+            // Bước 1: Evaluate CV trước
+            val cvResult = aiServiceRepository.evaluateCv(file)
             file.delete()
 
-            result.fold(
-                onSuccess = { session ->
-                    val initialMessages = buildList {
-                        session.initialMessage?.takeIf { msg -> msg.isNotBlank() }?.let { msg ->
-                            add(
-                                InterviewMessage(
-                                    sessionId = session.sessionId,
-                                    sender = ChatSender.AI,
-                                    message = msg,
-                                    timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                                )
-                            )
-                        }
-                    }
-                    _uiState.update {
-                        it.copy(
-                            step = InterviewStep.Chatting,
-                            isLoading = false,
-                            session = session,
-                            messages = initialMessages
+            cvResult.fold(
+                onSuccess = { cvEvaluation ->
+                    // Convert CvEvaluationResult to Map for backend
+                    val cvAnalysisResult = mapOf(
+                        "candidate" to mapOf("name" to ""),
+                        "scoring" to mapOf("overall_score_percent" to cvEvaluation.score),
+                        "matching" to mapOf(
+                            "skills_matched" to cvEvaluation.strengths,
+                            "skills_missing" to cvEvaluation.improvements
+                        ),
+                        "analysis" to mapOf(
+                            "summary" to (cvEvaluation.summary ?: ""),
+                            "strengths" to cvEvaluation.strengths,
+                            "improvements" to cvEvaluation.improvements,
+                            "recommendations" to cvEvaluation.recommendations
                         )
-                    }
+                    )
+
+                    // Bước 2: Start interview
+                    val interviewResult = aiServiceRepository.startInterview(cvAnalysisResult)
+                    
+                    interviewResult.fold(
+                        onSuccess = { session ->
+                            val initialMessages = buildList {
+                                session.initialMessage?.takeIf { msg -> msg.isNotBlank() }?.let { msg ->
+                                    add(
+                                        InterviewMessage(
+                                            sender = ChatSender.AI,
+                                            message = msg,
+                                            timestamp = OffsetDateTime.now(),
+                                            state = session.state
+                                        )
+                                    )
+                                }
+                            }
+                            _uiState.update {
+                                it.copy(
+                                    step = InterviewStep.Chatting,
+                                    isLoading = false,
+                                    session = session,
+                                    messages = initialMessages
+                                )
+                            }
+                        },
+                        onFailure = { error ->
+                            _uiState.update {
+                                it.copy(
+                                    step = InterviewStep.Upload,
+                                    isLoading = false,
+                                    session = null,
+                                    errorMessage = "Lỗi khởi tạo phỏng vấn: ${error.resolveMessage()}"
+                                )
+                            }
+                        }
+                    )
                 },
                 onFailure = { error ->
                     _uiState.update {
@@ -74,7 +107,7 @@ class InterviewEmulateViewModel @Inject constructor(
                             step = InterviewStep.Upload,
                             isLoading = false,
                             session = null,
-                            errorMessage = error.resolveMessage()
+                            errorMessage = "Lỗi đánh giá CV: ${error.resolveMessage()}"
                         )
                     }
                 }
@@ -88,10 +121,9 @@ class InterviewEmulateViewModel @Inject constructor(
         if (content.isBlank() || currentState.isSending) return
 
         val userMessage = InterviewMessage(
-            sessionId = session.sessionId,
             sender = ChatSender.USER,
             message = content.trim(),
-            timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+            timestamp = OffsetDateTime.now()
         )
 
         val history = currentState.messages + userMessage
@@ -106,18 +138,40 @@ class InterviewEmulateViewModel @Inject constructor(
 
         viewModelScope.launch {
             val result = aiServiceRepository.sendInterviewMessage(
-                sessionId = session.sessionId,
-                message = userMessage.message,
-                history = history
+                history = history,
+                cvAnalysisResult = session.cvAnalysisResult ?: emptyMap(),
+                state = getLatestState()
             )
 
             result.fold(
                 onSuccess = { aiReply ->
-                    _uiState.update {
-                        it.copy(
-                            messages = it.messages + aiReply,
-                            isSending = false
-                        )
+                    val updatedHistory = history + aiReply
+                    
+                    // Check if interview is finished based on AI response or state
+                    val isFinished = aiReply.state?.get("interview_finished")?.toString()?.toBoolean() == true ||
+                                   aiReply.state?.get("completed")?.toString()?.toBoolean() == true ||
+                                   aiReply.message.contains("🎉") || 
+                                   aiReply.message.contains("phỏng vấn hoàn tất", ignoreCase = true) ||
+                                   aiReply.message.contains("kết thúc phỏng vấn", ignoreCase = true)
+                    
+                    if (isFinished) {
+                        // Parse final result from AI message and state
+                        val finalResult = parseInterviewResult(aiReply.message, aiReply.state)
+                        _uiState.update {
+                            it.copy(
+                                messages = updatedHistory,
+                                isSending = false,
+                                step = InterviewStep.Result,
+                                result = finalResult
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                messages = updatedHistory,
+                                isSending = false
+                            )
+                        }
                     }
                 },
                 onFailure = { error ->
@@ -125,7 +179,7 @@ class InterviewEmulateViewModel @Inject constructor(
                         it.copy(
                             messages = currentState.messages,
                             isSending = false,
-                            errorMessage = error.resolveMessage()
+                            errorMessage = "Lỗi gửi tin nhắn: ${error.resolveMessage()}"
                         )
                     }
                 }
@@ -134,12 +188,19 @@ class InterviewEmulateViewModel @Inject constructor(
     }
 
     fun finishInterview() {
-        val session = _uiState.value.session ?: return
-        if (_uiState.value.isLoading) return
+        val currentState = _uiState.value
+        val session = currentState.session ?: return
+        if (currentState.isLoading) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = aiServiceRepository.finishInterview(session.sessionId)
+            
+            val result = aiServiceRepository.finishInterview(
+                history = currentState.messages,
+                cvAnalysisResult = session.cvAnalysisResult ?: emptyMap(),
+                state = getLatestState()
+            )
+            
             result.fold(
                 onSuccess = { summary ->
                     _uiState.update {
@@ -154,12 +215,98 @@ class InterviewEmulateViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.resolveMessage()
+                            errorMessage = "Lỗi kết thúc phỏng vấn: ${error.resolveMessage()}"
                         )
                     }
                 }
             )
         }
+    }
+
+    private fun getLatestState(): Map<String, Any>? {
+        return _uiState.value.messages.lastOrNull { it.sender == ChatSender.AI }?.state
+    }
+
+    private fun parseInterviewResult(message: String, state: Map<String, Any>?): InterviewResult {
+        // Try to extract info from state first (more reliable)
+        val finalScore = state?.let { s ->
+            s["final_score"]?.toString()?.toDoubleOrNull() ?:
+            s["overall_score"]?.toString()?.toDoubleOrNull() ?:
+            s["total_score"]?.toString()?.toDoubleOrNull()
+        }
+        
+        val assessment = state?.let { s ->
+            s["overall_assessment"]?.toString() ?:
+            s["assessment"]?.toString() ?:
+            s["evaluation"]?.toString()
+        }
+        
+        val recommendation = state?.let { s ->
+            s["recommendation"]?.toString() ?:
+            s["summary"]?.toString()
+        }
+        
+        // Fallback to parsing from message if state doesn't have the info
+        val messageScore = if (finalScore == null) {
+            val scoreRegex = """(?:điểm|score).*?(\d+\.?\d*)""".toRegex(RegexOption.IGNORE_CASE)
+            scoreRegex.find(message)?.groupValues?.get(1)?.toDoubleOrNull()
+        } else finalScore
+        
+        val messageAssessment = if (assessment == null) {
+            val assessmentRegex = """đánh giá:\s*(.+?)(?:\n|${'$'})""".toRegex(RegexOption.IGNORE_CASE)
+            assessmentRegex.find(message)?.groupValues?.get(1)?.trim()
+        } else assessment
+        
+        // Extract breakdown from state if available
+        val breakdown = state?.let { s ->
+            val cvScore = s["cv_score"]?.toString()?.toDoubleOrNull()
+            val interviewScores = s["interview_scores"] as? List<*>
+            val avgInterviewScore = interviewScores?.mapNotNull { (it as? Number)?.toDouble() }
+                ?.takeIf { it.isNotEmpty() }?.average()?.times(100) // Convert 0-1 to 0-100
+                
+            if (cvScore != null || avgInterviewScore != null) {
+                com.example.ptitjob.data.model.InterviewBreakdown(
+                    cvScore = cvScore,
+                    cvWeight = 0.3,
+                    interviewScore = avgInterviewScore,
+                    interviewWeight = 0.7
+                )
+            } else null
+        }
+        
+        // Extract improvements from state if available
+        val improvements = state?.let { s ->
+            (s["improvements"] as? List<*>)?.mapNotNull { item ->
+                when (item) {
+                    is Map<*, *> -> {
+                        val area = item["area"]?.toString() ?: item["title"]?.toString() ?: ""
+                        val tip = item["tip"]?.toString() ?: item["suggestion"]?.toString() ?: ""
+                        if (area.isNotBlank() && tip.isNotBlank()) {
+                            com.example.ptitjob.data.model.InterviewImprovement(area, tip)
+                        } else null
+                    }
+                    is String -> {
+                        // Simple string format: "Area: Tip"
+                        val parts = item.split(":", limit = 2)
+                        if (parts.size == 2) {
+                            com.example.ptitjob.data.model.InterviewImprovement(
+                                parts[0].trim(), 
+                                parts[1].trim()
+                            )
+                        } else null
+                    }
+                    else -> null
+                }
+            }
+        } ?: emptyList()
+        
+        return InterviewResult(
+            finalScore = messageScore,
+            overallAssessment = messageAssessment,
+            recommendation = recommendation,
+            breakdown = breakdown,
+            improvements = improvements
+        )
     }
 
     fun reset() {

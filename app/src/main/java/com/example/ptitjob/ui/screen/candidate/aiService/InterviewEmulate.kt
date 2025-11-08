@@ -386,7 +386,7 @@ private fun InterviewStepper(
             ) {
                 ChatSection(
                     messages = state.messages,
-                    isSessionComplete = state.isLoading ?: true,
+                    isSessionComplete = state.step == InterviewStep.Result,
                     isLoading = state.isSending,
                     onSendMessage = onSendMessage,
                     onFinishInterview = onFinishInterview
@@ -958,7 +958,7 @@ private fun ResultDisplay(result: InterviewResult) {
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
             ) {
                 Text(
-                    text = "${result.finalScore ?: 0}%",
+                    text = "${String.format("%.1f", result.finalScore ?: 0.0)}%",
                     style = MaterialTheme.typography.displayMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -966,12 +966,7 @@ private fun ResultDisplay(result: InterviewResult) {
                 )
 
                 Text(
-                    text = when {
-                        (result.finalScore ?: 0) >= 85 -> "Xuất sắc"
-                        (result.finalScore ?: 0) >= 70 -> "Tốt"
-                        (result.finalScore ?: 0) >= 50 -> "Khá"
-                        else -> "Cần cải thiện"
-                    },
+                    text = result.overallAssessment ?: "Cần đánh giá",
                     style = MaterialTheme.typography.titleLarge.copy(
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -987,75 +982,77 @@ private fun ResultDisplay(result: InterviewResult) {
         }
 
         // Score Breakdown
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
-        ) {
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = PTITCornerRadius.md,
-                color = PTITInfo.copy(alpha = 0.1f),
-                tonalElevation = PTITElevation.sm,
-                border = BorderStroke(1.dp, PTITInfo.copy(alpha = 0.2f))
+        result.breakdown?.let { breakdown ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
-                Column(
-                    modifier = Modifier.padding(PTITSpacing.lg),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = PTITCornerRadius.md,
+                    color = PTITInfo.copy(alpha = 0.1f),
+                    tonalElevation = PTITElevation.sm,
+                    border = BorderStroke(1.dp, PTITInfo.copy(alpha = 0.2f))
                 ) {
-                    Text(
-                        text = "${result.cvScore ?: 0}%",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = PTITInfo
+                    Column(
+                        modifier = Modifier.padding(PTITSpacing.lg),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                    ) {
+                        Text(
+                            text = "${String.format("%.1f", breakdown.cvScore ?: 0.0)}%",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = PTITInfo
+                            )
                         )
-                    )
-                    Text(
-                        text = "Điểm CV",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = PTITTextSecondary
+                        Text(
+                            text = "Điểm CV",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = PTITTextSecondary
+                            )
                         )
-                    )
+                    }
                 }
-            }
 
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = PTITCornerRadius.md,
-                color = PTITSecondary.copy(alpha = 0.1f),
-                tonalElevation = PTITElevation.sm,
-                border = BorderStroke(1.dp, PTITSecondary.copy(alpha = 0.2f))
-            ) {
-                Column(
-                    modifier = Modifier.padding(PTITSpacing.lg),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = PTITCornerRadius.md,
+                    color = PTITSecondary.copy(alpha = 0.1f),
+                    tonalElevation = PTITElevation.sm,
+                    border = BorderStroke(1.dp, PTITSecondary.copy(alpha = 0.2f))
                 ) {
-                    Text(
-                        text = "${result.interviewScore ?: 0}%",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = PTITSecondary
+                    Column(
+                        modifier = Modifier.padding(PTITSpacing.lg),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                    ) {
+                        Text(
+                            text = "${String.format("%.1f", breakdown.interviewScore ?: 0.0)}%",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = PTITSecondary
+                            )
                         )
-                    )
-                    Text(
-                        text = "Điểm phỏng vấn",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = PTITTextSecondary
+                        Text(
+                            text = "Điểm phỏng vấn",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = PTITTextSecondary
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
 
-        // Feedback Summary
-        result.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+        // Recommendation
+        result.recommendation?.takeIf { it.isNotBlank() }?.let { recommendation ->
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = PTITSecondary.copy(alpha = 0.08f),
                 shape = PTITCornerRadius.md
             ) {
                 Text(
-                    text = summary,
+                    text = recommendation,
                     style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextPrimary),
                     modifier = Modifier.padding(PTITSpacing.lg)
                 )
@@ -1096,7 +1093,7 @@ private fun ResultDisplay(result: InterviewResult) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
                     ) {
-                        result.improvements.forEach { (category, improvement) ->
+                        result.improvements.forEach { improvement ->
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = PTITCornerRadius.md,
@@ -1118,14 +1115,14 @@ private fun ResultDisplay(result: InterviewResult) {
                                         verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
                                     ) {
                                         Text(
-                                            text = category,
+                                            text = improvement.area,
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = PTITTextPrimary
                                             )
                                         )
                                         Text(
-                                            text = improvement,
+                                            text = improvement.tip,
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 color = PTITTextSecondary
                                             )
@@ -1199,6 +1196,27 @@ private fun CvAnalysisCard(session: InterviewSession) {
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             color = PTITSecondary
+                        )
+                    )
+                }
+            }
+            
+            // Show candidate name if available
+            session.candidateName?.takeIf { it.isNotBlank() }?.let { name ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PTITInfo,
+                        modifier = Modifier.size(PTITSize.iconSm)
+                    )
+                    Text(
+                        text = "Ứng viên: $name",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = PTITTextSecondary
                         )
                     )
                 }
@@ -1286,18 +1304,15 @@ private fun InterviewEmulatePreview() {
                 step = InterviewStep.Chatting,
                 messages = listOf(
                     InterviewMessage(
-                        sessionId = "test",
                         sender = ChatSender.AI,
                         message = "Xin chào! Hãy giới thiệu về bản thân và kinh nghiệm lập trình của bạn."
                     ),
                     InterviewMessage(
-                        sessionId = "test", 
                         sender = ChatSender.USER,
                         message = "Xin chào! Tôi có 3 năm kinh nghiệm phát triển Android với Kotlin và Java."
                     )
                 ),
                 session = InterviewSession(
-                    sessionId = "test",
                     cvScore = 85,
                     candidateName = "Test User",
                     matchedSkills = listOf("Kotlin", "Android", "Jetpack Compose"),

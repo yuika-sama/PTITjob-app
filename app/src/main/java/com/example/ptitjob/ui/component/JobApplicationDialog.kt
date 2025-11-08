@@ -1,6 +1,7 @@
 package com.example.ptitjob.ui.component
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -153,7 +154,7 @@ private fun PersonalInfoSection(formData: ApplicationFormData, onFormDataChange:
             modifier = Modifier.fillMaxWidth(),
             enabled = isEnabled
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement  = Arrangement.spacedBy(16.dp)){
             OutlinedTextField(
                 value = formData.email,
                 onValueChange = { onFormDataChange(formData.copy(email = it)) },
@@ -165,7 +166,7 @@ private fun PersonalInfoSection(formData: ApplicationFormData, onFormDataChange:
             OutlinedTextField(
                 value = formData.phone,
                 onValueChange = { onFormDataChange(formData.copy(phone = it)) },
-                label = { Text("Số điện thoại *") },
+                label = { Text("SDT *") },
                 placeholder = { Text("SĐT liên lạc") },
                 modifier = Modifier.weight(1f),
                 enabled = isEnabled
@@ -176,7 +177,7 @@ private fun PersonalInfoSection(formData: ApplicationFormData, onFormDataChange:
 
 @Composable
 private fun CvSection(formData: ApplicationFormData, onFormDataChange: (ApplicationFormData) -> Unit, isEnabled: Boolean) {
-    val cvOptions = listOf("url" to "URL CV", "upload" to "Tải lên CV")
+    val cvOptions = listOf("url" to "URL CV")
     FormSection(title = "Phương thức nộp CV") {
         Row(verticalAlignment = Alignment.CenterVertically) {
             cvOptions.forEach { (value, label) ->
@@ -227,7 +228,7 @@ private fun CoverLetterSection(formData: ApplicationFormData, onFormDataChange: 
         OutlinedTextField(
             value = formData.coverLetter,
             onValueChange = { onFormDataChange(formData.copy(coverLetter = it)) },
-            placeholder = { Text("Viết giới thiệu ngắn gọn về bản thân (điểm mạnh, điểm yếu) và nêu rõ mong muốn, lý do bạn muốn ứng tuyển...") },
+            placeholder = { Text("Viết giới thiệu ngắn gọn về bản thân, nêu rõ mong muốn, lý do bạn muốn ứng tuyển...") },
             modifier = Modifier.fillMaxWidth().height(120.dp),
             enabled = isEnabled
         )
@@ -254,7 +255,7 @@ private fun DialogActions(isSubmitting: Boolean, onSubmit: () -> Unit, onCancel:
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Đang nộp đơn...")
             } else {
-                Text("Nộp hồ sơ ứng tuyển")
+                Text("Nộp hồ sơ")
             }
         }
     }

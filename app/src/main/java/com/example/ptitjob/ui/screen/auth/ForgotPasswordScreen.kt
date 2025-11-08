@@ -7,13 +7,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,11 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.ptitjob.ui.component.AuthTextField
 import com.example.ptitjob.ui.component.PrimaryButton
 import com.example.ptitjob.ui.component.SecondaryButton
@@ -47,6 +54,7 @@ import com.example.ptitjob.ui.theme.PTITNeutral600
 import com.example.ptitjob.ui.theme.PTITNeutral700
 import com.example.ptitjob.ui.theme.PTITNeutral900
 import com.example.ptitjob.ui.theme.PTITPrimary
+import com.example.ptitjob.ui.theme.PTITPrimaryDark
 import com.example.ptitjob.ui.theme.PTITSecondary
 import com.example.ptitjob.ui.theme.PTITSize
 import com.example.ptitjob.ui.theme.PTITSpacing
@@ -209,21 +217,16 @@ private fun ForgotPasswordHeader() {
     ) {
         // App Icon with gradient background
         Surface(
-            modifier = Modifier.size(PTITSize.cardMd),
+            modifier = Modifier.size(PTITSize.cardLg),
             shape = PTITCornerRadius.md,
-            color = PTITInfo
+            color = Color.White
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LockReset,
-                    contentDescription = "Reset Password Icon",
-                    modifier = Modifier.size(PTITSize.iconLg),
-                    tint = Color.White
-                )
-            }
+            Image(
+                painter = painterResource(com.example.ptitjob.R.drawable.logo),
+                contentDescription = "PTIT Logo",
+                modifier = Modifier.fillMaxSize().padding(PTITSpacing.sm),
+                contentScale = ContentScale.Fit
+            )
         }
 
         // Welcome text
@@ -259,24 +262,6 @@ private fun EmailInputStep(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
     ) {
-        // Step Icon
-        Surface(
-            modifier = Modifier.size(PTITSize.cardLg),
-            shape = PTITCornerRadius.sm,
-            color = PTITInfo
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Email,
-                    contentDescription = "Email",
-                    modifier = Modifier.size(PTITSize.iconMd),
-                    tint = Color.White
-                )
-            }
-        }
 
         // Step Title and Description
         Text(
@@ -350,14 +335,14 @@ private fun EmailInputStep(
             enabled = !loading
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
                 modifier = Modifier.size(PTITSize.iconSm),
                 tint = PTITPrimary
             )
             Spacer(modifier = Modifier.width(PTITSpacing.sm))
             Text(
-                text = "Quay lại đăng nhập",
+                text = "Về trang trước",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium,
                     color = PTITPrimary
@@ -382,24 +367,6 @@ private fun TokenVerificationStep(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
     ) {
-        // Step Icon
-        Surface(
-            modifier = Modifier.size(PTITSize.cardLg),
-            shape = PTITCornerRadius.sm,
-            color = PTITSecondary
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MarkEmailRead,
-                    contentDescription = "Email Verification",
-                    modifier = Modifier.size(PTITSize.iconMd),
-                    tint = Color.White
-                )
-            }
-        }
 
         // Step Title and Description
         Text(
@@ -498,14 +465,14 @@ private fun TokenVerificationStep(
             enabled = !loading
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
                 modifier = Modifier.size(PTITSize.iconSm),
                 tint = PTITPrimary
             )
             Spacer(modifier = Modifier.width(PTITSpacing.sm))
             Text(
-                text = "Quay lại bước trước",
+                text = "Về trang trước",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium,
                     color = PTITPrimary
@@ -539,9 +506,9 @@ private fun PasswordResetStep(
         ) {
             // Success Icon
             Surface(
-                modifier = Modifier.size(PTITSize.cardXl * 1.5f),
+                modifier = Modifier.size(PTITSize.cardLg),
                 shape = PTITCornerRadius.md,
-                color = PTITSuccess
+                color = PTITPrimaryDark
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -560,7 +527,7 @@ private fun PasswordResetStep(
                 text = "Thành công!",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = PTITSuccess
+                    color = PTITPrimary
                 ),
                 textAlign = TextAlign.Center
             )
@@ -622,25 +589,6 @@ private fun PasswordResetStep(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
         ) {
-            // Step Icon
-            Surface(
-                modifier = Modifier.size(PTITSize.cardMd),
-                shape = PTITCornerRadius.sm,
-                color = PTITWarning
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "Password Reset",
-                        modifier = Modifier.size(PTITSize.iconMd),
-                        tint = Color.White
-                    )
-                }
-            }
-
             // Step Title and Description
             Text(
                 text = "Đặt mật khẩu mới",
@@ -722,17 +670,17 @@ private fun PasswordResetStep(
             // Back to Login
             TextButton(
                 onClick = onBackToLogin,
-                enabled = !loading
+                enabled = !loading,
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     modifier = Modifier.size(PTITSize.iconSm),
                     tint = PTITPrimary
                 )
                 Spacer(modifier = Modifier.width(PTITSpacing.sm))
                 Text(
-                    text = "Quay lại đăng nhập",
+                    text = "Về trang trước",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium,
                         color = PTITPrimary

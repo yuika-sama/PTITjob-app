@@ -36,10 +36,6 @@ class LoginViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showPassword = !_uiState.value.showPassword)
     }
 
-    fun fillTestCredentials(email: String, password: String) {
-        _uiState.value = _uiState.value.copy(email = email, password = password, validationErrors = emptyMap())
-    }
-
     private fun setFieldError(field: String, message: String) {
         val current = _uiState.value.validationErrors.toMutableMap()
         current[field] = message
@@ -76,9 +72,15 @@ class LoginViewModel @Inject constructor(
             val email = _uiState.value.email.trim()
             val password = _uiState.value.password
             val result = authRepository.login(email, password)
-            result.onSuccess {
-                _uiState.value = _uiState.value.copy(loading = false, isAuthenticated = true)
-                onAuthenticated()
+            result.onSuccess { apiResponse ->
+                // Kiểm tra nếu backend trả về thông tin user hợp lệ
+                if (apiResponse.success && apiResponse.data != null && apiResponse.data.user.id.isNotEmpty()) {
+                    _uiState.value = _uiState.value.copy(loading = false, isAuthenticated = true)
+                    onAuthenticated()
+                } else {
+                    _uiState.value = _uiState.value.copy(loading = false)
+                    setFieldError("general", "Email hoặc mật khẩu không chính xác")
+                }
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(loading = false)
                 setFieldError("general", e.message ?: "Đăng nhập thất bại")

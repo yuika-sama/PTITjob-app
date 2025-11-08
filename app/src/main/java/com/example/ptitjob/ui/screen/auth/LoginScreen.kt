@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,12 +22,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.example.ptitjob.R
 import com.example.ptitjob.ui.component.*
 import com.example.ptitjob.ui.theme.*
 
@@ -38,8 +43,7 @@ data class LoginUiState(
     val showPassword: Boolean = false,
     val loading: Boolean = false,
     val isAuthenticated: Boolean = false,
-    val validationErrors: Map<String, String> = emptyMap(),
-    val isDevelopmentMode: Boolean = true
+    val validationErrors: Map<String, String> = emptyMap()
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +57,6 @@ fun LoginScreen(
     onSubmit: () -> Unit,
     onForgotPasswordClick: () -> Unit,
     onSignUpClick: () -> Unit,
-    onFillTestCredentials: (String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
@@ -114,11 +117,6 @@ fun LoginScreen(
                         textAlign = TextAlign.Center
                     )
                     
-                    // Development Mode Test Credentials
-                    if (uiState.isDevelopmentMode) {
-                        TestCredentialsSection(onFillTestCredentials)
-                    }
-                    
                     // Login Form
                     LoginForm(
                         uiState = uiState,
@@ -148,23 +146,18 @@ private fun LoginHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
     ) {
-        // App Icon with gradient background
+        // App Icon with PTIT logo
         Surface(
-            modifier = Modifier.size(PTITSize.cardXl),
+            modifier = Modifier.size(PTITSize.cardLg),
             shape = PTITCornerRadius.md,
-            color = PTITPrimary
+            color = Color.White
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Work,
-                    contentDescription = "PTIT Job Logo",
-                    modifier = Modifier.size(PTITSize.iconLg),
-                    tint = Color.White
-                )
-            }
+            Image(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "PTIT Logo",
+                modifier = Modifier.fillMaxSize().padding(PTITSpacing.sm),
+                contentScale = ContentScale.Fit
+            )
         }
         
         // Welcome text
@@ -183,52 +176,6 @@ private fun LoginHeader() {
                 color = Color.White.copy(alpha = 0.9f)
             ),
             textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun TestCredentialsSection(
-    onFillTestCredentials: (String, String) -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-    ) {
-        Text(
-            text = "Tài khoản thử nghiệm",
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                color = PTITNeutral700
-            )
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-        ) {
-            SecondaryButton(
-                onClick = { onFillTestCredentials("admin@ptit.edu.vn", "admin123") },
-                modifier = Modifier.weight(1f),
-                text = "Admin"
-            )
-
-            SecondaryButton(
-                onClick = { onFillTestCredentials("candidate@ptit.edu.vn", "candidate123") },
-                modifier = Modifier.weight(1f),
-                text = "Candidate"
-            )
-
-            SecondaryButton(
-                onClick = { onFillTestCredentials("employer@ptit.edu.vn", "employer123") },
-                modifier = Modifier.weight(1f),
-                text = "Employer"
-            )
-        }
-
-        HorizontalDivider(
-            modifier = Modifier.padding(vertical = PTITSpacing.md),
-            thickness = DividerDefaults.Thickness, color = PTITNeutral300
         )
     }
 }
@@ -406,7 +353,6 @@ private fun PreviewLoginScreen() {
         var uiState by remember { 
             mutableStateOf(
                 LoginUiState(
-                    isDevelopmentMode = true,
                     email = "",
                     password = ""
                 )
@@ -421,14 +367,7 @@ private fun PreviewLoginScreen() {
             onToggleShowPassword = { uiState = uiState.copy(showPassword = !uiState.showPassword) },
             onSubmit = { uiState = uiState.copy(loading = true) },
             onForgotPasswordClick = { /* Navigate to forgot password */ },
-            onSignUpClick = { /* Navigate to sign up */ },
-            onFillTestCredentials = { email, password ->
-                uiState = uiState.copy(
-                    email = email, 
-                    password = password, 
-                    validationErrors = emptyMap()
-                )
-            }
+            onSignUpClick = { /* Navigate to sign up */ }
         )
     }
 }
@@ -442,7 +381,6 @@ private fun PreviewLoginScreenWithError() {
                 LoginUiState(
                     email = "invalid-email",
                     password = "123",
-                    isDevelopmentMode = false,
                     validationErrors = mapOf(
                         "email" to "Email không đúng định dạng",
                         "password" to "Mật khẩu phải có ít nhất 6 ký tự",
@@ -460,14 +398,7 @@ private fun PreviewLoginScreenWithError() {
             onToggleShowPassword = { uiState = uiState.copy(showPassword = !uiState.showPassword) },
             onSubmit = { /* Handle submit */ },
             onForgotPasswordClick = { /* Navigate to forgot password */ },
-            onSignUpClick = { /* Navigate to sign up */ },
-            onFillTestCredentials = { email, password ->
-                uiState = uiState.copy(
-                    email = email, 
-                    password = password, 
-                    validationErrors = emptyMap()
-                )
-            }
+            onSignUpClick = { /* Navigate to sign up */ }
         )
     }
 }
@@ -481,8 +412,7 @@ private fun PreviewLoginScreenLoading() {
                 LoginUiState(
                     email = "test@ptit.edu.vn",
                     password = "Password123",
-                    loading = true,
-                    isDevelopmentMode = false
+                    loading = true
                 )
             )
         }
@@ -495,14 +425,7 @@ private fun PreviewLoginScreenLoading() {
             onToggleShowPassword = { uiState = uiState.copy(showPassword = !uiState.showPassword) },
             onSubmit = { /* Handle submit */ },
             onForgotPasswordClick = { /* Navigate to forgot password */ },
-            onSignUpClick = { /* Navigate to sign up */ },
-            onFillTestCredentials = { email, password ->
-                uiState = uiState.copy(
-                    email = email, 
-                    password = password, 
-                    validationErrors = emptyMap()
-                )
-            }
+            onSignUpClick = { /* Navigate to sign up */ }
         )
     }
 }

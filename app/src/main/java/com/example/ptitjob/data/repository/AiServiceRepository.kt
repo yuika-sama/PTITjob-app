@@ -1,27 +1,27 @@
 package com.example.ptitjob.data.repository
 
+import android.util.Base64
 import com.example.ptitjob.data.api.ai.AiServiceApi
-import com.example.ptitjob.data.api.request.InterviewHistoryMessage
-import com.example.ptitjob.data.api.request.InterviewMessageRequest
-import com.example.ptitjob.data.api.request.InterviewFinishRequest
+import com.example.ptitjob.data.api.request.ChatMessage
+import com.example.ptitjob.data.api.request.EvaluateCvRequest
+import com.example.ptitjob.data.api.request.InterviewChatRequest
 import com.example.ptitjob.data.model.ChatSender
 import com.example.ptitjob.data.model.CvEvaluationResult
 import com.example.ptitjob.data.model.InterviewMessage
 import com.example.ptitjob.data.model.InterviewResult
 import com.example.ptitjob.data.model.InterviewSession
+import com.example.ptitjob.data.model.InterviewBreakdown
+import com.example.ptitjob.data.model.InterviewDetails
+import com.example.ptitjob.data.model.InterviewImprovement
+import com.example.ptitjob.data.model.ScoresDistribution
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.Response
 import java.io.File
 import java.time.OffsetDateTime
-import java.time.format.DateTimeParseException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,135 +30,229 @@ class AiServiceRepository @Inject constructor(
     private val api: AiServiceApi
 ) {
 
-    suspend fun evaluateCv(file: File): Result<CvEvaluationResult> {
+    suspend fun evaluateCv(file: File, jobDescription: String = "Software Engineer", jobSkills: String? = null): Result<CvEvaluationResult> {
         return withContext(Dispatchers.IO) {
             runCatching {
-                val response = api.evaluateCv(createFileParts(file))
-                handleResponse(response) { payload ->
-                    val score = payload.findFirstInt(SCORE_KEYS) ?: 0
-                    val summary = payload.findFirstString(SUMMARY_KEYS)
-                    val strengths = payload.findFirstStringList(STRENGTH_KEYS)
-                    val improvements = payload.findFirstStringList(IMPROVEMENT_KEYS)
-                    val recommendations = payload.findFirstStringList(RECOMMENDATION_KEYS)
-                    CvEvaluationResult(
-                        score = score.coerceIn(0, 100),
-                        summary = summary,
-                        strengths = strengths,
-                        improvements = improvements,
-                        recommendations = recommendations
-                    )
+                val fileBytes = file.readBytes()
+                val fileBase64 = Base64.encodeToString(fileBytes, Base64.NO_WRAP)
+                
+                val request = EvaluateCvRequest(
+                    fileBase64 = "data:application/pdf;base64,$fileBase64",
+                    jobDescription = jobDescription,
+                    jobSkills = jobSkills
+                )
+                
+                val response = api.evaluateCv(request)
+                if (!response.isSuccessful) {
+                    val errorBody = response.errorBody()?.string()?.takeIf { it.isNotBlank() }
+                    throw IllegalStateException(errorBody ?: "CV evaluation failed with status ${response.code()}")
                 }
+                
+                val body = response.body()
+                    ?: throw IllegalStateException("AI service returned empty response")
+                
+                val score = body.findFirstInt(SCORE_KEYS) ?: 0
+                val summary = body.findFirstString(SUMMARY_KEYS)
+                val strengths = body.findFirstStringList(STRENGTH_KEYS)
+                val improvements = body.findFirstStringList(IMPROVEMENT_KEYS)
+                val recommendations = body.findFirstStringList(RECOMMENDATION_KEYS)
+                
+                CvEvaluationResult(
+                    score = score.coerceIn(0, 100),
+                    summary = summary,
+                    strengths = strengths,
+                    improvements = improvements,
+                    recommendations = recommendations
+                )
             }
         }
     }
 
-    suspend fun startInterview(file: File): Result<InterviewSession> {
+    suspend fun startInterview(cvAnalysisResult: Map<String, Any>): Result<InterviewSession> {
         return withContext(Dispatchers.IO) {
             runCatching {
-                val response = api.startInterview(createFileParts(file))
-                handleResponse(response) { payload ->
-                    val sessionId = payload.findFirstString(SESSION_ID_KEYS)
-                        ?: error("Session id is missing in AI response")
-                    val cvScore = payload.findFirstInt(CV_SCORE_KEYS)
-                    val candidateName = payload.findFirstString(CANDIDATE_NAME_KEYS)
-                    val matchedSkills = payload.findFirstStringList(MATCHED_SKILLS_KEYS)
-                    val message = payload.findFirstString(INITIAL_MESSAGE_KEYS)
-                    InterviewSession(
-                        sessionId = sessionId,
-                        cvScore = cvScore,
-                        candidateName = candidateName,
-                        matchedSkills = matchedSkills,
-                        initialMessage = message
-                    )
+                val request = InterviewChatRequest(
+                    history = emptyList(),
+                    cvAnalysisResult = cvAnalysisResult,
+                    state = null
+                )
+                
+                val response = api.interviewChat(request)
+                if (!response.isSuccessful) {
+                    val errorBody = response.errorBody()?.string()?.takeIf { it.isNotBlank() }
+                    throw IllegalStateException(errorBody ?: "Interview start failed with status ${response.code()}")
                 }
+                
+                val body = response.body()
+                    ?: throw IllegalStateException("AI service returned empty response")
+                
+                val initialMessage = body.findFirstString(RESPONSE_KEYS)
+                val state = body.get("state")?.asJsonObject?.let { stateObj ->
+                    stateObj.entrySet().associate { (key, value) ->
+                        key to when {
+                            value.isJsonPrimitive -> {
+                                val primitive = value.asJsonPrimitive
+                                when {
+                                    primitive.isString -> primitive.asString
+                                    primitive.isNumber -> primitive.asNumber
+                                    primitive.isBoolean -> primitive.asBoolean
+                                    else -> value.toString()
+                                }
+                            }
+                            else -> value
+                        }
+                    }
+                }
+                
+                val cvScore = cvAnalysisResult["scoring"]?.let { scoring ->
+                    (scoring as? Map<*, *>)?.get("overall_score_percent")?.toString()?.toDoubleOrNull()?.toInt()
+                }
+                
+                val candidateName = cvAnalysisResult["candidate"]?.let { candidate ->
+                    (candidate as? Map<*, *>)?.get("name")?.toString()
+                }
+                
+                val matchedSkills = cvAnalysisResult["matching"]?.let { matching ->
+                    (matching as? Map<*, *>)?.get("skills_matched")?.let { skills ->
+                        (skills as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+                    }
+                } ?: emptyList()
+                
+                InterviewSession(
+                    cvAnalysisResult = cvAnalysisResult,
+                    state = state,
+                    cvScore = cvScore,
+                    candidateName = candidateName,
+                    matchedSkills = matchedSkills,
+                    initialMessage = initialMessage
+                )
             }
         }
     }
 
     suspend fun sendInterviewMessage(
-        sessionId: String,
-        message: String,
-        history: List<InterviewMessage>
+        history: List<InterviewMessage>,
+        cvAnalysisResult: Map<String, Any>,
+        state: Map<String, Any>?
     ): Result<InterviewMessage> {
         return withContext(Dispatchers.IO) {
             runCatching {
-                val request = InterviewMessageRequest(
-                    sessionId = sessionId,
-                    message = message,
-                    history = history.map {
-                        InterviewHistoryMessage(
-                            role = when (it.sender) {
-                                ChatSender.AI -> "assistant"
-                                ChatSender.USER -> "user"
-                                ChatSender.SYSTEM -> "system"
-                            },
-                            content = it.message
+                val chatHistory = history.map { msg ->
+                    ChatMessage(
+                        sender = when (msg.sender) {
+                            ChatSender.AI -> "ai"
+                            ChatSender.USER -> "user"
+                            ChatSender.SYSTEM -> "system"
+                        },
+                        text = msg.message,
+                        state = msg.state
+                    )
+                }
+                
+                val request = InterviewChatRequest(
+                    history = chatHistory,
+                    cvAnalysisResult = cvAnalysisResult,
+                    state = state
+                )
+                
+                val response = api.interviewChat(request)
+                if (!response.isSuccessful) {
+                    val errorBody = response.errorBody()?.string()?.takeIf { it.isNotBlank() }
+                    throw IllegalStateException(errorBody ?: "Interview message failed with status ${response.code()}")
+                }
+                
+                val body = response.body()
+                    ?: throw IllegalStateException("AI service returned empty response")
+                
+                val aiMessage = body.findFirstString(RESPONSE_KEYS)
+                    ?: throw IllegalStateException("AI response is missing")
+                
+                val isFinished = body.findFirstBoolean(FINISHED_KEYS) ?: false
+                val newState = body.get("state")?.asJsonObject?.let { stateObj ->
+                    stateObj.entrySet().associate { (key, value) ->
+                        key to when {
+                            value.isJsonPrimitive -> {
+                                val primitive = value.asJsonPrimitive
+                                when {
+                                    primitive.isString -> primitive.asString
+                                    primitive.isNumber -> primitive.asNumber
+                                    primitive.isBoolean -> primitive.asBoolean
+                                    else -> value.toString()
+                                }
+                            }
+                            else -> value
+                        }
+                    }
+                }
+                
+                InterviewMessage(
+                    sender = ChatSender.AI,
+                    message = aiMessage,
+                    timestamp = OffsetDateTime.now(),
+                    state = newState
+                )
+            }
+        }
+    }
+
+    suspend fun finishInterview(
+        history: List<InterviewMessage>,
+        cvAnalysisResult: Map<String, Any>,
+        state: Map<String, Any>?
+    ): Result<InterviewResult> {
+        // Backend tự động kết thúc khi hết câu hỏi, không cần endpoint riêng
+        // Chỉ cần gửi message cuối cùng và nhận kết quả
+        return sendInterviewMessage(history, cvAnalysisResult, state).map { lastMessage ->
+            // Parse result từ state cuối cùng nếu có
+            val finalState = lastMessage.state ?: state ?: emptyMap()
+            val finalScore = finalState["final_score"]?.toString()?.toDoubleOrNull()
+            val overallAssessment = finalState["overall_assessment"]?.toString()
+            val recommendation = finalState["recommendation"]?.toString()
+            
+            // Extract breakdown if available
+            val breakdown = finalState["breakdown"]?.let { breakdownData ->
+                when (breakdownData) {
+                    is Map<*, *> -> {
+                        val cvScore = breakdownData["cv_score"]?.toString()?.toDoubleOrNull()
+                        val interviewScore = breakdownData["interview_score"]?.toString()?.toDoubleOrNull()
+                        com.example.ptitjob.data.model.InterviewBreakdown(
+                            cvScore = cvScore,
+                            cvWeight = 0.3,
+                            interviewScore = interviewScore,
+                            interviewWeight = 0.7
                         )
                     }
-                )
-                val response = api.sendInterviewMessage(request)
-                handleResponse(response) { payload ->
-                    val reply = payload.findFirstString(AI_MESSAGE_KEYS)
-                        ?: error("AI reply is missing")
-                    val timestamp = payload.findFirstString(TIMESTAMP_KEYS)?.let(::parseTimestamp)
-                    InterviewMessage(
-                        sessionId = sessionId,
-                        sender = ChatSender.AI,
-                        message = reply,
-                        timestamp = timestamp
-                    )
+                    else -> null
                 }
             }
-        }
-    }
-
-    suspend fun finishInterview(sessionId: String): Result<InterviewResult> {
-        return withContext(Dispatchers.IO) {
-            runCatching {
-                val response = api.finishInterview(InterviewFinishRequest(sessionId))
-                handleResponse(response) { payload ->
-                    val finalScore = payload.findFirstInt(FINAL_SCORE_KEYS)
-                    val cvScore = payload.findFirstInt(CV_SCORE_KEYS)
-                    val interviewScore = payload.findFirstInt(INTERVIEW_SCORE_KEYS)
-                    val improvements = payload.findImprovements()
-                    val summary = payload.findFirstString(SUMMARY_KEYS)
-                    InterviewResult(
-                        finalScore = finalScore,
-                        cvScore = cvScore,
-                        interviewScore = interviewScore,
-                        improvements = improvements,
-                        summary = summary
-                    )
+            
+            // Extract improvements if available
+            val improvements = finalState["improvements"]?.let { improvementsData ->
+                when (improvementsData) {
+                    is List<*> -> improvementsData.mapNotNull { item ->
+                        when (item) {
+                            is Map<*, *> -> {
+                                val area = item["area"]?.toString() ?: ""
+                                val tip = item["tip"]?.toString() ?: ""
+                                if (area.isNotBlank() && tip.isNotBlank()) {
+                                    com.example.ptitjob.data.model.InterviewImprovement(area, tip)
+                                } else null
+                            }
+                            else -> null
+                        }
+                    }
+                    else -> emptyList()
                 }
-            }
+            } ?: emptyList()
+            
+            InterviewResult(
+                finalScore = finalScore,
+                overallAssessment = overallAssessment,
+                recommendation = recommendation,
+                breakdown = breakdown,
+                improvements = improvements
+            )
         }
-    }
-
-    private fun createFileParts(file: File): List<MultipartBody.Part> {
-        val mediaType = "application/pdf".toMediaType()
-        val requestBody: RequestBody = file.asRequestBody(mediaType)
-        return FILE_PART_NAMES.distinct().map { name ->
-            MultipartBody.Part.createFormData(name, file.name, requestBody)
-        }
-    }
-
-    private inline fun <T> handleResponse(
-        response: Response<JsonObject>,
-        crossinline mapper: (JsonObject) -> T
-    ): T {
-        if (!response.isSuccessful) {
-            val errorBody = response.errorBody()?.string()?.takeIf { it.isNotBlank() }
-            throw IllegalStateException(errorBody ?: response.message())
-        }
-        val body = response.body()
-            ?: throw IllegalStateException("AI service returned empty body")
-        val payload = body.unwrapData()
-        return mapper(payload)
-    }
-
-    private fun JsonObject.unwrapData(): JsonObject {
-        val dataNode = findFirstObject(DATA_KEYS)
-        return dataNode ?: this
     }
 
     private fun JsonObject.findFirstObject(keys: Array<String>): JsonObject? {
@@ -197,43 +291,6 @@ class AiServiceRepository @Inject constructor(
         return single?.let { listOf(it) } ?: emptyList()
     }
 
-    private fun JsonObject.findImprovements(): List<Pair<String, String>> {
-        val candidates = listOfNotNull(
-            findFirstArray(IMPROVEMENT_KEYS),
-            findFirstArray(RECOMMENDATION_KEYS)
-        )
-        val merged = mutableListOf<Pair<String, String>>()
-        for (array in candidates) {
-            array.forEach { element ->
-                when {
-                    element.isJsonObject -> {
-                        val obj = element.asJsonObject
-                        val title = obj.findFirstString(TITLE_KEYS) ?: obj.findFirstString(AREA_KEYS) ?: ""
-                        val detail = obj.findFirstString(CONTENT_KEYS) ?: obj.findFirstString(SUMMARY_KEYS) ?: ""
-                        if (title.isNotBlank() || detail.isNotBlank()) {
-                            merged += title.trim() to detail.trim()
-                        }
-                    }
-                    element.isJsonPrimitive && element.asJsonPrimitive.isString -> {
-                        val value = element.asString.trim()
-                        if (value.isNotBlank()) merged += value to ""
-                    }
-                }
-            }
-        }
-        if (merged.isNotEmpty()) return merged
-        return findFirstStringList(IMPROVEMENT_KEYS).map { it to "" }
-    }
-
-    private fun JsonObject.findFirstArray(keys: Array<String>): JsonArray? {
-        return keys.firstNotNullOfOrNull { key ->
-            when {
-                has(key) && get(key).isJsonArray -> getAsJsonArray(key)
-                else -> null
-            }
-        }
-    }
-
     private fun JsonObject.findFirstString(keys: Array<String>): String? {
         return keys.firstNotNullOfOrNull { key ->
             when {
@@ -259,29 +316,31 @@ class AiServiceRepository @Inject constructor(
         }
     }
 
-    private fun parseTimestamp(raw: String): OffsetDateTime? {
-        return runCatching { OffsetDateTime.parse(raw) }.getOrNull()
+    private fun JsonObject.findFirstBoolean(keys: Array<String>): Boolean? {
+        return keys.firstNotNullOfOrNull { key ->
+            when {
+                has(key) && get(key).isJsonPrimitive -> {
+                    val primitive = get(key).asJsonPrimitive
+                    when {
+                        primitive.isBoolean -> primitive.asBoolean
+                        primitive.isString -> primitive.asString.toBoolean()
+                        else -> null
+                    }
+                }
+                else -> null
+            }
+        }
     }
 
     companion object {
-        private val FILE_PART_NAMES = listOf("file", "cv", "resume", "cv_file")
-        private val DATA_KEYS = arrayOf("data", "result", "payload")
-        private val SCORE_KEYS = arrayOf("match_score", "matchScore", "score", "overall_score", "overallScore")
+        private val SCORE_KEYS = arrayOf("match_score", "matchScore", "score", "overall_score", "overallScore", "overall_score_percent")
         private val SUMMARY_KEYS = arrayOf("summary", "comment", "comments", "overall_feedback", "overallFeedback")
         private val STRENGTH_KEYS = arrayOf("strengths", "strong_points", "highlights", "positives")
         private val IMPROVEMENT_KEYS = arrayOf("improvements", "weaknesses", "areas_to_improve", "improvementAreas")
         private val RECOMMENDATION_KEYS = arrayOf("recommendations", "suggestions", "tips", "next_steps")
         private val CONTENT_KEYS = arrayOf("content", "details", "description", "text")
         private val TITLE_KEYS = arrayOf("title", "name", "label", "heading")
-        private val AREA_KEYS = arrayOf("area", "topic", "category")
-        private val SESSION_ID_KEYS = arrayOf("session_id", "sessionId", "id")
-        private val CV_SCORE_KEYS = arrayOf("cv_score", "cvScore")
-        private val MATCHED_SKILLS_KEYS = arrayOf("matched_skills", "skills", "top_skills")
-        private val INITIAL_MESSAGE_KEYS = arrayOf("initial_message", "message", "ai_message", "greeting")
-        private val CANDIDATE_NAME_KEYS = arrayOf("candidate_name", "candidateName", "user_name", "userName")
-        private val AI_MESSAGE_KEYS = arrayOf("ai_message", "message", "response", "answer")
-        private val TIMESTAMP_KEYS = arrayOf("timestamp", "created_at", "createdAt")
-        private val FINAL_SCORE_KEYS = arrayOf("final_score", "finalScore", "overall_score", "score")
-        private val INTERVIEW_SCORE_KEYS = arrayOf("interview_score", "interviewScore")
+        private val RESPONSE_KEYS = arrayOf("response", "message", "ai_message", "answer")
+        private val FINISHED_KEYS = arrayOf("finished", "completed", "done", "end")
     }
 }

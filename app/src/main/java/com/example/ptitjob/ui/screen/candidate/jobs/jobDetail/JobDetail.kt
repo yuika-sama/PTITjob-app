@@ -373,21 +373,21 @@ private fun JobDetailHeader(
                         }
 
                         // Save Button
-                        IconButton(
-                            onClick = onSaveJob,
-                            modifier = Modifier
-                                .background(
-                                    if (isSaved) PTITError.copy(alpha = 0.1f) else PTITNeutral100,
-                                    CircleShape
-                                )
-                                .size(PTITSize.buttonMd)
-                        ) {
-                            Icon(
-                                if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = if (isSaved) "Unsave" else "Save",
-                                tint = if (isSaved) PTITError else PTITTextSecondary
-                            )
-                        }
+//                        IconButton(
+//                            onClick = onSaveJob,
+//                            modifier = Modifier
+//                                .background(
+//                                    if (isSaved) PTITError.copy(alpha = 0.1f) else PTITNeutral100,
+//                                    CircleShape
+//                                )
+//                                .size(PTITSize.buttonMd)
+//                        ) {
+//                            Icon(
+//                                if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+//                                contentDescription = if (isSaved) "Unsave" else "Save",
+//                                tint = if (isSaved) PTITError else PTITTextSecondary
+//                            )
+//                        }
                     }
 
                     // Main Action Button
@@ -442,14 +442,14 @@ private fun JobQuickInfoSection(job: JobDetailsPageData) {
                 )
             )
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
+            Column(
+                verticalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 QuickInfoItem(
                     icon = Icons.Default.AttachMoney,
                     title = "Mức lương",
-                    value = job.salary,
+                    value = (job.salary),
                     color = PTITSuccess
                 )
                 QuickInfoItem(
@@ -468,8 +468,8 @@ private fun JobQuickInfoSection(job: JobDetailsPageData) {
 
             HorizontalDivider(Modifier, DividerDefaults.Thickness, color = PTITNeutral200)
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
+            Column(
+                verticalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 QuickInfoItem(
@@ -502,21 +502,24 @@ private fun QuickInfoItem(
     value: String,
     color: Color
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(color.copy(alpha = 0.1f)),
+                .background(color.copy(alpha = 0.1f))
+                .padding(vertical = PTITSpacing.md)
+            ,
             contentAlignment = Alignment.Center
         ) {
             Icon(icon, contentDescription = null, tint = color)
         }
-        Spacer(modifier = Modifier.height(PTITSpacing.xs))
-        Text(title, style = MaterialTheme.typography.bodySmall, color = PTITTextSecondary)
+        Spacer(modifier = Modifier.width(PTITSpacing.md).height(PTITSpacing.md))
+        Text(title, style = MaterialTheme.typography.titleMedium, color = PTITTextSecondary)
+        Spacer(modifier = Modifier.width(PTITSpacing.md).height(PTITSpacing.md))
         Text(
             value,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
             color = PTITTextPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -825,21 +828,21 @@ private fun FloatingActionSection(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = onSaveJob,
-                    modifier = Modifier
-                        .background(
-                            if (isSaved) PTITError.copy(alpha = 0.1f) else PTITNeutral100,
-                            CircleShape
-                        )
-                        .size(PTITSize.buttonMd)
-                ) {
-                    Icon(
-                        if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = if (isSaved) "Unsave" else "Save",
-                        tint = if (isSaved) PTITError else PTITTextSecondary
-                    )
-                }
+//                IconButton(
+//                    onClick = onSaveJob,
+//                    modifier = Modifier
+//                        .background(
+//                            if (isSaved) PTITError.copy(alpha = 0.1f) else PTITNeutral100,
+//                            CircleShape
+//                        )
+//                        .size(PTITSize.buttonMd)
+//                ) {
+//                    Icon(
+//                        if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+//                        contentDescription = if (isSaved) "Unsave" else "Save",
+//                        tint = if (isSaved) PTITError else PTITTextSecondary
+//                    )
+//                }
 
                 Button(
                     onClick = onApplyJob,
@@ -869,90 +872,3 @@ private fun FloatingActionSection(
     }
 }
 
-@Preview(showBackground = true, device = "spec:width=393dp,height=851dp,dpi=420")
-@Composable
-fun JobDetailsScreenPreview() {
-    MaterialTheme {
-        JobDetailsScreen(
-            state = JobDetailsUiState(
-                job = sampleJobDetailsData,
-                company = sampleCompanyInfo,
-                relatedJobs = sampleRelatedJobs()
-            ),
-            onBack = {},
-            onRetry = {},
-            onToggleSave = {},
-            onOpenApply = {},
-            onCloseApply = {},
-            onCompanySelected = {},
-            onRelatedJobSelected = {}
-        )
-    }
-}
-
-val sampleJobDetailsData = JobDetailsPageData(
-    id = "1",
-    title = "Senior Android Developer (Kotlin, Compose)",
-    companyName = "Global Tech Solutions",
-    companyId = "comp1",
-    logoUrl = null,
-    salary = "30 - 50 triệu VND",
-    jobType = "Toàn thời gian",
-    locationName = "Quận 1, TP. Hồ Chí Minh",
-    categoryName = "Công nghệ thông tin",
-    experience = "Trên 3 năm",
-    createdAt = "25/10/2025",
-    deadline = "25/11/2025",
-    expiryDate = "25/11/2025",
-    description = listOf(
-        "Phát triển các ứng dụng Android gốc bằng Kotlin và Jetpack Compose",
-        "Tham gia vào toàn bộ vòng đời phát triển sản phẩm từ ý tưởng đến triển khai",
-        "Hợp tác chặt chẽ với team UI/UX để tạo ra trải nghiệm người dùng tốt nhất",
-        "Đảm bảo chất lượng code thông qua code review và testing",
-        "Nghiên cứu và áp dụng các công nghệ mới để cải thiện hiệu suất ứng dụng"
-    ).joinToString("\n"),
-    requirements = listOf(
-        "Thành thạo Kotlin, Jetpack Compose, Coroutines, Flow",
-        "Có kinh nghiệm với các kiến trúc MVVM, MVI",
-        "Hiểu biết về Android SDK, APIs và Android Framework",
-        "Kinh nghiệm làm việc với Git, CI/CD",
-        "Khả năng làm việc nhóm và giao tiếp tốt"
-    ).joinToString("\n"),
-    benefits = listOf(
-        "Mức lương cạnh tranh, thưởng dự án hấp dẫn",
-        "Bảo hiểm sức khỏe cao cấp cho bản thân và gia đình",
-        "Cơ hội làm việc với các công nghệ mới nhất",
-        "Môi trường làm việc năng động, sáng tạo",
-        "Cơ hội du lịch, team building định kỳ"
-    ).joinToString("\n")
-)
-
-private val sampleCompanyInfo = JobCompanyInfo(
-    id = "comp1",
-    name = "Global Tech Solutions",
-    description = "Doanh nghiệp công nghệ tập trung vào các giải pháp di động.",
-    size = "500-1000 nhân viên",
-    address = "Quận 1, TP. Hồ Chí Minh",
-    website = "https://globaltech.vn",
-    email = "contact@globaltech.vn",
-    logoUrl = null,
-    jobCount = 42
-)
-
-private fun sampleRelatedJobs(): List<JobListCardData> = List(3) { index ->
-    JobListCardData(
-        id = index,
-        backendId = "job_rel_$index",
-        title = "Android Developer Level ${index + 1}",
-        company = "Innovative Apps Co.",
-        companyLogo = null,
-        salary = "${15 + index * 2} - ${25 + index * 2} triệu",
-        location = "TP. Hồ Chí Minh",
-        experience = "Đang cập nhật",
-        postedTime = "Đăng ${index + 1} ngày trước",
-        deadline = "${5 - index} ngày",
-        isUrgent = index % 2 == 0,
-        isVerified = index % 2 == 0,
-        tags = listOf("Android", "Kotlin", "Compose")
-    )
-}

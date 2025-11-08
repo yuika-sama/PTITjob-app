@@ -28,6 +28,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Assessment
@@ -69,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ptitjob.data.model.CvEvaluationResult
+import com.example.ptitjob.ui.component.PTITScreenContainer
 import com.example.ptitjob.ui.theme.PTITCornerRadius
 import com.example.ptitjob.ui.theme.PTITElevation
 import com.example.ptitjob.ui.theme.PTITGradientEnd
@@ -149,7 +151,7 @@ private fun CvEvaluationScreen(
                 title = { Text("Đánh giá CV", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Quay lại")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -162,7 +164,7 @@ private fun CvEvaluationScreen(
         containerColor = Color.Transparent
     ) { padding ->
         // Use PTITScreenContainer for consistent background
-        com.example.ptitjob.ui.component.PTITScreenContainer(
+        PTITScreenContainer(
             hasGradientBackground = true
         ) {
             Column(
@@ -219,16 +221,9 @@ private fun CvEvaluationHeader() {
         Surface(
             modifier = Modifier.size(PTITSize.iconXxxl + PTITSpacing.lg),
             shape = PTITCornerRadius.md,
-            color = PTITSecondary
+            color = PTITPrimary.copy(alpha = 0.0f)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.Assessment,
-                    contentDescription = null,
-                    modifier = Modifier.size(PTITSize.iconXxxl),
-                    tint = Color.White
-                )
-            }
+
         }
 
         Text(
@@ -435,7 +430,7 @@ private fun UploadBox(
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            verticalArrangement = Arrangement.Center
         ) {
             Surface(
                 modifier = Modifier.size(PTITSize.iconXxxl + PTITSpacing.md),
@@ -453,7 +448,7 @@ private fun UploadBox(
             }
 
             Text(
-                text = "Kéo thả hoặc chọn file CV",
+                text = "Chọn file CV",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
                     color = PTITPrimary
@@ -621,9 +616,9 @@ private fun ResultSection(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = color.copy(alpha = 0.05f),
+        color = color.copy(alpha = 0.1f),
         shape = PTITCornerRadius.md,
-        border = BorderStroke(1.dp, color.copy(alpha = 0.2f))
+        border = BorderStroke(1.dp, color.copy(alpha = 0.4f))
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -643,7 +638,7 @@ private fun ResultSection(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = color
                     )
                 )
@@ -656,12 +651,12 @@ private fun ResultSection(
                 items(items, key = { it }) { label ->
                     SuggestionChip(
                         onClick = {},
-                        label = { Text(label, style = MaterialTheme.typography.bodyMedium) },
+                        label = { Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold) },
                         colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = color.copy(alpha = 0.1f),
+                            containerColor = color.copy(alpha = 0.2f),
                             labelColor = color
                         ),
-                        border = BorderStroke(1.dp, color.copy(alpha = 0.2f))
+                        border = BorderStroke(1.dp, color.copy(alpha = 0.4f))
                     )
                 }
             }
@@ -719,7 +714,7 @@ private fun InstructionItem(order: Int, description: String) {
         Surface(
             modifier = Modifier.size(PTITSize.iconLg),
             shape = CircleShape,
-            color = PTITPrimary.copy(alpha = 0.1f)
+            color = PTITPrimary.copy(alpha = 0.0f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
@@ -739,7 +734,7 @@ private fun InstructionItem(order: Int, description: String) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun CvEvaluationPreview() {
     PtitjobTheme {

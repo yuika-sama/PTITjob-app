@@ -50,6 +50,7 @@ fun JobDto.toJobListCardData(
         deadline = remainingLabel,
         isUrgent = expiryInstant?.let { Duration.between(now, it).toDays() in 0..3 } ?: false,
         isVerified = jobCount != null && jobCount > 0,
+        logoUrl = logoUrl,
         tags = buildList {
             jobTypeLabel(jobType)?.let { add(it) }
             if (categoryName.isNotBlank()) add(categoryName)

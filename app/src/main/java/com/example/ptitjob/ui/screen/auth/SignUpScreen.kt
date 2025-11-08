@@ -2,6 +2,7 @@ package com.example.ptitjob.ui.screen.auth
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +29,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.example.ptitjob.R
 import com.example.ptitjob.ui.component.*
 import com.example.ptitjob.ui.theme.*
 
@@ -182,23 +187,17 @@ private fun SignUpHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
     ) {
-        // App Icon with gradient background
         Surface(
-            modifier = Modifier.size(PTITSize.cardXl),
+            modifier = Modifier.size(PTITSize.cardLg),
             shape = PTITCornerRadius.md,
-            color = PTITSecondary
+            color = Color.White
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PersonAdd,
-                    contentDescription = "Sign Up Icon",
-                    modifier = Modifier.size(PTITSize.iconLg),
-                    tint = Color.White
-                )
-            }
+            Image(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "PTIT Logo",
+                modifier = Modifier.fillMaxSize().padding(PTITSpacing.sm),
+                contentScale = ContentScale.Fit
+            )
         }
         
         // Welcome text
@@ -553,8 +552,8 @@ private fun RegistrationSuccessScreen(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(PTITSpacing.lg)
-                .clip((PTITCornerRadius.lg)),
+                .padding(PTITSpacing.md)
+                .clip((PTITCornerRadius.md)),
             color = PTITNeutral50.copy(alpha = 0.95f),
             shadowElevation = PTITElevation.md,
             tonalElevation = PTITElevation.sm
@@ -568,9 +567,9 @@ private fun RegistrationSuccessScreen(
             ) {
                 // Success Icon
                 Surface(
-                    modifier = Modifier.size(PTITSize.cardXl * 1.5f),
+                    modifier = Modifier.size(PTITSize.cardMd),
                     shape = (PTITCornerRadius.md),
-                    color = PTITSuccess
+                    color = PTITPrimaryDark
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -589,7 +588,7 @@ private fun RegistrationSuccessScreen(
                     text = "Đăng ký thành công!",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        color = PTITSuccess
+                        color = PTITPrimary
                     ),
                     textAlign = TextAlign.Center
                 )
@@ -626,7 +625,7 @@ private fun RegistrationSuccessScreen(
                 ) {
                     PrimaryButton(
                         onClick = onNavigateToDashboard,
-                        text = "Vào Dashboard",
+                        text = "Về Dashboard",
                         modifier = Modifier.weight(1f)
                     )
                     

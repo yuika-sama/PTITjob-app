@@ -22,8 +22,7 @@ fun LoginRoute(
         onToggleShowPassword = viewModel::toggleShowPassword,
         onSubmit = { viewModel.submit(onAuthenticated) },
         onForgotPasswordClick = onNavigateToForgot,
-        onSignUpClick = onNavigateToSignUp,
-        onFillTestCredentials = viewModel::fillTestCredentials
+        onSignUpClick = onNavigateToSignUp
     )
 }
 
