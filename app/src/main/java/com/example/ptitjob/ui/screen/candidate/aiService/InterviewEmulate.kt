@@ -243,14 +243,14 @@ private fun InterviewHeader() {
             shape = PTITCornerRadius.md,
             color = PTITInfo
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.Psychology,
-                    contentDescription = null,
-                    modifier = Modifier.size(PTITSize.iconXxxl),
-                    tint = Color.White
-                )
-            }
+//            Box(contentAlignment = Alignment.Center) {
+//                Icon(
+//                    imageVector = Icons.Default.Psychology,
+//                    contentDescription = null,
+//                    modifier = Modifier.size(PTITSize.iconXxxl),
+//                    tint = Color.White
+//                )
+//            }
         }
 
         Text(

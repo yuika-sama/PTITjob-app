@@ -42,7 +42,20 @@ class InterviewEmulateViewModel @Inject constructor(
             }
 
             // Bước 1: Evaluate CV trước
-            val cvResult = aiServiceRepository.evaluateCv(file)
+            val jobDescription = """
+                Software Developer position requiring:
+                - Programming skills (Java, Kotlin, Python, JavaScript, etc.)
+                - Software development experience
+                - Problem-solving abilities
+                - Communication and teamwork skills
+                - Bachelor's degree in Computer Science or related field
+            """.trimIndent()
+            
+            val cvResult = aiServiceRepository.evaluateCv(
+                file = file,
+                jobDescription = jobDescription,
+                jobSkills = "Programming, Software Development, Problem Solving, Communication"
+            )
             file.delete()
 
             cvResult.fold(

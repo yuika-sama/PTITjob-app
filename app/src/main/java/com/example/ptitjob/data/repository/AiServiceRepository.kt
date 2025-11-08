@@ -1,9 +1,7 @@
 package com.example.ptitjob.data.repository
 
-import android.util.Base64
 import com.example.ptitjob.data.api.ai.AiServiceApi
 import com.example.ptitjob.data.api.request.ChatMessage
-import com.example.ptitjob.data.api.request.EvaluateCvRequest
 import com.example.ptitjob.data.api.request.InterviewChatRequest
 import com.example.ptitjob.data.model.ChatSender
 import com.example.ptitjob.data.model.CvEvaluationResult
@@ -17,6 +15,10 @@ import com.example.ptitjob.data.model.ScoresDistribution
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -33,29 +35,48 @@ class AiServiceRepository @Inject constructor(
     suspend fun evaluateCv(file: File, jobDescription: String = "Software Engineer", jobSkills: String? = null): Result<CvEvaluationResult> {
         return withContext(Dispatchers.IO) {
             runCatching {
-                val fileBytes = file.readBytes()
-                val fileBase64 = Base64.encodeToString(fileBytes, Base64.NO_WRAP)
+                // Debug logging
+                println("🔍 AiServiceRepository - Starting CV evaluation")
+                println("📁 File: ${file.name}, Size: ${file.length()} bytes")
+                println("💼 Job Description: $jobDescription")
+                println("🎯 Job Skills: $jobSkills")
                 
-                val request = EvaluateCvRequest(
-                    fileBase64 = "data:application/pdf;base64,$fileBase64",
-                    jobDescription = jobDescription,
-                    jobSkills = jobSkills
+                // Create multipart request body
+                val filePart = MultipartBody.Part.createFormData(
+                    "file",
+                    file.name,
+                    file.asRequestBody("application/pdf".toMediaType())
                 )
                 
-                val response = api.evaluateCv(request)
+                val jobDescriptionBody = jobDescription.toRequestBody("text/plain".toMediaType())
+                val jobSkillsBody = jobSkills?.toRequestBody("text/plain".toMediaType())
+                
+                println("🚀 Sending multipart request to AI service...")
+                val response = api.evaluateCv(filePart, jobDescriptionBody, jobSkillsBody)
+                
+                println("📡 Response received - Status: ${response.code()}")
                 if (!response.isSuccessful) {
                     val errorBody = response.errorBody()?.string()?.takeIf { it.isNotBlank() }
+                    println("❌ Error response: $errorBody")
                     throw IllegalStateException(errorBody ?: "CV evaluation failed with status ${response.code()}")
                 }
                 
                 val body = response.body()
                     ?: throw IllegalStateException("AI service returned empty response")
                 
+                println("✅ Success response received")
+                println("📄 Response body keys: ${body.keySet()}")
+                
                 val score = body.findFirstInt(SCORE_KEYS) ?: 0
                 val summary = body.findFirstString(SUMMARY_KEYS)
                 val strengths = body.findFirstStringList(STRENGTH_KEYS)
                 val improvements = body.findFirstStringList(IMPROVEMENT_KEYS)
                 val recommendations = body.findFirstStringList(RECOMMENDATION_KEYS)
+                
+                println("📊 Parsed result - Score: $score, Summary length: ${summary?.length ?: 0}")
+                println("💪 Strengths: ${strengths.size} items")
+                println("🔧 Improvements: ${improvements.size} items")
+                println("💡 Recommendations: ${recommendations.size} items")
                 
                 CvEvaluationResult(
                     score = score.coerceIn(0, 100),

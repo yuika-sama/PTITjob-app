@@ -38,6 +38,9 @@ suspend fun copyUriToTempFile(
     prefix: String = "upload_",
     suffix: String? = null
 ): Pair<File, String> = withContext(Dispatchers.IO) {
+    println("🔍 AiUiUtils - Starting file copy")
+    println("📁 URI: $uri")
+    
     val resolver = context.contentResolver
     runCatching { resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
 
@@ -45,18 +48,29 @@ suspend fun copyUriToTempFile(
         val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
         if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
     } ?: "file_${System.currentTimeMillis()}"
+    
+    println("📄 Display name: $displayName")
 
     val extension = suffix ?: displayName.substringAfterLast('.', "").let { ext ->
         if (ext.isNotBlank()) ".${ext.lowercase(Locale.ROOT)}" else ""
     }
+    
+    println("📝 Extension: $extension")
 
     val tempFile = File.createTempFile(prefix, if (extension.isNotEmpty()) extension else ".tmp", context.cacheDir)
+    println("📂 Temp file created: ${tempFile.absolutePath}")
 
     resolver.openInputStream(uri)?.use { input ->
         FileOutputStream(tempFile).use { output ->
-            input.copyTo(output)
+            val bytesWritten = input.copyTo(output)
+            println("💾 Bytes written: $bytesWritten")
         }
     } ?: error("Không thể mở file đã chọn")
+    
+    println("✅ File copy completed")
+    println("📊 Final file size: ${tempFile.length()} bytes")
+    println("🔍 File exists: ${tempFile.exists()}")
+    println("📖 File readable: ${tempFile.canRead()}")
 
     tempFile to displayName
 }

@@ -2,14 +2,7 @@ package com.example.ptitjob.data.api.request
 
 import com.google.gson.annotations.SerializedName
 
-data class EvaluateCvRequest(
-    @SerializedName("file")
-    val fileBase64: String,
-    @SerializedName("jd_text") 
-    val jobDescription: String = "Software Engineer",
-    @SerializedName("jd_skills")
-    val jobSkills: String? = null
-)
+// EvaluateCvRequest removed - now using multipart form data
 
 data class InterviewChatRequest(
     @SerializedName("history")
