@@ -3,6 +3,7 @@ package com.example.ptitjob.di
 import android.content.SharedPreferences
 import com.example.ptitjob.data.api.auth.*
 import com.example.ptitjob.data.repository.*
+import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,9 +18,10 @@ object RepositoryModule {
     @Singleton
     fun provideAuthRepository(
         authApi: AuthApi,
-        sharedPreferences: SharedPreferences
+        sharedPreferences: SharedPreferences,
+        gson: Gson
     ): AuthRepository {
-        return AuthRepository(authApi, sharedPreferences)
+        return AuthRepository(authApi, sharedPreferences, gson)
     }
     
     @Provides

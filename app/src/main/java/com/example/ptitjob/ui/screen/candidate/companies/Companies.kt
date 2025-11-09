@@ -68,7 +68,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -103,6 +102,7 @@ import com.example.ptitjob.ui.theme.PTITSpacing
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import com.example.ptitjob.ui.theme.PTITTextLight
 import com.example.ptitjob.ui.theme.PTITTextPrimary
 import com.example.ptitjob.ui.theme.PTITTextSecondary
@@ -500,20 +500,6 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
                         )
                     )
                 }
-
-                Surface(
-                    shape = CircleShape,
-                    color = PTITPrimary.copy(alpha = 0.08f)
-                ) {
-                    IconButton(onClick = { /* TODO: Add to favorites */ }) {
-                        Icon(
-                            Icons.Default.FavoriteBorder,
-                            contentDescription = "Add to favorites",
-                            tint = PTITPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
             }
 
             Text(
@@ -534,10 +520,10 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
                 thickness = 1.dp
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(bottom = PTITSpacing.lg),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center
             ) {
                 company.address?.let { address ->
                     Surface(

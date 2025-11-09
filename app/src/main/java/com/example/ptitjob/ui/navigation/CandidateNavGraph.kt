@@ -13,6 +13,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.ptitjob.data.model.Company
 import com.example.ptitjob.data.repository.AuthRepository
 import com.example.ptitjob.ui.screen.auth.ForgotPasswordRoute
 import com.example.ptitjob.ui.screen.auth.LoginRoute
@@ -38,8 +39,9 @@ import com.example.ptitjob.ui.screen.candidate.utilities.PersonalIncomeTaxScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.SalaryCalculatorScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.UnemploymentInsuranceScreen
 import com.example.ptitjob.ui.screen.candidate.utilities.UtilitiesMenu
-import com.example.ptitjob.data.model.Company
 import com.example.ptitjob.ui.screen.candidate.utilities.UtilitiesViewModel
+import com.example.ptitjob.ui.viewmodel.ApplicationViewModel
+
 /**
  * Navigation Graph cho Candidate
  * Quản lý tất cả routes và navigation cho ứng viên với authentication check
@@ -49,27 +51,30 @@ fun CandidateNavGraph(
     navController: NavHostController,
     authRepository: AuthRepository
 ) {
-    // Kiểm tra trạng thái đăng nhập
-    var isAuthenticated by remember { mutableStateOf<Boolean?>(null) }
+    // Inject ApplicationViewModel to manage app-wide state
+    val applicationViewModel: ApplicationViewModel = hiltViewModel()
+    val appState by applicationViewModel.appState.collectAsStateWithLifecycle()
     
+    // Use app state instead of local state for authentication
+    val isAuthenticated = appState.isAuthenticated
+    
+    // Initialize app state on startup if needed
     LaunchedEffect(Unit) {
-        // Kiểm tra token có tồn tại và hợp lệ không
-        authRepository.getCurrentUser().fold(
-            onSuccess = { user ->
-                isAuthenticated = user != null && user.data?.id!!.isNotBlank()
-            },
-            onFailure = {
-                isAuthenticated = false
-            }
-        )
+        // Only load if we don't have user data yet
+        if (appState.currentUser == null) {
+            applicationViewModel.loadUserProfile()
+        }
     }
     
     // Xác định start destination dựa trên trạng thái đăng nhập
     val startDestination = when (isAuthenticated) {
         true -> CandidateRoutes.Dashboard.route
         false -> AuthRoutes.Login
-        null -> return // Đang loading, không render gì
+        else -> AuthRoutes.Login // Default to login if unknown state
     }
+
+    // Create navigation helper with ApplicationViewModel
+    val navigationHelper = navController.createNavigationHelper(applicationViewModel)
 
     NavHost(
         navController = navController,
@@ -85,12 +90,14 @@ fun CandidateNavGraph(
                     navController.navigate(AuthRoutes.ForgotPassword) { launchSingleTop = true }
                 },
                 onAuthenticated = {
-                    // Khi đăng nhập thành công, chuyển đến dashboard và xóa auth stack
+                    // Khi đăng nhập thành công, set authenticated trước rồi mới load profile
+                    // Để tránh bị chuyển về login nếu getCurrentUser thất bại
                     navController.navigate(CandidateRoutes.Dashboard.route) {
                         popUpTo(0) { inclusive = true } // Clear toàn bộ back stack
                         launchSingleTop = true
                     }
-                    isAuthenticated = true
+                    // Load profile sau khi đã navigate (không blocking)
+                    applicationViewModel.loadUserProfile()
                 }
             )
         }
@@ -315,7 +322,7 @@ fun CandidateNavGraph(
         composable(
             route = CandidateRoutes.CompanyDetail.route,
             arguments = listOf(navArgument("companyId") { type = NavType.StringType })
-        ) { _ ->
+        ) { backStackEntry ->
             ProtectedRoute(isAuthenticated, navController) {
                 CompanyDetailScreen(
                     company = Company(
@@ -482,8 +489,8 @@ fun CandidateNavGraph(
                 ProfileRoute(
                     onBack = { navController.popBackStack() },
                     onLogout = {
-                        // Khi logout, chuyển về login và clear back stack
-                        isAuthenticated = false
+                        // Trigger logout via ApplicationViewModel to clear all state
+                        applicationViewModel.logout()
                         navController.navigate(AuthRoutes.Login) {
                             popUpTo(0) { inclusive = true }
                             launchSingleTop = true
@@ -508,10 +515,12 @@ private fun ProtectedRoute(
         if (isAuthenticated == false) {
             navController.navigate(AuthRoutes.Login) {
                 popUpTo(0) { inclusive = true }
+                launchSingleTop = true
             }
         }
     }
     
+    // Only render content if authenticated
     if (isAuthenticated == true) {
         content()
     }

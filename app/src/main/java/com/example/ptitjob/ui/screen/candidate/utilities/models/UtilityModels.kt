@@ -199,9 +199,8 @@ data class SalaryCalculationResult(
     val unemploymentInsurance: Long = 0,
     val personalIncomeTax: Long = 0,
     val totalDeductions: Long = 0,
-    val breakdown: SalaryBreakdown
+    val breakdown: SalaryBreakdown = SalaryBreakdown()
 )
-
 @Immutable
 data class SalaryBreakdown(
     val socialInsuranceRate: Double = 0.08,

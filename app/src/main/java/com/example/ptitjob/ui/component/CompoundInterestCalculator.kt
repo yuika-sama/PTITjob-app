@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -184,14 +185,13 @@ private fun StepItem(
 
 @Composable
 private fun ResultOverview(result: CompoundInterestResult) {
-    OutlinedCard {
-        Column(modifier = Modifier.padding(16.dp)) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
             Text("📊 Tổng quan kết quả", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ResultChip("Tổng tiền gửi", formatCurrencyCompact(result.totalContributions), MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                ResultChip("Lãi kiếm được", "+${formatCurrencyCompact(result.totalInterest)}", MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
-                ResultChip("Tổng giá trị cuối kỳ", formatCurrencyCompact(result.finalAmount), MaterialTheme.colorScheme.error, Modifier.weight(1f))
+            Column(verticalArrangement = Arrangement.Top) {
+                ResultChip("Tổng tiền gửi", formatCurrencyCompact(result.totalContributions), MaterialTheme.colorScheme.primary, Modifier.weight(1f).size(40.dp))
+                ResultChip("Lãi kiếm được", "+${formatCurrencyCompact(result.totalInterest)}", MaterialTheme.colorScheme.tertiary, Modifier.weight(1f).size(40.dp))
+                ResultChip("Tổng giá trị cuối kỳ", formatCurrencyCompact(result.finalAmount), MaterialTheme.colorScheme.error, Modifier.weight(1f).size(40.dp))
             }
         }
     }
@@ -199,11 +199,9 @@ private fun ResultOverview(result: CompoundInterestResult) {
 
 @Composable
 private fun ResultChip(label: String, amount: String, color: Color, modifier: Modifier = Modifier) {
-    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(amount, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
-        }
+    Row(Modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(amount, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
     }
 }
 

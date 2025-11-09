@@ -1,6 +1,7 @@
 package com.example.ptitjob.data.repository
 
 import android.content.SharedPreferences
+import com.google.gson.Gson
 import com.example.ptitjob.data.api.auth.AuthApi
 import com.example.ptitjob.data.api.dto.ApiResponse
 import com.example.ptitjob.data.api.dto.AuthResponse
@@ -19,7 +20,8 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val gson: Gson
 ) {
     
     suspend fun login(email: String, password: String): Result<ApiResponse<AuthResponse>> {
@@ -35,6 +37,23 @@ class AuthRepository @Inject constructor(
                 
                 val response = authApi.login(LoginRequest(email, password))
                 if (response.isSuccessful && response.body() != null) {
+                    // Persist tokens and user info for subsequent requests
+                    try {
+                        val body = response.body()!!.data
+                        body?.let {
+                            // Save access & refresh tokens
+                            sharedPreferences.edit().apply {
+                                putString("accessToken", it.accessToken)
+                                putString("refreshToken", it.refreshToken)
+                                // Save serialized user object for quick access
+                                putString("ptitjob_user", gson.toJson(it.user))
+                                apply()
+                            }
+                        }
+                    } catch (_: Exception) {
+                        // Ignore persistence errors; still return success response
+                    }
+
                     Result.success(response.body()!!)
                 } else {
                     Result.failure(Exception(response.message() ?: "Đăng nhập thất bại"))

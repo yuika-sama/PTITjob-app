@@ -115,6 +115,36 @@ class UserRepository @Inject constructor(
         }
     }
     
+    suspend fun getCurrentUser(): Result<ApiResponse<UserDto>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = userApi.getCurrentUser()
+                if (response.isSuccessful && response.body() != null) {
+                    Result.success(response.body()!!)
+                } else {
+                    Result.failure(Exception(response.message() ?: "Lấy thông tin người dùng hiện tại thất bại"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+    
+    suspend fun updateCurrentUser(request: UpdateUserRequest): Result<ApiResponse<UserDto>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = userApi.updateCurrentUser(request)
+                if (response.isSuccessful && response.body() != null) {
+                    Result.success(response.body()!!)
+                } else {
+                    Result.failure(Exception(response.message() ?: "Cập nhật hồ sơ thất bại"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+    
     suspend fun getUserStats(): Result<ApiResponse<UserStatsDto>> {
         return withContext(Dispatchers.IO) {
             try {

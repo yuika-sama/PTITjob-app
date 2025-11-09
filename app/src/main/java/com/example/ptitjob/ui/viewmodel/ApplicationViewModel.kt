@@ -3,6 +3,7 @@ package com.example.ptitjob.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.content.SharedPreferences
+import com.google.gson.Gson
 import com.example.ptitjob.data.api.dto.UserDto
 import com.example.ptitjob.data.model.Company
 import com.example.ptitjob.data.model.Job
@@ -25,7 +26,8 @@ class ApplicationViewModel @Inject constructor(
     private val jobRepository: JobRepository,
     private val companyRepository: CompanyRepository,
     private val authRepository: AuthRepository,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val gson: Gson
 ) : ViewModel() {
 
     private val _appState = MutableStateFlow(ApplicationState())
@@ -40,7 +42,11 @@ class ApplicationViewModel @Inject constructor(
     val searchPayload: StateFlow<DashboardSearchPayload?> = _searchPayload.asStateFlow()
 
     init {
-        loadUserProfile()
+        // Check if user has valid token on app start
+        val hasToken = !sharedPreferences.getString("accessToken", null).isNullOrEmpty()
+        if (hasToken) {
+            loadUserProfile()
+        }
     }
 
     /**
@@ -48,6 +54,16 @@ class ApplicationViewModel @Inject constructor(
      */
     fun loadUserProfile() {
         viewModelScope.launch {
+            // First try to get user from stored data (faster, no network call)
+            val storedUser = getStoredUser()
+            if (storedUser != null) {
+                _appState.value = _appState.value.copy(
+                    currentUser = storedUser,
+                    isAuthenticated = true
+                )
+            }
+            
+            // Then try to refresh from server (can fail without affecting auth state)
             val result = authRepository.getCurrentUser()
             result.fold(
                 onSuccess = { response ->
@@ -57,13 +73,33 @@ class ApplicationViewModel @Inject constructor(
                     )
                 },
                 onFailure = {
-                    // On failure (e.g., token expired, network error), treat as not authenticated
-                    _appState.value = _appState.value.copy(
-                        currentUser = null,
-                        isAuthenticated = false
-                    )
+                    // If we have stored user, don't set isAuthenticated = false
+                    // Only set false if we don't have any user data
+                    if (storedUser == null) {
+                        _appState.value = _appState.value.copy(
+                            currentUser = null,
+                            isAuthenticated = false
+                        )
+                    }
+                    // If we have stored user but API fails, keep authenticated state
                 }
             )
+        }
+    }
+    
+    /**
+     * Get user from SharedPreferences
+     */
+    private fun getStoredUser(): UserDto? {
+        return try {
+            val userJson = sharedPreferences.getString("ptitjob_user", null)
+            if (!userJson.isNullOrEmpty()) {
+                gson.fromJson(userJson, UserDto::class.java)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
         }
     }
 

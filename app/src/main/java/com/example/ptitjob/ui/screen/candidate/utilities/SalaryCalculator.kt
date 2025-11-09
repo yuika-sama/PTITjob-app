@@ -4,12 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -32,14 +29,15 @@ import com.example.ptitjob.ui.screen.candidate.utilities.calculations.formatCurr
 import com.example.ptitjob.ui.screen.candidate.utilities.models.*
 import com.example.ptitjob.ui.theme.*
 
-// --- Route Component with ViewModel Integration ---
+/* -------------------- Route (VM) -------------------- */
+
 @Composable
 fun SalaryCalculatorRoute(
     onBack: () -> Unit,
     viewModel: UtilitiesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.salaryState.collectAsStateWithLifecycle()
-    
+
     SalaryCalculatorScreen(
         uiState = uiState,
         onInputChange = viewModel::updateSalaryInput,
@@ -49,7 +47,38 @@ fun SalaryCalculatorRoute(
     )
 }
 
-// --- Main Screen Component ---
+/* -------------------- Small UI helpers -------------------- */
+
+@Composable
+private fun ErrorCard(message: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = PTITError.copy(alpha = 0.1f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(PTITSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = null,
+                tint = PTITError
+            )
+            Spacer(Modifier.width(PTITSpacing.sm))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = PTITError
+            )
+        }
+    }
+}
+
+/* -------------------- Main Screen -------------------- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalaryCalculatorScreen(
@@ -65,17 +94,12 @@ fun SalaryCalculatorScreen(
                 title = {
                     Text(
                         text = "Tính lương Gross - Net",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        )
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại"
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -90,15 +114,14 @@ fun SalaryCalculatorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background( PTITBackgroundLight
-                )
+                .background(PTITBackgroundLight)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(PTITSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
             ) {
-                // --- Header Banner ---
+                /* Action */
                 item {
                     SalaryCalculateButton(
                         isLoading = uiState.isLoading,
@@ -106,14 +129,27 @@ fun SalaryCalculatorScreen(
                     )
                 }
 
-                // --- Error Display ---
+                /* Errors */
                 if (uiState.hasError) {
-                    item {
-                        ErrorCard(message = uiState.error ?: "Đã xảy ra lỗi")
-                    }
+                    item { ErrorCard(message = uiState.error ?: "Đã xảy ra lỗi") }
                 }
 
-                // --- Results ---
+                /* Inputs */
+                item {
+                    SalaryCalculatorTypeSelector(
+                        selectedType = uiState.input.calculationType,
+                        onTypeChange = { onInputChange(uiState.input.copy(calculationType = it)) }
+                    )
+                }
+                item {
+                    SalaryInputForm(
+                        input = uiState.input,
+                        validationErrors = uiState.validationErrors ?: emptyList(),
+                        onInputChange = onInputChange
+                    )
+                }
+
+                /* Result */
                 if (uiState.hasResult) {
                     val result = uiState.result as SalaryCalculationResult
                     item {
@@ -125,16 +161,16 @@ fun SalaryCalculatorScreen(
                     }
                 }
 
-                // --- Information Section ---
-                item {
-                    SalaryInformationSection()
-                }
+                /* Info + FAQ */
+                item { SalaryInformationSection() }
+                item { SalaryFaqSection() }
             }
         }
     }
 }
 
-// --- Calculator Type Selector ---
+/* -------------------- Calculator Type -------------------- */
+
 @Composable
 private fun SalaryCalculatorTypeSelector(
     selectedType: SalaryCalculationType,
@@ -154,10 +190,9 @@ private fun SalaryCalculatorTypeSelector(
                 text = "Chọn loại tính toán",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = PTITTextPrimary,
-                modifier = Modifier.padding(bottom = PTITSpacing.sm)
+                color = PTITTextPrimary
             )
-            
+            Spacer(Modifier.height(PTITSpacing.sm))
             SalaryCalculationType.values().forEach { type ->
                 Row(
                     modifier = Modifier
@@ -171,11 +206,11 @@ private fun SalaryCalculatorTypeSelector(
                         onClick = { onTypeChange(type) },
                         colors = RadioButtonDefaults.colors(selectedColor = PTITPrimary)
                     )
+                    Spacer(Modifier.width(PTITSpacing.xs))
                     Text(
                         text = type.displayName,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = PTITTextPrimary,
-                        modifier = Modifier.padding(start = PTITSpacing.xs)
+                        color = PTITTextPrimary
                     )
                 }
             }
@@ -183,7 +218,8 @@ private fun SalaryCalculatorTypeSelector(
     }
 }
 
-// --- Input Form Component ---
+/* -------------------- Input Form -------------------- */
+
 @Composable
 private fun SalaryInputForm(
     input: SalaryInput,
@@ -208,18 +244,19 @@ private fun SalaryInputForm(
                 color = PTITTextPrimary
             )
 
-            // Salary Input
             OutlinedTextField(
                 value = input.inputSalary,
                 onValueChange = { onInputChange(input.copy(inputSalary = it)) },
-                label = { 
-                    Text(when (input.calculationType) {
-                        SalaryCalculationType.GROSS_TO_NET -> "Lương GROSS (VNĐ)"
-                        SalaryCalculationType.NET_TO_GROSS -> "Lương NET mong muốn (VNĐ)"
-                    })
+                label = {
+                    Text(
+                        when (input.calculationType) {
+                            SalaryCalculationType.GROSS_TO_NET -> "Lương GROSS (VNĐ)"
+                            SalaryCalculationType.NET_TO_GROSS -> "Lương NET mong muốn (VNĐ)"
+                        }
+                    )
                 },
-                placeholder = { Text("Ví dụ: 15000000") },
-                leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
+                placeholder = { Text("Ví dụ: 15.000.000") },
+                leadingIcon = { Icon(Icons.Default.AttachMoney, null) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PTITPrimary,
@@ -227,13 +264,12 @@ private fun SalaryInputForm(
                 )
             )
 
-            // Dependents Input
             OutlinedTextField(
                 value = input.dependents,
                 onValueChange = { onInputChange(input.copy(dependents = it)) },
                 label = { Text("Số người phụ thuộc") },
                 placeholder = { Text("0") },
-                leadingIcon = { Icon(Icons.Default.People, contentDescription = null) },
+                leadingIcon = { Icon(Icons.Default.People, null) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PTITPrimary,
@@ -241,14 +277,12 @@ private fun SalaryInputForm(
                 )
             )
 
-            // Region Selection
             Text(
                 text = "Vùng lương tối thiểu",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = PTITTextPrimary
             )
-            
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
@@ -263,7 +297,6 @@ private fun SalaryInputForm(
                 }
             }
 
-            // Unemployment Insurance Checkbox
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -273,15 +306,14 @@ private fun SalaryInputForm(
                     onCheckedChange = { onInputChange(input.copy(hasUnemploymentInsurance = it)) },
                     colors = CheckboxDefaults.colors(checkedColor = PTITPrimary)
                 )
+                Spacer(Modifier.width(PTITSpacing.xs))
                 Text(
                     text = "Đóng bảo hiểm thất nghiệp",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = PTITTextPrimary,
-                    modifier = Modifier.padding(start = PTITSpacing.xs)
+                    color = PTITTextPrimary
                 )
             }
 
-            // Validation Errors
             if (validationErrors.isNotEmpty()) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = PTITError.copy(alpha = 0.1f)),
@@ -296,14 +328,13 @@ private fun SalaryInputForm(
                                 Icon(
                                     imageVector = Icons.Default.Error,
                                     contentDescription = null,
-                                    tint = PTITError,
-                                    modifier = Modifier.size(16.dp)
+                                    tint = PTITError
                                 )
+                                Spacer(Modifier.width(PTITSpacing.xs))
                                 Text(
                                     text = error,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = PTITError,
-                                    modifier = Modifier.padding(start = PTITSpacing.xs)
+                                    color = PTITError
                                 )
                             }
                         }
@@ -314,6 +345,8 @@ private fun SalaryInputForm(
     }
 }
 
+/* -------------------- Calculate Button -------------------- */
+
 @Composable
 private fun SalaryCalculateButton(
     isLoading: Boolean,
@@ -322,30 +355,22 @@ private fun SalaryCalculateButton(
     Button(
         onClick = onCalculate,
         enabled = !isLoading,
+        shape = PTITCornerRadius.lg,
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        contentPadding = PaddingValues(),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = PTITElevation.xl),
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                brush = Brush.linearGradient(
-                    listOf(PTITPrimary, PTITSecondary)
-                ),
+                brush = Brush.linearGradient(listOf(PTITPrimary, PTITSecondary)),
                 shape = PTITCornerRadius.lg
-            ),
-        shape = PTITCornerRadius.lg,
-        color = Color.Transparent,
-        tonalElevation = PTITElevation.xl
+            )
     ) {
         if (isLoading) {
-            CircularProgressIndicator(
-                color = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
+            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
         } else {
-            Icon(
-                imageVector = Icons.Default.Calculate,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(PTITSpacing.sm))
+            Icon(Icons.Default.Calculate, contentDescription = null)
+            Spacer(Modifier.width(PTITSpacing.sm))
             Text(
                 text = "Tính toán",
                 style = MaterialTheme.typography.titleMedium,
@@ -355,7 +380,8 @@ private fun SalaryCalculateButton(
     }
 }
 
-// --- Result Card Component ---
+/* -------------------- Result Card -------------------- */
+
 @Composable
 private fun SalaryResultCard(
     result: SalaryCalculationResult,
@@ -363,7 +389,7 @@ private fun SalaryResultCard(
     onClearResult: () -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(true) }
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = PTITSuccess.copy(alpha = 0.1f)),
@@ -374,7 +400,6 @@ private fun SalaryResultCard(
                 .fillMaxWidth()
                 .padding(PTITSpacing.md)
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -402,40 +427,18 @@ private fun SalaryResultCard(
                         )
                     }
                 }
+            }
 
-                Text(
-                    text = "Tính Lương Gross - Net",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ),
-                    textAlign = TextAlign.Center
-                )
-
-                Text(
-                    text = "Công cụ tính toán lương chính xác theo quy định thuế thu nhập cá nhân 2025",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Black.copy(0.9f)
-                    ),
-                    textAlign = TextAlign.Center
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-                ) {
+            AnimatedVisibility(visible = isExpanded, enter = fadeIn() + slideInVertically()) {
+                Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)) {
                     Divider(color = PTITSuccess.copy(alpha = 0.3f))
 
-                    // Main Results
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text(
-                                text = "Lương GROSS",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = PTITTextSecondary
-                            )
+                            Text("Lương GROSS", style = MaterialTheme.typography.bodyMedium, color = PTITTextSecondary)
                             Text(
                                 text = formatCurrency(result.grossSalary),
                                 style = MaterialTheme.typography.titleLarge,
@@ -444,11 +447,7 @@ private fun SalaryResultCard(
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "Lương NET",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = PTITTextSecondary
-                            )
+                            Text("Lương NET", style = MaterialTheme.typography.bodyMedium, color = PTITTextSecondary)
                             Text(
                                 text = formatCurrency(result.netSalary),
                                 style = MaterialTheme.typography.titleLarge,
@@ -460,7 +459,6 @@ private fun SalaryResultCard(
 
                     Divider(color = PTITNeutral200)
 
-                    // Breakdown
                     Text(
                         text = "Chi tiết khấu trừ",
                         style = MaterialTheme.typography.titleSmall,
@@ -474,14 +472,9 @@ private fun SalaryResultCard(
                         SalaryBreakdownItem("BHTN (1%)", result.unemploymentInsurance)
                     }
                     SalaryBreakdownItem("Thuế TNCN", result.personalIncomeTax)
-                    
+
                     Divider(color = PTITNeutral200)
-                    
-                    SalaryBreakdownItem(
-                        "Tổng khấu trừ", 
-                        result.totalDeductions,
-                        isTotal = true
-                    )
+                    SalaryBreakdownItem("Tổng khấu trừ", result.totalDeductions, isTotal = true)
                 }
             }
         }
@@ -514,103 +507,8 @@ private fun SalaryBreakdownItem(
     }
 }
 
-// --- Error Card Component ---
-@Composable
-private fun SalaryCalculatorTabs(currentTab: Int, onTabChange: (Int) -> Unit) {
-    val tabs = listOf(
-        "Gross → Net" to "Từ lương gộp sang thực nhận",
-        "Net → Gross" to "Từ lương thực nhận sang gộp"
-    )
+/* -------------------- Information & FAQ -------------------- */
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PTITError.copy(alpha = 0.1f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(PTITSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            tabs.forEachIndexed { index, (title, description) ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = PTITSpacing.xs),
-                    shape = PTITCornerRadius.md,
-                    color = if (currentTab == index) PTITPrimary else Color.Transparent,
-                    onClick = { onTabChange(index) }
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(PTITSpacing.md),
-                        verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
-                    ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (currentTab == index) Color.White else PTITTextPrimary
-                            )
-                        )
-                        Text(
-                            text = description,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = if (currentTab == index) Color.White.copy(0.8f) else PTITTextSecondary
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SalaryCalculatorSection(
-    calculationType: String,
-    onCalculate: (SalaryCalculationResult) -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.xxxl
-    ) {
-        Column(
-            modifier = Modifier.padding(PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Calculate,
-                    contentDescription = null,
-                    tint = PTITPrimary,
-                    modifier = Modifier.size(PTITSize.iconMd)
-                )
-                Text(
-                    text = "Nhập thông tin tính lương",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = PTITTextPrimary
-                    )
-                )
-            }
-
-            SalaryCalculator(
-                calculationType = calculationType,
-                onCalculate = onCalculate
-            )
-        }
-    }
-}
-
-// --- Information Section ---
 @Composable
 private fun SalaryInformationSection() {
     Card(
@@ -620,18 +518,16 @@ private fun SalaryInformationSection() {
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Assessment,
                     contentDescription = null,
-                    tint = PTITSuccess,
-                    modifier = Modifier.size(PTITSize.iconMd)
+                    tint = PTITSuccess
                 )
+                Spacer(Modifier.width(PTITSpacing.sm))
                 Text(
                     text = "Kết quả tính lương",
                     style = MaterialTheme.typography.titleLarge.copy(
@@ -641,57 +537,63 @@ private fun SalaryInformationSection() {
                 )
             }
 
-            SalaryResultDisplay(
-                result = result,
-                calculationType = calculationType
+            Text(
+                text = "Kết quả sẽ hiển thị ở thẻ “Kết quả tính toán” sau khi bạn nhấn “Tính toán”.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = PTITTextSecondary,
+                textAlign = TextAlign.Center
             )
+
+            SalaryFooterNote()
         }
     }
 }
 
 @Composable
 private fun SalaryFaqSection() {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.sm
+        colors = CardDefaults.cardColors(containerColor = PTITSurfaceLight),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Help,
-                    contentDescription = null,
-                    tint = PTITWarning,
-                    modifier = Modifier.size(PTITSize.iconMd)
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Info, contentDescription = null, tint = PTITInfo)
+                Spacer(Modifier.width(PTITSpacing.sm))
                 Text(
-                    text = "Câu hỏi thường gặp",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = PTITTextPrimary
-                    )
+                    text = "Thông tin tham khảo",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PTITInfo
                 )
             }
 
-            val faqData = listOf(
-                "Thuế thu nhập cá nhân được tính như thế nào?" to "Thuế TNCN được tính theo thang thuế lũy tiến từng phần với các mức từ 5% đến 35% tùy theo mức thu nhập chịu thuế của bạn.",
-                "Mức giảm trừ gia cảnh năm 2025 là bao nhiêu?" to "Giảm trừ bản thân: 11.000.000 VND/tháng. Giảm trừ người phụ thuộc: 4.400.000 VND/người/tháng.",
-                "Sự khác biệt giữa lương Gross và Net?" to "Lương Gross là lương trước thuế và bảo hiểm. Lương Net là lương thực nhận sau khi đã trừ các khoản thuế, bảo hiểm xã hội, bảo hiểm y tế và bảo hiểm thất nghiệp."
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append("• Tỷ lệ đóng bảo hiểm 2025:\n") }
+                    append("  - BHXH: 8% lương đóng bảo hiểm\n")
+                    append("  - BHYT: 1.5% lương đóng bảo hiểm\n")
+                    append("  - BHTN: 1% lương đóng bảo hiểm\n\n")
+
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append("• Giảm trừ thuế TNCN:\n") }
+                    append("  - Bản thân: 11.000.000 VNĐ/tháng\n")
+                    append("  - Người phụ thuộc: 4.400.000 VNĐ/người/tháng\n\n")
+
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append("• Lưu ý: ") }
+                    append("Kết quả tính toán chỉ mang tính chất tham khảo.")
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = PTITTextSecondary
             )
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-            ) {
-                faqData.forEach { (question, answer) ->
-                    SalaryFaqAccordion(question = question, answer = answer)
-                }
+            Spacer(Modifier.height(PTITSpacing.md))
+
+            // FAQs
+            faqData.forEach { (q, a) ->
+                SalaryFaqAccordion(question = q, answer = a)
             }
         }
     }
@@ -700,10 +602,7 @@ private fun SalaryFaqSection() {
 @Composable
 private fun SalaryFaqAccordion(question: String, answer: String) {
     var isExpanded by remember { mutableStateOf(false) }
-    val rotationAngle by animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f,
-        label = "salary_faq_rotation"
-    )
+    val rotation by animateFloatAsState(if (isExpanded) 180f else 0f, label = "faq_rotate")
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -721,111 +620,79 @@ private fun SalaryFaqAccordion(question: String, answer: String) {
             ) {
                 Text(
                     text = question,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = PTITTextPrimary
-                    ),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = PTITTextPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 Icon(
                     imageVector = Icons.Default.ExpandMore,
-                    contentDescription = "Mở rộng",
-                    tint = PTITWarning,
-                    modifier = Modifier
-                        .size(PTITSize.iconMd)
-                        .rotate(rotationAngle)
+                    contentDescription = null,
+                    tint = PTITTextSecondary,
                 )
             }
-
             AnimatedVisibility(visible = isExpanded) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color.White
-                ) {
-                    Text(
-                        text = answer,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = PTITTextSecondary
-                        ),
-                        modifier = Modifier.padding(PTITSpacing.md)
-                    )
-                }
+                Text(
+                    text = answer,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PTITTextSecondary,
+                    modifier = Modifier.padding(horizontal = PTITSpacing.md, vertical = PTITSpacing.sm)
+                )
             }
         }
     }
 }
+
+/* -------------------- Placeholders để biên dịch -------------------- */
 
 @Composable
 private fun SalaryFooterNote() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
-        color = PTITInfo.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
-    ) {
-        Column(
-            modifier = Modifier.padding(PTITSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = PTITInfo,
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = "Thông tin tham khảo",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PTITInfo,
-                    modifier = Modifier.padding(start = PTITSpacing.sm)
-                )
-            }
-
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Tỷ lệ đóng bảo hiểm 2025:\n")
-                    }
-                    append("  - BHXH: 8% lương đóng bảo hiểm\n")
-                    append("  - BHYT: 1.5% lương đóng bảo hiểm\n")
-                    append("  - BHTN: 1% lương đóng bảo hiểm\n\n")
-                    
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Giảm trừ thuế TNCN:\n")
-                    }
-                    append("  - Bản thân: 11.000.000 VNĐ/tháng\n")
-                    append("  - Người phụ thuộc: 4.400.000 VNĐ/người/tháng\n\n")
-                    
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                        append("• Lưu ý: ")
-                    }
-                    append("Kết quả tính toán chỉ mang tính chất tham khảo")
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = PTITTextSecondary
-            )
-        }
-    }
+    Text(
+        text = "Chúng tôi áp dụng mức giảm trừ mới nhất bạn đã cấu hình trong module tính toán.",
+        style = MaterialTheme.typography.bodySmall,
+        color = PTITTextSecondary,
+        textAlign = TextAlign.Center
+    )
 }
 
+private val faqData = listOf(
+    "Gross và Net khác gì nhau?" to "Gross là lương trước khấu trừ; Net là số bạn thực nhận sau khi trừ BHXH, BHYT, BHTN và thuế TNCN.",
+    "Số người phụ thuộc ảnh hưởng thế nào?" to "Mỗi người phụ thuộc được giảm trừ 4.400.000đ/tháng làm giảm thu nhập chịu thuế.",
+    "BHTN có bắt buộc không?" to "Tùy thuộc hợp đồng và khu vực; nếu không tham gia, bỏ chọn “Đóng BHTN”."
+)
 
-// --- Preview ---
-@Preview(showBackground = true, widthDp = 1200, heightDp = 2000)
+/* -------------------- Optional Preview -------------------- */
+
+@Preview(showBackground = true)
 @Composable
-fun SalaryCalculatorScreenPreview() {
-    MaterialTheme {
-        // Preview with some default state
-        SalaryCalculatorScreen(
-            uiState = CalculatorUiState(input = SalaryInput()),
-            onInputChange = {},
-            onCalculate = {},
-            onClearResult = {},
-            onBack = {}
-        )
-    }
+private fun PreviewSalaryScreen() {
+    val dummy = CalculatorUiState(
+        input = SalaryInput(
+            inputSalary = "15000000",
+            dependents = "1",
+            region = 1,
+            hasUnemploymentInsurance = true,
+            calculationType = SalaryCalculationType.GROSS_TO_NET
+        ),
+        isLoading = false,
+        error = null,
+        result = SalaryCalculationResult(
+            grossSalary = 15000000,
+            netSalary = 13000000,
+            socialInsurance = 1200000,
+            healthInsurance = 225000,
+            unemploymentInsurance = 150000,
+            personalIncomeTax = 250000,
+            totalDeductions = 1825000,
+            breakdown = SalaryBreakdown()
+        ),
+        validationErrors = emptyList()
+    )
+
+    SalaryCalculatorScreen(
+        uiState = dummy,
+        onInputChange = {},
+        onCalculate = {},
+        onClearResult = {},
+        onBack = {}
+    )
 }

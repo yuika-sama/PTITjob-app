@@ -57,7 +57,7 @@ class ProfileViewModel @Inject constructor(
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                val result = authRepository.getCurrentUser()
+                val result = userRepository.getCurrentUser()
                 result.fold(onSuccess = { apiResp ->
                     val dto = apiResp.data
                     if (dto != null) {
@@ -96,7 +96,7 @@ class ProfileViewModel @Inject constructor(
                     isActive = null
                 )
 
-                val result = userRepository.updateUser(currentUser.id, req)
+                val result = userRepository.updateCurrentUser(req)
                 result.fold(onSuccess = { apiResp ->
                     val updatedDto = apiResp.data
                     if (updatedDto != null) {

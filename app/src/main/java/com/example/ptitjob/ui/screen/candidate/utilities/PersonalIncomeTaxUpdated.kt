@@ -21,6 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ptitjob.ui.screen.candidate.utilities.calculations.formatCurrency
 import com.example.ptitjob.ui.screen.candidate.utilities.models.*
 import com.example.ptitjob.ui.theme.*
+import java.text.NumberFormat
+import java.util.Locale
 
 // --- Route Component with ViewModel Integration ---
 @Composable
@@ -349,6 +351,11 @@ private fun TaxCalculateButton(
 }
 
 // --- Result Card Component ---
+
+private fun formatCurrency(amount: Double): String {
+    val formatter = NumberFormat.getInstance(Locale("vi", "VN"))
+    return "${formatter.format(amount)} đ"
+}
 @Composable
 private fun TaxResultCard(
     result: TaxCalculationResult,
@@ -415,7 +422,7 @@ private fun TaxResultCard(
                                 color = PTITTextSecondary
                             )
                             Text(
-                                text = formatCurrency(result.grossSalary),
+                                text = formatCurrency(result.grossIncome),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = PTITPrimary
@@ -428,7 +435,7 @@ private fun TaxResultCard(
                                 color = PTITTextSecondary
                             )
                             Text(
-                                text = formatCurrency(result.netSalary),
+                                text = formatCurrency(result.netIncome),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = PTITSuccess
@@ -446,8 +453,8 @@ private fun TaxResultCard(
                         color = PTITTextPrimary
                     )
 
-                    TaxDetailRow("Thu nhập chịu thuế", formatCurrency(result.taxableIncome))
-                    TaxDetailRow("Thuế TNCN", formatCurrency(result.personalIncomeTax), isHighlight = true)
+                    TaxDetailRow("Thu nhập chịu thuế", formatCurrency(result.personalDeduction))
+                    TaxDetailRow("Thuế TNCN", formatCurrency(result.dependentDeduction), isHighlight = true)
                     
                     Divider(color = PTITNeutral200)
                     
@@ -460,26 +467,9 @@ private fun TaxResultCard(
                     
                     TaxDetailRow("Giảm trừ bản thân", formatCurrency(result.personalDeduction))
                     TaxDetailRow("Giảm trừ người phụ thuộc", formatCurrency(result.dependentDeduction))
-                    TaxDetailRow("Khấu trừ bảo hiểm", formatCurrency(result.insuranceDeduction))
-                    if (result.otherDeductions > 0) {
-                        TaxDetailRow("Khấu trừ khác", formatCurrency(result.otherDeductions))
-                    }
+                    TaxDetailRow("Khấu trừ bảo hiểm", formatCurrency(result.totalDeduction))
 
                     // Tax Brackets Breakdown
-                    if (result.breakdown.isNotEmpty()) {
-                        Divider(color = PTITNeutral200)
-                        
-                        Text(
-                            text = "Chi tiết thuế theo bậc",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = PTITTextPrimary
-                        )
-                        
-                        result.breakdown.forEach { bracket ->
-                            TaxBracketCard(bracket = bracket)
-                        }
-                    }
                 }
             }
         }
