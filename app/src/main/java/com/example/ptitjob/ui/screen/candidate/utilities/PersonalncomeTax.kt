@@ -597,7 +597,7 @@ private fun TaxBracketCard(bracket: Map<String, Any>) {
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.md,
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+
     ) {
         Column(
             modifier = Modifier

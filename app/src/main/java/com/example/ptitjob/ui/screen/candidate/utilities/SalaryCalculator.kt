@@ -207,7 +207,7 @@ private fun SalaryHeaderBanner() {
                 Text(
                     text = "Công cụ tính toán lương chính xác theo quy định thuế thu nhập cá nhân 2025",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Black.copy(0.9f)
+                        color = Color.White.copy(0.9f)
                     ),
                     textAlign = TextAlign.Center
                 )

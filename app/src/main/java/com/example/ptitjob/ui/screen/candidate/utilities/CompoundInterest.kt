@@ -6,8 +6,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
@@ -27,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ptitjob.ui.component.CompoundInterestCalculator
 import com.example.ptitjob.ui.component.CompoundInterestResult
-import com.example.ptitjob.ui.component.CompoundInterestResultDisplay
 import com.example.ptitjob.ui.theme.*
 
 // --- Component Màn hình Chính ---
@@ -188,7 +189,7 @@ private fun CompoundInterestTabs(currentTab: Int, onTabChange: (Int) -> Unit) {
     ) {
         Column(modifier = Modifier.padding(PTITSpacing.md)) {
             tabs.forEachIndexed { index, (title, icon) ->
-                Card( // ✅ Card hỗ trợ onClick ổn định
+                Card(
                     onClick = { onTabChange(index) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -264,8 +265,8 @@ private fun CompoundInterestCalculatorTab(
                     )
                 }
 
-                // Giả sử composable này tự quản lý state nội bộ và hiển thị kết quả qua callback
-                CompoundInterestCalculator()
+
+                CompoundInterestCalculator(onCalculate = onCalculate as (com.example.ptitjob.ui.screen.candidate.utilities.models.CompoundInterestResult) -> Unit)
             }
         }
 
@@ -304,11 +305,100 @@ private fun CompoundInterestCalculatorTab(
                             )
                         }
 
-                        CompoundInterestResultDisplay(result = it)
+                        ResultOverviewSection(result = it)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ResultOverviewSection(result: CompoundInterestResult) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = PTITCornerRadius.md,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.sm)
+    ) {
+        Column(
+            modifier = Modifier.padding(PTITSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+        ) {
+            Text(
+                text = "📊 Tổng quan kết quả",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextPrimary
+                )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+            ) {
+                ResultStatColumn(
+                    title = "Tổng tiền cuối kỳ",
+                    value = String.format("%,.0f", result.finalAmount),
+                    unit = "triệu",
+                    valueColor = PTITPrimary
+                )
+
+                ResultStatColumn(
+                    title = "Lãi kiếm được",
+                    value = String.format("+%,.1f", result.totalInterest),
+                    unit = "triệu",
+                    valueColor = PTITSuccess
+                )
+
+                ResultStatColumn(
+                    title = "Tổng giá trị đầu tư",
+                    value = String.format("%,.1f"),
+                    unit = "triệu",
+                    valueColor = PTITWarning
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ResultStatColumn(
+    title: String,
+    value: String,
+    unit: String,
+    valueColor: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
+        modifier = Modifier.width(IntrinsicSize.Max)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = PTITTextSecondary
+            ),
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = valueColor
+            ),
+            maxLines = 1
+        )
+        Text(
+            text = unit,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = PTITTextSecondary
+            ),
+            maxLines = 1
+        )
     }
 }
 
@@ -420,10 +510,7 @@ fun FormulaCard(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(PTITPrimary, PTITSecondary)
-                ),
-                shape = PTITCornerRadius.lg
+                PTITBackgroundLight
             ),
         shape = PTITCornerRadius.lg,
         color = Color.Transparent,
