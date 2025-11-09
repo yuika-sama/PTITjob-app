@@ -75,14 +75,7 @@ fun SalaryCalculatorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            PTITGradientStart,
-                            PTITGradientMiddle,
-                            PTITGradientEnd
-                        )
-                    )
+                .background( PTITBackgroundLight
                 )
         ) {
             LazyColumn(
@@ -149,8 +142,6 @@ fun SalaryCalculatorScreen(
 }
 
 
-// --- Các Composable con của Màn hình ---
-
 @Composable
 private fun SalaryHeaderBanner() {
     Surface(
@@ -158,13 +149,13 @@ private fun SalaryHeaderBanner() {
             .fillMaxWidth()
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(PTITPrimary, PTITSecondary)
+                    listOf(PTITPrimary, PTITSecondary)
                 ),
                 shape = PTITCornerRadius.lg
             ),
         shape = PTITCornerRadius.lg,
-        color = Color.Transparent,     // để không che gradient phía dưới
-        tonalElevation = PTITElevation.md
+        color = Color.Transparent,
+        tonalElevation = PTITElevation.xl
     ) {
         Box(
             modifier = Modifier
@@ -203,24 +194,24 @@ private fun SalaryHeaderBanner() {
                         )
                     }
                 }
-                
+
                 Text(
                     text = "Tính Lương Gross - Net",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.Black
                     ),
                     textAlign = TextAlign.Center
                 )
-                
+
                 Text(
                     text = "Công cụ tính toán lương chính xác theo quy định thuế thu nhập cá nhân 2025",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.White.copy(0.9f)
+                        color = Color.Black.copy(0.9f)
                     ),
                     textAlign = TextAlign.Center
                 )
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
                 ) {
@@ -259,7 +250,7 @@ private fun SalaryCalculatorTabs(currentTab: Int, onTabChange: (Int) -> Unit) {
         "Gross → Net" to "Từ lương gộp sang thực nhận",
         "Net → Gross" to "Từ lương thực nhận sang gộp"
     )
-    
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
@@ -313,7 +304,7 @@ private fun SalaryCalculatorSection(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        tonalElevation = PTITElevation.xxxl
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
@@ -337,7 +328,7 @@ private fun SalaryCalculatorSection(
                     )
                 )
             }
-            
+
             SalaryCalculator(
                 calculationType = calculationType,
                 onCalculate = onCalculate
@@ -379,7 +370,7 @@ private fun SalaryResultSection(
                     )
                 )
             }
-            
+
             SalaryResultDisplay(
                 result = result,
                 calculationType = calculationType
@@ -418,13 +409,13 @@ private fun SalaryFaqSection() {
                     )
                 )
             }
-            
+
             val faqData = listOf(
                 "Thuế thu nhập cá nhân được tính như thế nào?" to "Thuế TNCN được tính theo thang thuế lũy tiến từng phần với các mức từ 5% đến 35% tùy theo mức thu nhập chịu thuế của bạn.",
                 "Mức giảm trừ gia cảnh năm 2025 là bao nhiêu?" to "Giảm trừ bản thân: 11.000.000 VND/tháng. Giảm trừ người phụ thuộc: 4.400.000 VND/người/tháng.",
                 "Sự khác biệt giữa lương Gross và Net?" to "Lương Gross là lương trước thuế và bảo hiểm. Lương Net là lương thực nhận sau khi đã trừ các khoản thuế, bảo hiểm xã hội, bảo hiểm y tế và bảo hiểm thất nghiệp."
             )
-            
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
             ) {
@@ -440,7 +431,7 @@ private fun SalaryFaqSection() {
 private fun SalaryFaqAccordion(question: String, answer: String) {
     var isExpanded by remember { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f, 
+        targetValue = if (isExpanded) 180f else 0f,
         label = "salary_faq_rotation"
     )
 
@@ -475,7 +466,7 @@ private fun SalaryFaqAccordion(question: String, answer: String) {
                         .rotate(rotationAngle)
                 )
             }
-            
+
             AnimatedVisibility(visible = isExpanded) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -525,7 +516,7 @@ private fun SalaryFooterNote() {
                     )
                 )
             }
-            
+
             Text(
                 buildAnnotatedString {
                     append("Kết quả tính toán chỉ mang tính chất ")

@@ -29,6 +29,36 @@ fun formatCurrency(amount: Long): String {
     return "${numberFormat.format(amount)} ₫"
 }
 
+fun formatCurrencyCompact(amount: Long): String {
+    return when {
+        amount >= 1_000_000_000 -> {
+            val billions = amount / 1_000_000_000.0
+            if (billions % 1 == 0.0) {
+                "${billions.toInt()} tỷ"
+            } else {
+                "%.1f tỷ".format(billions)
+            }
+        }
+        amount >= 1_000_000 -> {
+            val millions = amount / 1_000_000.0
+            if (millions % 1 == 0.0) {
+                "${millions.toInt()} triệu"
+            } else {
+                "%.1f triệu".format(millions)
+            }
+        }
+        amount >= 1_000 -> {
+            val thousands = amount / 1_000.0
+            if (thousands % 1 == 0.0) {
+                "${thousands.toInt()} nghìn"
+            } else {
+                "%.1f nghìn".format(thousands)
+            }
+        }
+        else -> "$amount ₫"
+    }
+}
+
 fun formatPercentage(percentage: Double): String {
     return "%.2f%%".format(percentage)
 }
@@ -120,9 +150,9 @@ fun TaxResultDisplay(
         ResultSummaryCard(
             title = "Kết quả tính thuế",
             items = listOf(
-                "Lương gộp" to formatCurrency(result.grossSalary),
-                "Thuế TNCN phải nộp" to formatCurrency(result.personalIncomeTax),
-                "Lương thực nhận" to formatCurrency(result.netSalary)
+                "Lương gộp" to formatCurrencyCompact(result.grossSalary),
+                "Thuế TNCN phải nộp" to formatCurrencyCompact(result.personalIncomeTax),
+                "Lương thực nhận" to formatCurrencyCompact(result.netSalary)
             ),
             color = PTITSuccess
         )
@@ -144,10 +174,10 @@ fun TaxResultDisplay(
                     )
                 )
 
-                BreakdownItem("Thu nhập chịu thuế", formatCurrency(result.taxableIncome))
-                BreakdownItem("Giảm trừ bản thân", formatCurrency(result.personalDeduction))
-                BreakdownItem("Giảm trừ người phụ thuộc", formatCurrency(result.dependentDeduction))
-                BreakdownItem("Khấu trừ bảo hiểm", formatCurrency(result.insuranceDeduction))
+                BreakdownItem("Thu nhập chịu thuế", formatCurrencyCompact(result.taxableIncome))
+                BreakdownItem("Giảm trừ bản thân", formatCurrencyCompact(result.personalDeduction))
+                BreakdownItem("Giảm trừ người phụ thuộc", formatCurrencyCompact(result.dependentDeduction))
+                BreakdownItem("Khấu trừ bảo hiểm", formatCurrencyCompact(result.insuranceDeduction))
 
                 if (result.breakdown.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(PTITSpacing.sm))
@@ -161,7 +191,7 @@ fun TaxResultDisplay(
                     result.breakdown.forEach { bracket ->
                         BreakdownItem(
                             "Bậc ${bracket.level} (${formatPercentage(bracket.rate)})",
-                            formatCurrency(bracket.tax)
+                            formatCurrencyCompact(bracket.tax)
                         )
                     }
                 }
@@ -287,9 +317,9 @@ fun SalaryResultDisplay(
         ResultSummaryCard(
             title = "Kết quả tính lương",
             items = listOf(
-                "Lương gộp (GROSS)" to formatCurrency(result.grossSalary),
-                "Lương thực nhận (NET)" to formatCurrency(result.netSalary),
-                "Tổng khấu trừ" to formatCurrency(result.totalDeductions)
+                "Lương gộp (GROSS)" to formatCurrencyCompact(result.grossSalary),
+                "Lương thực nhận (NET)" to formatCurrencyCompact(result.netSalary),
+                "Tổng khấu trừ" to formatCurrencyCompact(result.totalDeductions)
             ),
             color = PTITSuccess
         )
@@ -311,12 +341,12 @@ fun SalaryResultDisplay(
                     )
                 )
 
-                BreakdownItem("Bảo hiểm xã hội (8%)", formatCurrency(result.socialInsurance))
-                BreakdownItem("Bảo hiểm y tế (1.5%)", formatCurrency(result.healthInsurance))
+                BreakdownItem("Bảo hiểm xã hội (8%)", formatCurrencyCompact(result.socialInsurance))
+                BreakdownItem("Bảo hiểm y tế (1.5%)", formatCurrencyCompact(result.healthInsurance))
                 if (result.unemploymentInsurance > 0) {
-                    BreakdownItem("Bảo hiểm thất nghiệp (1%)", formatCurrency(result.unemploymentInsurance))
+                    BreakdownItem("Bảo hiểm thất nghiệp (1%)", formatCurrencyCompact(result.unemploymentInsurance))
                 }
-                BreakdownItem("Thuế thu nhập cá nhân", formatCurrency(result.personalIncomeTax))
+                BreakdownItem("Thuế thu nhập cá nhân", formatCurrencyCompact(result.personalIncomeTax))
             }
         }
     }
@@ -425,8 +455,8 @@ fun CompoundInterestResultDisplay(
         ResultSummaryCard(
             title = "Kết quả đầu tư",
             items = listOf(
-                "Số tiền cuối kỳ" to formatCurrency(result.finalAmount),
-                "Tổng lãi" to formatCurrency(result.totalInterest),
+                "Số tiền cuối kỳ" to formatCurrencyCompact(result.finalAmount),
+                "Tổng lãi" to formatCurrencyCompact(result.totalInterest),
                 "Tỷ suất lợi nhuận" to formatPercentage(result.effectiveRate)
             ),
             color = PTITSuccess
@@ -449,10 +479,10 @@ fun CompoundInterestResultDisplay(
                     )
                 )
 
-                BreakdownItem("Số tiền ban đầu", formatCurrency(result.principal))
-                BreakdownItem("Tổng đóng góp", formatCurrency(result.totalContributions))
-                BreakdownItem("Tổng đầu tư", formatCurrency(result.totalInvestment))
-                BreakdownItem("Lãi tích lũy", formatCurrency(result.totalInterest))
+                BreakdownItem("Số tiền ban đầu", formatCurrencyCompact(result.principal))
+                BreakdownItem("Tổng đóng góp", formatCurrencyCompact(result.totalContributions))
+                BreakdownItem("Tổng đầu tư", formatCurrencyCompact(result.totalInvestment))
+                BreakdownItem("Lãi tích lũy", formatCurrencyCompact(result.totalInterest))
             }
         }
     }
@@ -552,8 +582,8 @@ fun BHXHResultDisplay(
         ResultSummaryCard(
             title = "Kết quả tính BHXH",
             items = listOf(
-                "Số tiền nhận được" to formatCurrency(result.totalAmount.toLong()),
-                "Lương trung bình" to formatCurrency(result.averageSalary.toLong()),
+                "Số tiền nhận được" to formatCurrencyCompact(result.totalAmount.toLong()),
+                "Lương trung bình" to formatCurrencyCompact(result.averageSalary.toLong()),
                 "Tổng số tháng đóng" to "${result.totalMonths} tháng"
             ),
             color = PTITSuccess

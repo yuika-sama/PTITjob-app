@@ -104,13 +104,7 @@ fun UnemploymentInsuranceScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            PTITGradientStart,
-                            PTITGradientMiddle,
-                            PTITGradientEnd
-                        )
-                    )
+                    PTITBackgroundLight
                 )
         ) {
             LazyColumn(
@@ -130,7 +124,7 @@ fun UnemploymentInsuranceScreen(
                         UnemploymentFormSection(
                             formData = formData,
                             onFormChange = { formData = it },
-                            onCalculate = { /* có thể trigger tính lại nếu muốn */ }
+                            onCalculate = {  }
                         )
                     }
                 }
@@ -162,14 +156,14 @@ private fun UnemploymentHeaderSection() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
+          .background(
                 brush = Brush.linearGradient(
                     listOf(PTITPrimary, PTITSecondary)
                 ),
                 shape = PTITCornerRadius.lg
             ),
         shape = PTITCornerRadius.lg,
-        color = Color.Transparent, // để lộ gradient từ background()
+        color = Color.Transparent,
         tonalElevation = PTITElevation.md
     ) {
         Box(
@@ -634,3 +628,5 @@ fun UnemploymentInsuranceScreenPreview() {
         }
     }
 }
+
+

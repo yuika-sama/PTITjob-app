@@ -93,13 +93,7 @@ fun BHXHCalculatorScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            PTITGradientStart,
-                            PTITGradientMiddle,
-                            PTITGradientEnd
-                        )
-                    )
+                    PTITBackgroundLight
                 )
         ) {
             LazyColumn(
@@ -107,96 +101,106 @@ fun BHXHCalculatorScreen(
                 contentPadding = PaddingValues(PTITSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
             ) {
-            // --- Header Banner ---
-            item {
-                BHXHHeaderBanner()
-            }
+                // --- Header Banner ---
+                item {
+                    BHXHHeaderBanner()
+                }
 
-            // --- Calculator Tabs ---
-            item {
-                BHXHCalculatorTabs(
-                    currentTab = currentTab,
-                    onTabChange = { currentTab = it }
-                )
-            }
-
-            // --- Calculator Section ---
-            item {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = slideInVertically() + fadeIn()
-                ) {
-                    BHXHCalculatorSection(
+                // --- Calculator Tabs ---
+                item {
+                    BHXHCalculatorTabs(
                         currentTab = currentTab,
-                        onCalculate = handleCalculate
+                        onTabChange = { currentTab = it }
                     )
                 }
-            }
 
-            // --- Result Section ---
-            item {
-                AnimatedVisibility(
-                    visible = currentResult != null,
-                    enter = slideInVertically() + fadeIn()
-                ) {
-                    currentResult?.let { result ->
-                        BHXHResultSection(
-                            result = result,
-                            currentTab = currentTab
+                // --- Calculator Section ---
+                item {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically() + fadeIn()
+                    ) {
+                        BHXHCalculatorSection(
+                            currentTab = currentTab,
+                            onCalculate = handleCalculate
                         )
                     }
                 }
-            }
 
-            // --- Information Section ---
-            item {
-                BHXHInformationSection()
+                // --- Result Section ---
+                item {
+                    AnimatedVisibility(
+                        visible = currentResult != null,
+                        enter = slideInVertically() + fadeIn()
+                    ) {
+                        currentResult?.let { result ->
+                            BHXHResultSection(
+                                result = result,
+                                currentTab = currentTab
+                            )
+                        }
+                    }
+                }
+
+                // --- Information Section ---
+                item {
+                    BHXHInformationSection()
+                }
             }
-        }
         }
     }
 }
 
 
-// --- 3. CHILD COMPOSABLES (Đầy đủ) ---
-
-// --- BHXHCalculator Component ---
-
-// --- BHXHResultDisplay Component ---
-
-// --- Các Composable con và Helper của màn hình chính ---
-
 @Composable
 private fun BHXHHeaderBanner() {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(PTITSpacing.xl)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            PTITPrimary,
+                            PTITSecondary
+                        )
+                    )
+                )
         ) {
-            // Background decoration circle
+            // Decorative circles
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .offset(x = 40.dp, y = (-40).dp)
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(PTITPrimary.copy(alpha = 0.1f))
+                    .background(Color.White.copy(alpha = 0.1f))
             )
-            
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .offset(x = (-40).dp, y = 40.dp)
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.05f))
+            )
+
             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(PTITSpacing.xl),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
                 Surface(
                     modifier = Modifier.size(PTITSize.iconXxl),
                     shape = CircleShape,
-                    color = PTITPrimary
+                    color = Color.White.copy(alpha = 0.2f),
+                    contentColor = Color.White
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -205,25 +209,24 @@ private fun BHXHHeaderBanner() {
                         Icon(
                             imageVector = Icons.Default.Calculate,
                             contentDescription = null,
-                            tint = Color.White,
                             modifier = Modifier.size(PTITSize.iconXl)
                         )
                     }
                 }
-                
+
                 Text(
                     text = "Công cụ tính bảo hiểm xã hội một lần",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = PTITTextPrimary
+                        color = Color.White
                     ),
                     textAlign = TextAlign.Center
                 )
-                
+
                 Text(
                     text = "Miễn phí 2025",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = PTITPrimary,
+                        color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     ),
                     textAlign = TextAlign.Center
@@ -240,12 +243,12 @@ private fun BHXHCalculatorTabs(currentTab: Int, onTabChange: (Int) -> Unit) {
         "BHXH tự nguyện" to Icons.Default.VolunteerActivism,
         "Cả hai loại" to Icons.Default.Checklist
     )
-    
-    Surface(
+
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.sm
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.md)
@@ -291,11 +294,11 @@ private fun BHXHCalculatorSection(
     currentTab: Int,
     onCalculate: (BHXHResult) -> Unit
 ) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.sm
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
@@ -319,7 +322,7 @@ private fun BHXHCalculatorSection(
                     )
                 )
             }
-            
+
             val calculatorType = when (currentTab) {
                 0 -> "mandatory"
                 1 -> "voluntary"
@@ -338,11 +341,11 @@ private fun BHXHResultSection(
     result: BHXHResult,
     currentTab: Int
 ) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = PTITSuccess.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.sm
+        colors = CardDefaults.cardColors(containerColor = PTITSuccess.copy(alpha = 0.1f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
@@ -366,7 +369,7 @@ private fun BHXHResultSection(
                     )
                 )
             }
-            
+
             val resultType = when (currentTab) {
                 0 -> "mandatory"
                 1 -> "voluntary"
@@ -382,11 +385,11 @@ private fun BHXHResultSection(
 
 @Composable
 private fun BHXHInformationSection() {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),
@@ -410,19 +413,19 @@ private fun BHXHInformationSection() {
                     )
                 )
             }
-            
+
             BHXHInfoCard(
                 title = "Bảo hiểm xã hội một lần là gì?",
                 content = "Căn cứ theo Điều 3 Luật Bảo hiểm xã hội 2014, bảo hiểm xã hội một lần là sự bù đắp một phần thu nhập dành cho người lao động khi người lao động bị ốm đau, thai sản hay bị tai nạn lao động, bệnh nghề nghiệp, hết tuổi lao động hoặc chết.",
                 icon = Icons.Default.Description
             )
-            
+
             BHXHInfoCard(
                 title = "Điều kiện hưởng BHXH một lần",
                 content = "",
                 icon = Icons.Default.Checklist
             )
-            
+
             BHXHConditionCard(
                 title = "1. Đối với người lao động đã tham gia BHXH trước ngày 01/7/2025:",
                 items = listOf(
@@ -431,7 +434,7 @@ private fun BHXHInformationSection() {
                     "Có đơn yêu cầu được hưởng BHXH một lần."
                 )
             )
-            
+
             BHXHConditionCard(
                 title = "2. Đối với người lao động bắt đầu tham gia BHXH từ ngày 01/7/2025 trở đi:",
                 items = listOf(
@@ -441,7 +444,7 @@ private fun BHXHInformationSection() {
                     "Suy giảm khả năng lao động từ 81% trở lên."
                 )
             )
-            
+
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = PTITCornerRadius.md,
@@ -466,11 +469,10 @@ private fun BHXHInfoCard(
     content: String,
     icon: ImageVector
 ) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.md,
-        color = PTITInfo.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
+        colors = CardDefaults.cardColors(containerColor = PTITInfo.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -494,7 +496,7 @@ private fun BHXHInfoCard(
                     )
                 )
             }
-            
+
             if (content.isNotEmpty()) {
                 Text(
                     text = content,
@@ -512,11 +514,10 @@ private fun BHXHConditionCard(
     title: String,
     items: List<String>
 ) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.md,
-        color = PTITSecondary.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
+        colors = CardDefaults.cardColors(containerColor = PTITSecondary.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -529,7 +530,7 @@ private fun BHXHConditionCard(
                     color = PTITTextPrimary
                 )
             )
-            
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
             ) {

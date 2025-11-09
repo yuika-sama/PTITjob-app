@@ -71,13 +71,7 @@ fun CompoundInterestScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            PTITGradientStart,
-                            PTITGradientMiddle,
-                            PTITGradientEnd
-                        )
-                    )
+                    PTITBackgroundLight
                 )
         ) {
             LazyColumn(
@@ -119,11 +113,11 @@ fun CompoundInterestScreen(
 
 @Composable
 private fun CompoundInterestHeaderSection() {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.xl),

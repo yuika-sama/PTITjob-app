@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
@@ -32,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.ptitjob.ui.component.CompanyDetailCard
 import com.example.ptitjob.ui.component.CompanyDetailData
 import com.example.ptitjob.ui.theme.*
 
@@ -46,14 +46,8 @@ fun TopCompaniesScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(PTITGradientStart, PTITGradientMiddle, PTITGradientEnd),
-                    startY = 0f,
-                    endY = 500f
-                )
-            )
-    ) {
+            .background(PTITPrimary)
+        )
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -65,70 +59,66 @@ fun TopCompaniesScreen() {
                     onSearchChange = { searchQuery = it }
                 )
             }
-            
+
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            PTITBackgroundLight,
-                            PTITCornerRadius.xl
-                        )
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(PTITBackgroundLight)
                         .padding(PTITSpacing.lg)
                 ) {
                     // Stats Section
                     TopCompaniesStats(companies = mockTopCompanies)
-                    
-                    PTITSpacing.xl.let { Spacer(Modifier.height(it)) }
-                    
-                    // Featured Companies Grid
+
+                    Spacer(Modifier.height(PTITSpacing.xl))
+
+                    // Featured Companies Title
                     Text(
                         text = "TOP CÔNG TY NỔI BẬT NHẤT",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = PTITTextPrimary
+                            color = PTITTextPrimary,
+                            fontSize = 24.sp
                         ),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
-                    PTITSpacing.sm.let { Spacer(Modifier.height(it)) }
-                    
+
+                    Spacer(Modifier.height(PTITSpacing.sm))
+
                     Text(
                         text = "Được xếp hạng dựa trên đánh giá, tăng trưởng và uy tín thương hiệu",
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            color = PTITTextSecondary
+                            color = PTITTextSecondary,
+                            fontSize = 14.sp
                         ),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
-                    PTITSpacing.xl.let { Spacer(Modifier.height(it)) }
-                    
-                    // Company Grid
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 320.dp),
-                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
-                        verticalArrangement = Arrangement.spacedBy(PTITSpacing.md),
-                        modifier = Modifier.height(1200.dp)
+
+                    Spacer(Modifier.height(PTITSpacing.xl))
+
+                    // Company List (Changed from Grid to Column)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
                     ) {
-                        items(mockTopCompanies) { company ->
+                        mockTopCompanies.forEach { company ->
                             TopCompanyCard(
                                 company = company,
                                 onViewCompany = { /* TODO */ }
                             )
                         }
                     }
-                    
-                    PTITSpacing.xl.let { Spacer(Modifier.height(it)) }
-                    
+
+                    Spacer(Modifier.height(PTITSpacing.xl))
+
                     // Pagination
                     PaginationSection()
                 }
             }
         }
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -139,7 +129,7 @@ private fun TopCompaniesHeader(
     onSearchChange: (String) -> Unit
 ) {
     val tabs = listOf("Danh sách công ty", "Top công ty")
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -148,31 +138,32 @@ private fun TopCompaniesHeader(
         // Tab Navigation
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = PTITCornerRadius.lg,
-            color = Color.White.copy(alpha = 0.9f),
-            tonalElevation = PTITElevation.sm
+            shape = RoundedCornerShape(16.dp),
+            color = Color.White.copy(alpha = 0.95f),
+            shadowElevation = 2.dp
         ) {
             TabRow(
                 selectedTabIndex = currentTab,
                 containerColor = Color.Transparent,
                 contentColor = PTITPrimary,
                 indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
+                    TabRowDefaults.SecondaryIndicator(
                         modifier = Modifier.tabIndicatorOffset(tabPositions[currentTab]),
                         color = PTITPrimary,
                         height = 3.dp
                     )
-                },
-                modifier = Modifier.padding(PTITSpacing.sm)
+                }
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = currentTab == index,
                         onClick = { onTabChange(index) },
-                        text = { 
+                        modifier = Modifier.padding(vertical = PTITSpacing.sm),
+                        text = {
                             Text(
                                 title,
-                                fontWeight = if (currentTab == index) FontWeight.Bold else FontWeight.Medium
+                                fontWeight = if (currentTab == index) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp
                             )
                         },
                         selectedContentColor = PTITPrimary,
@@ -181,74 +172,82 @@ private fun TopCompaniesHeader(
                 }
             }
         }
-        
-        PTITSpacing.xl.let { Spacer(Modifier.height(it)) }
-        
-        // Header Content
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+
+        Spacer(Modifier.height(PTITSpacing.xl))
+
+        // Header Icon
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .align(Alignment.CenterHorizontally)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.EmojiEvents,
+                contentDescription = null,
+                tint = PTITSecondary,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+
+        Spacer(Modifier.height(PTITSpacing.md))
+
+        // Title
+        Text(
+            text = "Top công ty nổi bật nhất",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                fontSize = 28.sp
+            ),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(PTITSpacing.sm))
+
+        Text(
+            text = "Khám phá những công ty hàng đầu với môi trường làm việc tuyệt vời",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                color = Color.White.copy(alpha = 0.95f),
+                fontSize = 15.sp
+            ),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(PTITSpacing.lg))
+
+        // Feature Chips
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.EmojiEvents,
-                    contentDescription = null,
-                    tint = PTITSecondary,
-                    modifier = Modifier.size(PTITSize.iconXl)
-                )
-                Text(
-                    text = "Top công ty nổi bật nhất",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = PTITTextLight,
-                        fontSize = 28.sp
-                    )
-                )
-            }
-            
-            Text(
-                text = "Khám phá những công ty hàng đầu với môi trường làm việc tuyệt vời",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    color = PTITTextLight.copy(alpha = 0.9f)
-                ),
-                textAlign = TextAlign.Center
-            )
-            
-            PTITSpacing.md.let { Spacer(Modifier.height(it)) }
-            
-            // Feature Chips
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
-                modifier = Modifier.fillMaxWidth()
             ) {
                 FeatureChip(
                     text = "Đánh giá cao nhất",
                     icon = Icons.Filled.Star,
-                    color = PTITSuccess
+                    color = PTITSecondary
                 )
                 FeatureChip(
                     text = "Tăng trưởng nhanh",
                     icon = Icons.AutoMirrored.Filled.TrendingUp,
-                    color = PTITInfo
-                )
-                FeatureChip(
-                    text = "Phúc lợi tốt nhất",
-                    icon = Icons.Filled.Verified,
-                    color = PTITWarning
+                    color = PTITSecondary
                 )
             }
-            
-            PTITSpacing.lg.let { Spacer(Modifier.height(it)) }
-            
-            // Search Section
-            SearchSection(
-                searchQuery = searchQuery,
-                onSearchChange = onSearchChange
-            )
         }
+
+        Spacer(Modifier.height(PTITSpacing.xl))
+
+        // Search Section
+        SearchSection(
+            searchQuery = searchQuery,
+            onSearchChange = onSearchChange
+        )
     }
 }
 
@@ -259,26 +258,26 @@ private fun FeatureChip(
     color: Color
 ) {
     Surface(
-        shape = PTITCornerRadius.full,
-        color = color.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White.copy(alpha = 0.15f)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
-            modifier = Modifier.padding(horizontal = PTITSpacing.md, vertical = PTITSpacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(PTITSize.iconSm)
+                modifier = Modifier.size(16.dp)
             )
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = color,
-                    fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp
                 )
             )
         }
@@ -293,37 +292,41 @@ private fun SearchSection(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
+        shape = RoundedCornerShape(20.dp),
         color = Color.White,
-        shadowElevation = PTITElevation.md
+        shadowElevation = 8.dp
     ) {
         Row(
-            modifier = Modifier.padding(PTITSpacing.lg),
+            modifier = Modifier.padding(PTITSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = { 
+                placeholder = {
                     Text(
                         "Tìm kiếm top công ty",
-                        color = PTITTextSecondary
+                        color = PTITTextSecondary.copy(alpha = 0.6f),
+                        fontSize = 14.sp
                     )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = null,
-                        tint = PTITPrimary
+                        tint = PTITPrimary,
+                        modifier = Modifier.size(20.dp)
                     )
                 },
                 modifier = Modifier.weight(1f),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = PTITNeutral300,
-                    focusedBorderColor = PTITPrimary
+                    unfocusedBorderColor = PTITNeutral300.copy(alpha = 0.5f),
+                    focusedBorderColor = PTITPrimary,
+                    unfocusedContainerColor = PTITNeutral50.copy(alpha = 0.3f),
+                    focusedContainerColor = PTITNeutral50.copy(alpha = 0.5f)
                 ),
-                shape = PTITCornerRadius.md,
+                shape = RoundedCornerShape(16.dp),
                 singleLine = true
             )
             Button(
@@ -331,13 +334,14 @@ private fun SearchSection(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PTITPrimary
                 ),
-                shape = PTITCornerRadius.md,
-                contentPadding = PaddingValues(horizontal = PTITSpacing.lg, vertical = PTITSpacing.md)
+                shape = RoundedCornerShape(16.dp),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
             ) {
                 Text(
                     "Tìm kiếm",
                     fontWeight = FontWeight.SemiBold,
-                    color = PTITTextLight
+                    color = Color.White,
+                    fontSize = 14.sp
                 )
             }
         }
@@ -348,9 +352,9 @@ private fun SearchSection(
 private fun TopCompaniesStats(companies: List<CompanyDetailData>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
+        shape = RoundedCornerShape(20.dp),
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -362,17 +366,11 @@ private fun TopCompaniesStats(companies: List<CompanyDetailData>) {
                 icon = Icons.Default.Business,
                 color = PTITPrimary
             )
-//            StatItem(
-//                value = "${companies.sumOf { it.jobCount }}",
-//                label = "Việc làm",
-//                icon = Icons.Default.Work,
-//                color = PTITSuccess
-//            )
             StatItem(
                 value = "4.8★",
                 label = "Đánh giá TB",
                 icon = Icons.Default.Star,
-                color = PTITWarning
+                color = PTITSecondary
             )
         }
     }
@@ -392,14 +390,14 @@ private fun StatItem(
         Surface(
             shape = CircleShape,
             color = color.copy(alpha = 0.1f),
-            modifier = Modifier.size(PTITSize.avatarMd)
+            modifier = Modifier.size(56.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(PTITSize.iconLg)
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
@@ -407,13 +405,15 @@ private fun StatItem(
             text = value,
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
-                color = PTITTextPrimary
+                color = PTITTextPrimary,
+                fontSize = 24.sp
             )
         )
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = PTITTextSecondary
+                color = PTITTextSecondary,
+                fontSize = 13.sp
             ),
             textAlign = TextAlign.Center
         )
@@ -429,67 +429,73 @@ private fun TopCompanyCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onViewCompany),
-        shape = PTITCornerRadius.lg,
+        shape = RoundedCornerShape(20.dp),
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = 3.dp
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg)
         ) {
-            // Ranking Badge
+            // Top Row: Ranking Badge + Favorite
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = PTITCornerRadius.sm,
-                    color = PTITPrimary,
-                    modifier = Modifier.clip(PTITCornerRadius.sm)
+                    shape = RoundedCornerShape(12.dp),
+                    color = PTITPrimary
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
-                        modifier = Modifier.padding(horizontal = PTITSpacing.sm, vertical = PTITSpacing.xs)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Icon(
                             Icons.Default.EmojiEvents,
                             contentDescription = null,
-                            tint = PTITTextLight,
-                            modifier = Modifier.size(PTITSize.iconSm)
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = "TOP ${company.id}",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = PTITTextLight
+                                color = Color.White,
+                                fontSize = 12.sp
                             )
                         )
                     }
                 }
-                
-                IconButton(onClick = { /* TODO: Add to favorites */ }) {
-                    Icon(
-                        Icons.Default.FavoriteBorder,
-                        contentDescription = "Add to favorites",
-                        tint = PTITTextSecondary
-                    )
+
+                Surface(
+                    shape = CircleShape,
+                    color = PTITPrimary.copy(alpha = 0.08f)
+                ) {
+                    IconButton(onClick = { /* TODO: Add to favorites */ }) {
+                        Icon(
+                            Icons.Default.FavoriteBorder,
+                            contentDescription = "Add to favorites",
+                            tint = PTITPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
-            
-            PTITSpacing.md.let { Spacer(Modifier.height(it)) }
-            
-            // Company Info
+
+            Spacer(Modifier.height(PTITSpacing.md))
+
+            // Company Info Row
             Row(
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Company Logo
                 Surface(
-                    modifier = Modifier.size(PTITSize.avatarLg),
-                    shape = PTITCornerRadius.md,
+                    modifier = Modifier.size(72.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = PTITNeutral50,
-                    tonalElevation = PTITElevation.xs
+                    shadowElevation = 1.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (company.logo.isNotBlank()) {
@@ -499,30 +505,33 @@ private fun TopCompanyCard(
                                     .crossfade(true)
                                     .build(),
                                 contentDescription = "${company.name} logo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                contentScale = ContentScale.Fit
                             )
                         } else {
                             Icon(
                                 Icons.Default.Business,
                                 contentDescription = "Company placeholder",
-                                modifier = Modifier.size(PTITSize.iconLg),
-                                tint = PTITTextSecondary
+                                modifier = Modifier.size(32.dp),
+                                tint = PTITTextSecondary.copy(alpha = 0.5f)
                             )
                         }
                     }
                 }
-                
+
                 // Company Details
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
                         text = company.name,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = PTITTextPrimary
+                            color = PTITTextPrimary,
+                            fontSize = 18.sp
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -530,77 +539,69 @@ private fun TopCompanyCard(
                     Text(
                         text = company.industry,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = PTITTextSecondary
+                            color = PTITTextSecondary,
+                            fontSize = 13.sp
                         )
                     )
-//                    Text(
-//                        text = "${company.size} • ${company.address}",
-//                        style = MaterialTheme.typography.bodySmall.copy(
-//                            color = PTITTextSecondary
-//                        ),
-//                        maxLines = 1,
-//                        overflow = TextOverflow.Ellipsis
-//                    )
                 }
             }
-            
-            PTITSpacing.lg.let { Spacer(Modifier.height(it)) }
-            
+
+            Spacer(Modifier.height(PTITSpacing.md))
+
             // Company Description
             Text(
                 text = company.description,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = PTITTextSecondary
+                    color = PTITTextSecondary,
+                    fontSize = 13.sp,
+                    lineHeight = 20.sp
                 ),
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
-            
-            PTITSpacing.lg.let { Spacer(Modifier.height(it)) }
-            
+
+            Spacer(Modifier.height(PTITSpacing.md))
+
+            HorizontalDivider(
+                color = PTITNeutral300.copy(alpha = 0.3f),
+                thickness = 1.dp
+            )
+
+            Spacer(Modifier.height(PTITSpacing.md))
+
             // Company Stats
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-//                CompanyStatChip(
-//                    icon = Icons.Default.Work,
-//                    text = "${company.jobCount} việc làm",
-//                    color = PTITSuccess
-//                )
                 CompanyStatChip(
                     icon = Icons.Default.Star,
                     text = "4.${(1..9).random()}★",
-                    color = PTITWarning
+                    color = PTITSecondary
                 )
-//                CompanyStatChip(
-//                    icon = Icons.Default.Verified,
-//                    text = if (company.isVerified) "Xác thực" else "Chưa xác thực",
-//                    color = if (company.isVerified) PTITInfo else PTITNeutral400
-//                )
-            }
-            
-            PTITSpacing.lg.let { Spacer(Modifier.height(it)) }
-            
-            // Action Button
-            Button(
-                onClick = onViewCompany,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PTITPrimary
-                ),
-                shape = PTITCornerRadius.md
-            ) {
-                Icon(
-                    Icons.Default.Visibility,
-                    contentDescription = null,
-                    modifier = Modifier.size(PTITSize.iconSm)
-                )
-                PTITSpacing.sm.let { Spacer(Modifier.width(it)) }
-                Text(
-                    "Xem chi tiết công ty",
-                    fontWeight = FontWeight.SemiBold
-                )
+
+                // Action Button
+                Button(
+                    onClick = onViewCompany,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PTITPrimary
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Visibility,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Xem chi tiết công ty",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
+                }
             }
         }
     }
@@ -613,25 +614,26 @@ private fun CompanyStatChip(
     color: Color
 ) {
     Surface(
-        shape = PTITCornerRadius.sm,
+        shape = RoundedCornerShape(12.dp),
         color = color.copy(alpha = 0.1f)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
-            modifier = Modifier.padding(horizontal = PTITSpacing.sm, vertical = PTITSpacing.xs)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(PTITSize.iconSm)
+                modifier = Modifier.size(16.dp)
             )
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = color,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp
                 )
             )
         }
@@ -646,27 +648,30 @@ private fun PaginationSection() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            shape = PTITCornerRadius.lg,
+            shape = RoundedCornerShape(16.dp),
             color = Color.White,
-            tonalElevation = PTITElevation.sm
+            shadowElevation = 2.dp
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(PTITSpacing.lg)
+                modifier = Modifier.padding(PTITSpacing.md)
             ) {
-                IconButton(onClick = { /* TODO: Previous page */ }) {
+                IconButton(
+                    onClick = { /* TODO: Previous page */ },
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(
                         Icons.Default.ChevronLeft,
                         contentDescription = "Previous page",
                         tint = PTITTextSecondary
                     )
                 }
-                
+
                 repeat(5) { index ->
                     val pageNumber = index + 1
-                    val isSelected = pageNumber == 1 // Current page
-                    
+                    val isSelected = pageNumber == 1
+
                     Surface(
                         shape = CircleShape,
                         color = if (isSelected) PTITPrimary else Color.Transparent,
@@ -678,15 +683,19 @@ private fun PaginationSection() {
                             Text(
                                 text = pageNumber.toString(),
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (isSelected) PTITTextLight else PTITTextSecondary
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) Color.White else PTITTextSecondary,
+                                    fontSize = 14.sp
                                 )
                             )
                         }
                     }
                 }
-                
-                IconButton(onClick = { /* TODO: Next page */ }) {
+
+                IconButton(
+                    onClick = { /* TODO: Next page */ },
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = "Next page",

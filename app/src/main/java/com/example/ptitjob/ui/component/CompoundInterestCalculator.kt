@@ -189,9 +189,9 @@ private fun ResultOverview(result: CompoundInterestResult) {
             Text("📊 Tổng quan kết quả", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ResultChip("Tổng tiền gửi", formatCurrency(result.totalContributions), MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                ResultChip("Lãi kiếm được", "+${formatCurrency(result.totalInterest)}", MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
-                ResultChip("Tổng giá trị cuối kỳ", formatCurrency(result.finalAmount), MaterialTheme.colorScheme.error, Modifier.weight(1f))
+                ResultChip("Tổng tiền gửi", formatCurrencyCompact(result.totalContributions), MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+                ResultChip("Lãi kiếm được", "+${formatCurrencyCompact(result.totalInterest)}", MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
+                ResultChip("Tổng giá trị cuối kỳ", formatCurrencyCompact(result.finalAmount), MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
         }
     }
