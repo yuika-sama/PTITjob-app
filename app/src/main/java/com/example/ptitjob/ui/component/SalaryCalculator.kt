@@ -206,7 +206,7 @@ private fun RegionSection(selectedRegion: String, onRegionChange: (String) -> Un
         Column {
             MINIMUM_WAGES.forEach { (regionKey, wage) ->
                 RadioOption(
-                    label = "Vùng $regionKey - ${formatCurrencyCompact(wage)}/tháng",
+                    label = "Vùng $regionKey - ${formatCurrency(wage)}đ/tháng",
                     selected = selectedRegion == regionKey,
                     onClick = { onRegionChange(regionKey) }
                 )

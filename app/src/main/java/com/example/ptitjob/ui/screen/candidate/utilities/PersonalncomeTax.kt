@@ -549,8 +549,7 @@ private fun TaxBracketsTab() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -708,8 +707,7 @@ private fun TaxFormulaCard() {
         shape = PTITCornerRadius.md,
         colors = CardDefaults.cardColors(
             containerColor = PTITInfo.copy(alpha = 0.08f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        )
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.md),
