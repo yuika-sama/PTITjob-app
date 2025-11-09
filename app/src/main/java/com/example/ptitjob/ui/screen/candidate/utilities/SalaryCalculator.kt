@@ -199,7 +199,7 @@ private fun SalaryHeaderBanner() {
                     text = "Tính Lương Gross - Net",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.White
                     ),
                     textAlign = TextAlign.Center
                 )
