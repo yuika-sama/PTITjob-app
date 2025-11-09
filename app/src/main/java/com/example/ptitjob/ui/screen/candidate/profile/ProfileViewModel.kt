@@ -2,6 +2,8 @@ package com.example.ptitjob.ui.screen.candidate.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.SharedPreferences
+import com.google.gson.Gson
 import com.example.ptitjob.data.api.dto.UserDto
 import com.example.ptitjob.data.api.request.UpdateUserRequest
 import com.example.ptitjob.data.repository.AuthRepository
@@ -18,7 +20,9 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
-    private val resumeRepository: ResumeRepository
+    private val resumeRepository: ResumeRepository,
+    private val sharedPreferences: SharedPreferences,
+    private val gson: Gson
 ) : ViewModel() {
 
     // UI state exposed to composables
@@ -32,7 +36,26 @@ class ProfileViewModel @Inject constructor(
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     init {
+        // Load user from SharedPreferences first (immediate display)
+        loadUserFromStorage()
+        // Then refresh from API
         loadCurrentUser()
+    }
+    
+    /**
+     * Load user from SharedPreferences for immediate display
+     */
+    private fun loadUserFromStorage() {
+        try {
+            val userJson = sharedPreferences.getString("ptitjob_user", null)
+            if (!userJson.isNullOrEmpty()) {
+                val userDto = gson.fromJson(userJson, UserDto::class.java)
+                _userState.value = mapDtoToUi(userDto)
+                _isLoading.value = false
+            }
+        } catch (e: Exception) {
+            // If parsing fails, continue with API call
+        }
     }
 
     private fun mapDtoToUi(dto: UserDto): UserProfile = UserProfile(
@@ -62,6 +85,8 @@ class ProfileViewModel @Inject constructor(
                     val dto = apiResp.data
                     if (dto != null) {
                         _userState.value = mapDtoToUi(dto)
+                        // Save updated user data to SharedPreferences
+                        saveUserToStorage(dto)
                     } else {
                         _errorMessage.value = apiResp.message.ifBlank { "Không tìm thấy dữ liệu người dùng" }
                     }
@@ -73,6 +98,21 @@ class ProfileViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+    
+    /**
+     * Save user data to SharedPreferences
+     */
+    private fun saveUserToStorage(userDto: UserDto) {
+        try {
+            val userJson = gson.toJson(userDto)
+            sharedPreferences.edit().apply {
+                putString("ptitjob_user", userJson)
+                apply()
+            }
+        } catch (e: Exception) {
+            // Ignore storage errors
         }
     }
 
@@ -101,6 +141,8 @@ class ProfileViewModel @Inject constructor(
                     val updatedDto = apiResp.data
                     if (updatedDto != null) {
                         _userState.value = mapDtoToUi(updatedDto)
+                        // Save updated user data to SharedPreferences
+                        saveUserToStorage(updatedDto)
                         onResult(true, null)
                     } else {
                         onResult(false, apiResp.message.ifBlank { "Cập nhật hồ sơ thất bại" })
