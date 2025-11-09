@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -85,6 +87,7 @@ fun PersonalIncomeTaxScreen(
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
                 item { TaxHeaderBanner() }
+                item {TaxRegulationInfo()}
                 item {
                     TaxNavigationTabs(
                         currentTab = currentTab,
@@ -116,11 +119,20 @@ private fun TaxHeaderBanner() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        colors = CardDefaults.cardColors(containerColor = PTITPrimary, PTITSecondary),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.lg),
+            modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            PTITPrimary,
+                            PTITSecondary
+                        )
+                    )
+                )
+                .padding(PTITSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
@@ -152,28 +164,48 @@ private fun TaxHeaderBanner() {
                 ),
                 textAlign = TextAlign.Center
             )
+        }
+    }
+}
 
+
+@Composable
+private fun TaxRegulationInfo() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = PTITCornerRadius.lg,
+        colors = CardDefaults.cardColors(containerColor = PTITInfo.copy(alpha = 0.1f)), // Dùng màu nền nhạt
+        border = BorderStroke(1.dp, PTITInfo.copy(alpha = 0.3f)) // Thêm viền nhẹ
+    ) {
+        Column(
+            modifier = Modifier.padding(PTITSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+        ) {
             Text(
                 text = "Áp dụng quy định:",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color.White.copy(0.9f),
-                    fontSize = 12.sp
-                ),
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextPrimary
+                )
             )
-
             Text(
-                text = "• Mức giảm trừ gia cảnh: 11 Tr/tháng (bản thân) và 4.4 Tr/tháng (người phụ thuộc)",
+                text = "• Giảm trừ gia cảnh bản thân: 11,000,000 VNĐ/tháng.",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color.White.copy(0.85f),
-                    fontSize = 11.sp,
-                    lineHeight = 16.sp
-                ),
-                textAlign = TextAlign.Center
+                    color = PTITTextSecondary,
+                    lineHeight = 18.sp
+                )
+            )
+            Text(
+                text = "• Giảm trừ người phụ thuộc: 4,400,000 VNĐ/người/tháng.",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = PTITTextSecondary,
+                    lineHeight = 18.sp
+                )
             )
         }
     }
 }
+
 
 @Composable
 private fun TaxNavigationTabs(currentTab: Int, onTabChange: (Int) -> Unit) {
