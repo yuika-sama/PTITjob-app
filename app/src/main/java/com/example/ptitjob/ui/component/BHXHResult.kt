@@ -113,7 +113,18 @@ private fun CalculationDetailsCard(periods: List<BHXHPeriod>) {
     }
 }
 
-private fun formatCurrency(amount: Double): String = NumberFormat.getNumberInstance(Locale("vi", "VN")).format(amount.toLong())
+private fun formatCurrency(amount: Double): String {
+    val millions = amount / 1_000_000.0
+    return if (millions >= 1) {
+        if (millions % 1 == 0.0) {
+            "${millions.toInt()} triệu"
+        } else {
+            "%.1f triệu".format(millions)
+        }
+    } else {
+        NumberFormat.getNumberInstance(Locale("vi", "VN")).format(amount.toLong())
+    }
+}
 private fun formatTime(months: Int): String {
     val years = months / 12
     val remainingMonths = months % 12

@@ -97,7 +97,8 @@ fun SecondaryButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            softWrap = false
         )
     }
 }

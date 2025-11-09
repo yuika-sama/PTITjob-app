@@ -12,11 +12,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.ptitjob.ui.theme.*
+import com.example.ptitjob.ui.theme.PTITNeutral50
+import com.example.ptitjob.ui.theme.PTITPrimary
 
 /**
  * Screen container utility cho các màn hình candidate
@@ -26,23 +25,11 @@ import com.example.ptitjob.ui.theme.*
 @Composable
 fun PTITScreenContainer(
     modifier: Modifier = Modifier,
-    hasGradientBackground: Boolean = true,
+    hasGradientBackground: Boolean = false,
     topBar: @Composable () -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     content: @Composable () -> Unit
 ) {
-    // Memoize background to prevent unnecessary recomposition
-    val backgroundBrush = remember(hasGradientBackground) {
-        if (hasGradientBackground) {
-            Brush.verticalGradient(
-                colors = listOf(PTITGradientStart, PTITGradientMiddle, PTITGradientEnd),
-                startY = 0f,
-                endY = 800f
-            )
-        } else {
-            Brush.verticalGradient(colors = listOf(PTITNeutral50, PTITNeutral50))
-        }
-    }
     Scaffold(
         modifier = modifier,
         topBar = topBar,
@@ -55,13 +42,9 @@ fun PTITScreenContainer(
                 .padding(paddingValues)
                 .background(
                     if (hasGradientBackground) {
-                        Brush.verticalGradient(
-                            colors = listOf(PTITGradientStart, PTITGradientMiddle, PTITGradientEnd),
-                            startY = 0f,
-                            endY = 800f
-                        )
+                        PTITPrimary
                     } else {
-                        Brush.verticalGradient(colors = listOf(PTITNeutral50, PTITNeutral50))
+                        PTITNeutral50
                     }
                 )
         ) {
@@ -91,13 +74,9 @@ fun PTITPageContainer(
                 .padding(paddingValues)
                 .background(
                     if (hasGradientBackground) {
-                        Brush.verticalGradient(
-                            colors = listOf(PTITGradientStart, PTITGradientMiddle, PTITGradientEnd),
-                            startY = 0f,
-                            endY = 800f
-                        )
+                        PTITPrimary
                     } else {
-                        Brush.verticalGradient(colors = listOf(PTITNeutral50, PTITNeutral50))
+                        PTITNeutral50
                     }
                 )
         ) {

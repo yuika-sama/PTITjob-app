@@ -76,6 +76,7 @@ data class PasswordFormData(
 @Composable
 fun ProfileScreen(
     user: UserProfile,
+    background: Color = Color.White,
     onBack: () -> Unit = {},
     onUpdateProfile: (EditFormData, (Boolean, String?) -> Unit) -> Unit = { _, cb -> cb(true, null) },
     onChangePassword: (PasswordFormData, (Boolean, String?) -> Unit) -> Unit = { _, cb -> cb(true, null) },
@@ -99,19 +100,19 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         text = "Hồ sơ cá nhân",
-                        color = Color.White,
+                        color = PTITTextPrimary, // Changed for light background
                         fontWeight = FontWeight.Bold
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Quay lại",
-                            tint = Color.White
+                            tint = PTITTextPrimary // Changed for light background
                         )
                     }
                 },
@@ -120,12 +121,12 @@ fun ProfileScreen(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Cài đặt",
-                            tint = Color.White
+                            tint = PTITTextPrimary // Changed for light background
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PTITPrimary
+                    containerColor = Color.Transparent // Transparent to blend with screen background
                 )
             )
         },
@@ -135,22 +136,14 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            PTITGradientStart,
-                            PTITGradientMiddle, 
-                            PTITGradientEnd
-                        )
-                    )
-                )
+                .background(PTITBackgroundLight) // Solid light background
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(PTITSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
-                // Profile Header với animation
+                // Profile Header with animation
                 item {
                     AnimatedVisibility(
                         visible = showAnimations,
@@ -169,20 +162,7 @@ fun ProfileScreen(
                     }
                 }
 
-                // Personal Information Card
-                item {
-                    AnimatedVisibility(
-                        visible = showAnimations,
-                        enter = slideInHorizontally(
-                            initialOffsetX = { -it },
-                            animationSpec = tween(600, delayMillis = 200)
-                        ) + fadeIn()
-                    ) {
-                        PTITPersonalInfoCard(user = user)
-                    }
-                }
-
-                // Academic Information Card  
+                // Academic Information Card
                 item {
                     AnimatedVisibility(
                         visible = showAnimations,
@@ -312,104 +292,112 @@ private fun PTITProfileHeader(
     user: UserProfile,
     onEditClick: () -> Unit
 ) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        tonalElevation = PTITElevation.lg
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
-        Box(
-            modifier = Modifier.background(
-                brush = Brush.linearGradient(
-                    colors = listOf(PTITPrimary, PTITSecondary),
-                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                    end = androidx.compose.ui.geometry.Offset(1000f, 1000f)
-                )
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(PTITSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Decorative circles
+            // Avatar Section
             Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = 50.dp, y = (-50).dp)
-                    .size(150.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(0.1f))
-            )
-            
-            Column(
-                modifier = Modifier.padding(PTITSpacing.xl),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.size(120.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Avatar Section
-                Box(
-                    modifier = Modifier.size(120.dp),
-                    contentAlignment = Alignment.Center
+                // Default Grey Avatar
+                Surface(
+                    modifier = Modifier.size(110.dp),
+                    shape = CircleShape,
+                    color = Color.LightGray
                 ) {
-                    Surface(
-                        modifier = Modifier.size(110.dp),
-                        shape = CircleShape,
-                        color = Color.White,
-                        tonalElevation = PTITElevation.md
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = user.fullName.split(" ").mapNotNull { it.firstOrNull() }.take(2).joinToString("").uppercase(),
-                                style = MaterialTheme.typography.headlineLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = PTITPrimary
-                                )
-                            )
-                        }
-                    }
-                    
-                    // Edit avatar button
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .size(32.dp)
-                            .clickable { onEditClick() },
-                        shape = CircleShape,
-                        color = PTITBackgroundLight,
-                        tonalElevation = PTITElevation.sm
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CameraAlt,
-                                contentDescription = "Đổi ảnh đại diện",
-                                tint = Color.White,
-                                modifier = Modifier.size(PTITSize.iconSm)
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Avatar mặc định",
+                            tint = Color.White,
+                            modifier = Modifier.size(60.dp)
+                        )
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
-                // User Info
-                Text(
-                    text = user.fullName,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ),
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(PTITSpacing.xs))
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
-                    verticalAlignment = Alignment.CenterVertically
+
+                // Edit Button
+                FilledIconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(36.dp),
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = PTITPrimary,
+                        contentColor = Color.White
+                    )
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Chỉnh sửa hồ sơ",
+                        modifier = Modifier.size(PTITSize.iconSm)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(PTITSpacing.md))
+
+            // User Info
+            Text(
+                text = user.fullName,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = PTITTextPrimary
+                ),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(PTITSpacing.xs))
+
+            // Role and Status Chips
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Role Chip
+                Surface(
+                    shape = PTITCornerRadius.md,
+                    color = PTITPrimary.copy(alpha = 0.1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = PTITSpacing.sm, vertical = PTITSpacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.School,
+                            contentDescription = null,
+                            tint = PTITPrimary,
+                            modifier = Modifier.size(PTITSize.iconSm)
+                        )
+                        Text(
+                            text = user.role.uppercase(),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = PTITPrimary
+                            )
+                        )
+                    }
+                }
+
+                // Status Chip
+                if (user.isActive) {
                     Surface(
                         shape = PTITCornerRadius.md,
-                        color = Color.White.copy(0.2f)
+                        color = PTITSuccess.copy(alpha = 0.1f)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = PTITSpacing.sm, vertical = PTITSpacing.xs),
@@ -417,140 +405,75 @@ private fun PTITProfileHeader(
                             horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.School,
+                                imageVector = Icons.Default.Verified,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = PTITSuccess,
                                 modifier = Modifier.size(PTITSize.iconSm)
                             )
                             Text(
-                                text = user.role.uppercase(),
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color.White
+                                text = "ĐANG HOẠT ĐỘNG",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = PTITSuccess
                                 )
                             )
                         }
                     }
-                    
-                    if (user.isActive) {
-                        Surface(
-                            shape = PTITCornerRadius.md,
-                            color = PTITSuccess.copy(0.8f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = PTITSpacing.sm, vertical = PTITSpacing.xs),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Verified,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(PTITSize.iconSm)
-                                )
-                                Text(
-                                    text = "ĐANG HOẠT ĐỘNG",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(PTITSpacing.sm))
-                
-                Text(
-                    text = user.email,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.White.copy(0.9f)
-                    ),
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
-                // Quick Edit Button
-                OutlinedButton(
-                    onClick = onEditClick,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.White
-                    ),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = Brush.horizontalGradient(
-                            listOf(Color.White, Color.White.copy(0.7f))
-                        )
-                    ),
-                    shape = PTITCornerRadius.md
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(PTITSize.iconSm)
-                    )
-                    Spacer(modifier = Modifier.width(PTITSpacing.xs))
-                    Text(
-                        text = "Chỉnh sửa hồ sơ",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun PTITPersonalInfoCard(user: UserProfile) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
-    ) {
-        Column(
-            modifier = Modifier.padding(PTITSpacing.lg)
-        ) {
-            PTITSectionHeader(
-                title = "Thông tin cá nhân",
-                icon = Icons.Default.Person,
-                iconColor = PTITPrimary
+            Spacer(modifier = Modifier.height(PTITSpacing.lg))
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = PTITSpacing.lg),
+                color = PTITPrimary.copy(alpha = 0.2f)
             )
-            
-            Spacer(modifier = Modifier.height(PTITSpacing.md))
-            
-            PTITInfoRow(
-                icon = Icons.Default.Badge,
-                label = "Họ và tên",
-                value = user.fullName,
-                valueColor = PTITTextPrimary
-            )
-            
-            PTITInfoRow(
-                icon = Icons.Default.Email,
-                label = "Email",
-                value = user.email,
-                valueColor = PTITTextSecondary
-            )
-            
-            PTITInfoRow(
-                icon = Icons.Default.Phone,
-                label = "Số điện thoại",
-                value = user.phoneNumber ?: "Chưa cập nhật",
-                valueColor = if (user.phoneNumber != null) PTITTextPrimary else PTITWarning
-            )
-            
-            if (user.bio?.isNotEmpty() == true) {
-                PTITInfoRow(
-                    icon = Icons.Default.Info,
-                    label = "Giới thiệu",
-                    value = user.bio,
-                    valueColor = PTITTextSecondary,
-                    maxLines = 3
-                )
+
+            Spacer(modifier = Modifier.height(PTITSpacing.lg))
+
+            // Contact Info Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = PTITSpacing.md),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            ) {
+                // Email Row
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Email,
+                        contentDescription = "Email",
+                        tint = PTITTextSecondary,
+                        modifier = Modifier.size(PTITSize.iconMd)
+                    )
+                    Spacer(modifier = Modifier.width(PTITSpacing.md))
+                    Column {
+                        Text("Email", style = MaterialTheme.typography.labelMedium.copy(color = PTITTextSecondary))
+                        Text(user.email, style = MaterialTheme.typography.bodyMedium.copy(color = PTITTextPrimary, fontWeight = FontWeight.SemiBold))
+                    }
+                }
+
+                // Phone Row
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Phone,
+                        contentDescription = "Số điện thoại",
+                        tint = PTITTextSecondary,
+                        modifier = Modifier.size(PTITSize.iconMd)
+                    )
+                    Spacer(modifier = Modifier.width(PTITSpacing.md))
+                    Column {
+                        Text("Số điện thoại", style = MaterialTheme.typography.labelMedium.copy(color = PTITTextSecondary))
+                        Text(
+                            text = user.phoneNumber ?: "Chưa cập nhật",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (user.phoneNumber != null) PTITTextPrimary else PTITWarning
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -558,11 +481,11 @@ private fun PTITPersonalInfoCard(user: UserProfile) {
 
 @Composable
 private fun PTITAcademicInfoCard(user: UserProfile) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg)
@@ -572,23 +495,23 @@ private fun PTITAcademicInfoCard(user: UserProfile) {
                 icon = Icons.Default.School,
                 iconColor = PTITSecondary
             )
-            
+
             Spacer(modifier = Modifier.height(PTITSpacing.md))
-            
+
             PTITInfoRow(
                 icon = Icons.Default.Numbers,
                 label = "Mã sinh viên",
                 value = user.studentId ?: "Chưa cập nhật",
                 valueColor = if (user.studentId != null) PTITTextPrimary else PTITWarning
             )
-            
+
             PTITInfoRow(
                 icon = Icons.Default.Category,
                 label = "Ngành học",
                 value = user.major ?: "Chưa cập nhật",
                 valueColor = if (user.major != null) PTITTextPrimary else PTITWarning
             )
-            
+
             PTITInfoRow(
                 icon = Icons.Default.CalendarMonth,
                 label = "Năm tốt nghiệp",
@@ -601,11 +524,11 @@ private fun PTITAcademicInfoCard(user: UserProfile) {
 
 @Composable
 private fun PTITSkillsAchievementsCard(user: UserProfile) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg)
@@ -613,11 +536,11 @@ private fun PTITSkillsAchievementsCard(user: UserProfile) {
             PTITSectionHeader(
                 title = "Kỹ năng & Thành tích",
                 icon = Icons.Default.Star,
-                iconColor = PTITBackgroundLight
+                iconColor = PTITSecondary
             )
-            
+
             Spacer(modifier = Modifier.height(PTITSpacing.md))
-            
+
             // Skills Section
             if (user.skills.isNotEmpty()) {
                 Text(
@@ -627,9 +550,9 @@ private fun PTITSkillsAchievementsCard(user: UserProfile) {
                         color = PTITTextPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.sm))
-                
+
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                     contentPadding = PaddingValues(bottom = PTITSpacing.md)
@@ -656,7 +579,7 @@ private fun PTITSkillsAchievementsCard(user: UserProfile) {
                     message = "Chưa có kỹ năng nào được thêm"
                 )
             }
-            
+
             // Achievements Section
             if (user.achievements.isNotEmpty()) {
                 Text(
@@ -666,9 +589,9 @@ private fun PTITSkillsAchievementsCard(user: UserProfile) {
                         color = PTITTextPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.sm))
-                
+
                 user.achievements.forEach { achievement ->
                     Row(
                         modifier = Modifier.padding(vertical = PTITSpacing.xs),
@@ -701,11 +624,11 @@ private fun PTITSkillsAchievementsCard(user: UserProfile) {
 
 @Composable
 private fun PTITAccountStatusCard(user: UserProfile) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg)
@@ -715,9 +638,9 @@ private fun PTITAccountStatusCard(user: UserProfile) {
                 icon = Icons.Default.Security,
                 iconColor = PTITInfo
             )
-            
+
             Spacer(modifier = Modifier.height(PTITSpacing.md))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -749,7 +672,7 @@ private fun PTITAccountStatusCard(user: UserProfile) {
                         )
                     }
                 }
-                
+
                 Icon(
                     imageVector = if (user.isActive) Icons.Default.CheckCircle else Icons.Default.Cancel,
                     contentDescription = null,
@@ -757,12 +680,12 @@ private fun PTITAccountStatusCard(user: UserProfile) {
                     modifier = Modifier.size(PTITSize.iconMd)
                 )
             }
-            
+
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = PTITSpacing.md),
                 color = PTITPrimary
             )
-            
+
             PTITInfoRow(
                 icon = Icons.Default.CalendarToday,
                 label = "Ngày tham gia",
@@ -780,11 +703,11 @@ private fun PTITQuickActionsCard(
     onSettings: () -> Unit,
     isLoading: Boolean
 ) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.md
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = PTITElevation.md)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg)
@@ -794,9 +717,9 @@ private fun PTITQuickActionsCard(
                 icon = Icons.Default.Speed,
                 iconColor = PTITBackgroundLight
             )
-            
+
             Spacer(modifier = Modifier.height(PTITSpacing.md))
-            
+
             // Edit Profile Button
             Button(
                 onClick = onEditProfile,
@@ -829,10 +752,10 @@ private fun PTITQuickActionsCard(
                     )
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(PTITSpacing.sm))
-            
-            // Change Password Button  
+
+            // Change Password Button
             OutlinedButton(
                 onClick = onChangePassword,
                 modifier = Modifier.fillMaxWidth(),
@@ -861,9 +784,9 @@ private fun PTITQuickActionsCard(
                     )
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(PTITSpacing.sm))
-            
+
             // Settings Button
             TextButton(
                 onClick = onSettings,
@@ -958,7 +881,7 @@ private fun PTITInfoRow(
                 tint = PTITTextSecondary,
                 modifier = Modifier.size(PTITSize.iconSm)
             )
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
@@ -1065,16 +988,16 @@ private fun PTITEditProfileDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.lg))
-                
+
                 // Form Fields
                 OutlinedTextField(
                     value = formData.fullName,
                     onValueChange = { formData = formData.copy(fullName = it) },
                     label = { Text("Họ và tên") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.Person, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.Person, contentDescription = null)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = PTITCornerRadius.md,
@@ -1083,15 +1006,15 @@ private fun PTITEditProfileDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
+
                 OutlinedTextField(
                     value = formData.phoneNumber,
                     onValueChange = { formData = formData.copy(phoneNumber = it) },
                     label = { Text("Số điện thoại") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.Phone, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.Phone, contentDescription = null)
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
@@ -1101,15 +1024,15 @@ private fun PTITEditProfileDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
+
                 OutlinedTextField(
                     value = formData.studentId,
                     onValueChange = { formData = formData.copy(studentId = it) },
                     label = { Text("Mã sinh viên") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.Numbers, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.Numbers, contentDescription = null)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = PTITCornerRadius.md,
@@ -1118,15 +1041,15 @@ private fun PTITEditProfileDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
+
                 OutlinedTextField(
                     value = formData.major,
                     onValueChange = { formData = formData.copy(major = it) },
                     label = { Text("Ngành học") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.School, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.School, contentDescription = null)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = PTITCornerRadius.md,
@@ -1135,15 +1058,15 @@ private fun PTITEditProfileDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
+
                 OutlinedTextField(
                     value = formData.graduationYear,
                     onValueChange = { formData = formData.copy(graduationYear = it) },
                     label = { Text("Năm tốt nghiệp") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.CalendarMonth, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null)
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -1153,15 +1076,15 @@ private fun PTITEditProfileDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
+
                 OutlinedTextField(
                     value = formData.bio,
                     onValueChange = { formData = formData.copy(bio = it) },
                     label = { Text("Giới thiệu bản thân") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.Info, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.Info, contentDescription = null)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
@@ -1172,9 +1095,9 @@ private fun PTITEditProfileDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.xl))
-                
+
                 // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1191,7 +1114,7 @@ private fun PTITEditProfileDialog(
                     ) {
                         Text("Hủy")
                     }
-                    
+
                     Button(
                         onClick = {
                             isLoading = true
@@ -1265,16 +1188,16 @@ private fun PTITChangePasswordDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.lg))
-                
+
                 // Current Password
                 OutlinedTextField(
                     value = formData.current,
                     onValueChange = { formData = formData.copy(current = it) },
                     label = { Text("Mật khẩu hiện tại") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.Lock, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = null)
                     },
                     trailingIcon = {
                         IconButton(onClick = { showCurrentPassword = !showCurrentPassword }) {
@@ -1293,16 +1216,16 @@ private fun PTITChangePasswordDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
+
                 // New Password
                 OutlinedTextField(
                     value = formData.new,
                     onValueChange = { formData = formData.copy(new = it) },
                     label = { Text("Mật khẩu mới") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.LockOpen, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.LockOpen, contentDescription = null)
                     },
                     trailingIcon = {
                         IconButton(onClick = { showNewPassword = !showNewPassword }) {
@@ -1321,16 +1244,16 @@ private fun PTITChangePasswordDialog(
                         focusedLabelColor = PTITPrimary
                     )
                 )
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.md))
-                
+
                 // Confirm Password
                 OutlinedTextField(
                     value = formData.confirm,
                     onValueChange = { formData = formData.copy(confirm = it) },
                     label = { Text("Xác nhận mật khẩu mới") },
-                    leadingIcon = { 
-                        Icon(Icons.Default.LockOpen, contentDescription = null) 
+                    leadingIcon = {
+                        Icon(Icons.Default.LockOpen, contentDescription = null)
                     },
                     trailingIcon = {
                         IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
@@ -1350,7 +1273,7 @@ private fun PTITChangePasswordDialog(
                     ),
                     isError = formData.new.isNotBlank() && formData.confirm.isNotBlank() && formData.new != formData.confirm
                 )
-                
+
                 if (formData.new.isNotBlank() && formData.confirm.isNotBlank() && formData.new != formData.confirm) {
                     Text(
                         text = "Mật khẩu xác nhận không khớp",
@@ -1359,9 +1282,9 @@ private fun PTITChangePasswordDialog(
                         modifier = Modifier.padding(start = PTITSpacing.md, top = PTITSpacing.xs)
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.xl))
-                
+
                 // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1378,16 +1301,16 @@ private fun PTITChangePasswordDialog(
                     ) {
                         Text("Hủy")
                     }
-                    
+
                     Button(
                         onClick = {
                             isLoading = true
                             onSave(formData)
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = !isLoading && 
-                                formData.current.isNotBlank() && 
-                                formData.new.isNotBlank() && 
+                        enabled = !isLoading &&
+                                formData.current.isNotBlank() &&
+                                formData.new.isNotBlank() &&
                                 formData.confirm.isNotBlank() &&
                                 formData.new == formData.confirm,
                         colors = ButtonDefaults.buttonColors(
@@ -1448,9 +1371,9 @@ private fun PTITSettingsDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(PTITSpacing.lg))
-                
+
                 // Settings Items
                 PTITSettingsItem(
                     icon = Icons.Default.Notifications,
@@ -1458,35 +1381,35 @@ private fun PTITSettingsDialog(
                     subtitle = "Cài đặt thông báo việc làm",
                     onClick = { /* TODO */ }
                 )
-                
+
                 PTITSettingsItem(
                     icon = Icons.Default.Language,
                     title = "Ngôn ngữ",
                     subtitle = "Tiếng Việt",
                     onClick = { /* TODO */ }
                 )
-                
+
                 PTITSettingsItem(
                     icon = Icons.Default.DarkMode,
                     title = "Giao diện",
                     subtitle = "Chế độ sáng/tối",
                     onClick = { /* TODO */ }
                 )
-                
+
                 PTITSettingsItem(
                     icon = Icons.Default.Security,
                     title = "Bảo mật",
                     subtitle = "Cài đặt bảo mật tài khoản",
                     onClick = { /* TODO */ }
                 )
-                
+
                 PTITSettingsItem(
                     icon = Icons.Default.Help,
                     title = "Trợ giúp",
                     subtitle = "Hướng dẫn sử dụng ứng dụng",
                     onClick = { /* TODO */ }
                 )
-                
+
                 PTITSettingsItem(
                     icon = Icons.Default.Info,
                     title = "Về ứng dụng",
@@ -1523,7 +1446,7 @@ private fun PTITSettingsItem(
                 tint = PTITPrimary,
                 modifier = Modifier.size(PTITSize.iconMd)
             )
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
@@ -1539,7 +1462,7 @@ private fun PTITSettingsItem(
                     )
                 )
             }
-            
+
             Icon(
                 imageVector = Icons.Default.ArrowForwardIos,
                 contentDescription = null,
@@ -1548,7 +1471,7 @@ private fun PTITSettingsItem(
             )
         }
     }
-    
+
     Spacer(modifier = Modifier.height(PTITSpacing.xs))
 }
 
@@ -1577,7 +1500,7 @@ fun ProfileScreenPreview() {
             "Hoàn thành khóa học AWS Cloud Practitioner"
         )
     )
-    
+
     PtitjobTheme {
         ProfileScreen(
             user = sampleUser,

@@ -95,8 +95,8 @@ fun CandidateDashboardScreen(
     var selectedTimeFilter by rememberSaveable { mutableStateOf("Tất cả") }
 
     com.example.ptitjob.ui.component.PTITScreenContainer(
-        hasGradientBackground = true,
-        snackbarHostState = snackbarHostState
+        hasGradientBackground = false,
+        snackbarHostState = snackbarHostState,
     ) {
         if (uiState.isLoading && uiState.featuredJobs.isEmpty() &&
             uiState.topCompanies.isEmpty() && uiState.hotIndustries.isEmpty()
@@ -104,6 +104,7 @@ fun CandidateDashboardScreen(
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
+
             ) {
                 CircularProgressIndicator(color = PTITPrimary)
             }
@@ -205,14 +206,14 @@ private fun DashboardHeader(
                     text = "Chào mừng trở lại! 👋",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = PTITTextLight,
+                        color = PTITTextPrimary,
                         fontSize = 24.sp
                     )
                 )
                 Text(
                     text = "Tìm kiếm cơ hội việc làm tốt nhất",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = PTITTextLight.copy(alpha = 0.9f)
+                        color = PTITTextSecondary
                     )
                 )
             }
@@ -221,19 +222,19 @@ private fun DashboardHeader(
                     Icon(
                         Icons.Default.Refresh,
                         contentDescription = "Làm mới",
-                        tint = PTITTextLight
+                        tint = PTITTextPrimary
                     )
                 }
                 Surface(
                     shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.2f),
+                    color = PTITNeutral100,
                     modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.Notifications,
                             contentDescription = "Thông báo",
-                            tint = PTITTextLight,
+                            tint = PTITTextPrimary,
                             modifier = Modifier.size(PTITSize.iconMd)
                         )
                     }
@@ -276,7 +277,7 @@ private fun DashboardSearchBar(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
+        shape = PTITCornerRadius.xl,
         shadowElevation = PTITElevation.md,
         color = Color.White
     ) {
@@ -347,8 +348,13 @@ private fun DashboardSearchBar(
                             )
                         },
                         label = { Text(category.name) },
-                        selected = false
-                    )
+                        selected = false,
+                        shape = CircleShape, // Bo tròn hoàn toàn
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = PTITNeutral100, // Màu nền nhạt
+                            labelColor = PTITTextSecondary // Màu chữ xám
+                        )
+                  )
                 }
             }
 
@@ -382,7 +388,8 @@ private fun DashboardStatsSection(stats: DashboardStats) {
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = PTITElevation.sm,
+        border = BorderStroke(1.dp, PTITNeutral100)
     ) {
         Row(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -553,6 +560,23 @@ private fun FeaturedJobsSection(
     }
 }
 
+private fun formatSalary(salary: String): String {
+    val parts = salary.split(" - ")
+    val formattedParts = parts.map { part ->
+        val numericSalary = part.filter { it.isDigit() }.toLongOrNull()
+
+        if (numericSalary != null && numericSalary >= 1_000_000) {
+            // Chia cho 1 triệu và thêm chữ "triệu"
+            val millions = numericSalary / 1_000_000
+            "$millions triệu"
+        } else {
+            part
+        }
+    }
+    return formattedParts.joinToString(" - ")
+}
+
+
 @Composable
 private fun FeaturedJobCard(
     job: JobItem,
@@ -565,17 +589,32 @@ private fun FeaturedJobCard(
             .clickable(onClick = onClick),
         shape = PTITCornerRadius.lg,
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = PTITElevation.md,
+        border = BorderStroke(1.dp, PTITNeutral100)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
         ) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
+                // Tên công việc, chiếm không gian còn lại
+                Text(
+                    text = job.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITTextPrimary
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+
                 IconButton(
                     onClick = onBookmark,
                     modifier = Modifier.size(32.dp)
@@ -589,15 +628,6 @@ private fun FeaturedJobCard(
                 }
             }
 
-            Text(
-                text = job.title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = PTITTextPrimary
-                ),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -638,37 +668,33 @@ private fun FeaturedJobCard(
             Divider(color = PTITNeutral300, thickness = 1.dp)
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
+
+                Icon(
+                    imageVector = Icons.Default.Paid,
+                    contentDescription = "Salary",
+                    tint = PTITSuccess,
+                    modifier = Modifier.size(PTITSize.iconMd)
+                )
+
+                Spacer(modifier = Modifier.width(PTITSpacing.xs))
+
+
                 Text(
-                    text = job.salary,
+                    text = formatSalary(job.salary),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = PTITSuccess
                     )
                 )
-
-                Button(
-                    onClick = { /* TODO: Apply */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PTITPrimary
-                    ),
-                    shape = PTITCornerRadius.sm,
-                    contentPadding = PaddingValues(horizontal = PTITSpacing.md, vertical = PTITSpacing.sm)
-                ) {
-                    Text(
-                        "Ứng tuyển",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                }
             }
         }
     }
 }
+
 
 @Composable
 private fun TopCompaniesSection(
@@ -750,7 +776,8 @@ private fun TopCompanyCard(
             .clickable(onClick = onClick),
         shape = PTITCornerRadius.lg,
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = PTITElevation.sm,
+        border = BorderStroke(1.dp, PTITNeutral100)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.md),
@@ -869,7 +896,7 @@ private fun IndustryCard(
             .clickable(onClick = onClick),
         shape = PTITCornerRadius.lg,
         color = color.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
+        border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.md),
@@ -916,17 +943,25 @@ private fun QuickToolsSection(onToolSelected: (QuickToolType) -> Unit) {
 
         PTITSpacing.md.let { Spacer(Modifier.height(it)) }
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md),
-            modifier = Modifier.height(200.dp)
-        ) {
-            items(getQuickTools()) { tool ->
-                QuickToolCard(
-                    tool = tool,
-                    onClick = { onToolSelected(tool.type) }
-                )
+        val tools = getQuickTools()
+        Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)) {
+            tools.chunked(2).forEach { rowItems ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    rowItems.forEach { tool ->
+                        Box(Modifier.weight(1f)) {
+                            QuickToolCard(
+                                tool = tool,
+                                onClick = { onToolSelected(tool.type) }
+                            )
+                        }
+                    }
+                    if (rowItems.size < 2) {
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
@@ -940,7 +975,8 @@ private fun QuickToolCard(tool: QuickTool, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         shape = PTITCornerRadius.lg,
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = PTITElevation.sm,
+        border = BorderStroke(1.dp, PTITNeutral100)
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.md),
@@ -1054,7 +1090,7 @@ fun CandidateDashboardScreenPreview() {
             CandidateDashboardScreen(
                 uiState = previewState,
                 snackbarHostState = remember { SnackbarHostState() },
-                onRefresh = {},
+                onRefresh = { },
                 onSearchRequest = { _ -> },
                 onJobSelected = {},
                 onViewAllJobs = {},

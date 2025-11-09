@@ -98,7 +98,7 @@ private fun SummaryCard(icon: ImageVector, label: String, value: Long) {
                 Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
             }
             Text(
-                text = formatCurrency(value),
+                text = formatCurrencyCompact(value),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -159,9 +159,9 @@ private fun BreakdownTable(result: CompoundInterestResult) {
             result.yearlyBreakdown.forEach { row ->
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("Năm ${row.year}", Modifier.weight(1f))
-                    Text(formatCurrency(row.totalContributions), Modifier.weight(1.5f), textAlign = TextAlign.End)
-                    Text("+${formatCurrency(row.interestEarned)}", Modifier.weight(1.5f), textAlign = TextAlign.End, color = MaterialTheme.colorScheme.primary)
-                    Text(formatCurrency(row.yearEndBalance), Modifier.weight(1.5f), textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
+                    Text(formatCurrencyCompact(row.totalContributions), Modifier.weight(1.5f), textAlign = TextAlign.End)
+                    Text("+${formatCurrencyCompact(row.interestEarned)}", Modifier.weight(1.5f), textAlign = TextAlign.End, color = MaterialTheme.colorScheme.primary)
+                    Text(formatCurrencyCompact(row.yearEndBalance), Modifier.weight(1.5f), textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -174,7 +174,7 @@ private fun PerformanceSummary(result: CompoundInterestResult) {
         Column(Modifier.padding(16.dp)) {
             Text("Sức mạnh của lãi suất kép", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
-            Text("Bạn đang có trong tay ${formatCurrency(result.initialInvestment)} ban đầu và muốn đầu tư với lãi suất ${result.annualInterestRate}%/năm.", style = MaterialTheme.typography.bodyMedium)
+            Text("Bạn đang có trong tay ${formatCurrencyCompact(result.initialInvestment)} ban đầu và muốn đầu tư với lãi suất ${result.annualInterestRate}%/năm.", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

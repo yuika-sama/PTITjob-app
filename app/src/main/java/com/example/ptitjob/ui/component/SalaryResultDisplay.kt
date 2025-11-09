@@ -108,7 +108,7 @@ private fun ResultBox(label: String, amount: Long, isActive: Boolean, modifier: 
                 color = if (isActive) Color.White else MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = formatCurrency(amount),
+                text = formatCurrencyCompact(amount),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (isActive) Color.White else MaterialTheme.colorScheme.onSurface
@@ -132,7 +132,7 @@ private fun InputInfoCard(result: SalaryCalculationResult) {
                 item { InfoChipRow("Vùng lương:", "Vùng ${result.region}") }
                 item { InfoChipRow("Người phụ thuộc:", "${result.dependents} người") }
                 item { InfoChipRow("Loại bảo hiểm:", if(result.insuranceType == "official") "Lương chính thức" else "Tự chọn") }
-                item { InfoChipRow("Mức đóng BH:", formatCurrency(result.insuranceBase)) }
+                item { InfoChipRow("Mức đóng BH:", formatCurrencyCompact(result.insuranceBase)) }
             }
         }
     }
@@ -170,7 +170,7 @@ private fun CalculationTable(result: SalaryCalculationResult) {
                     val isTotal = label.startsWith("Tổng")
                     Row(Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(label, Modifier.weight(1f), fontWeight = if (isTotal) FontWeight.SemiBold else FontWeight.Normal)
-                        Text(formatCurrency(value), Modifier.weight(1f), textAlign = TextAlign.End, fontWeight = if (isTotal) FontWeight.SemiBold else FontWeight.Normal,
+                        Text(formatCurrencyCompact(value), Modifier.weight(1f), textAlign = TextAlign.End, fontWeight = if (isTotal) FontWeight.SemiBold else FontWeight.Normal,
                             color = if (label.contains("bảo hiểm") || label.contains("Thuế")) MaterialTheme.colorScheme.error else Color.Unspecified)
                     }
                 }
@@ -185,8 +185,8 @@ private fun NotesCard(result: SalaryCalculationResult) {
         Column(Modifier.padding(16.dp)) {
             Text("Ghi chú", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
-            Text("• Giảm trừ bản thân: ${formatCurrency(result.personalDeduction)}/tháng", style = MaterialTheme.typography.bodyMedium)
-            Text("• Giảm trừ người phụ thuộc: 4,400,000đ/người/tháng", style = MaterialTheme.typography.bodyMedium)
+            Text("• Giảm trừ bản thân: ${formatCurrencyCompact(result.personalDeduction)}/tháng", style = MaterialTheme.typography.bodyMedium)
+            Text("• Giảm trừ người phụ thuộc: 4.4 triệu/người/tháng", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

@@ -245,45 +245,54 @@ private fun CompaniesHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(PTITSpacing.lg),
+            .padding(horizontal = PTITSpacing.lg, vertical = PTITSpacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
+        // Icon với background trắng mờ
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Work,
                 contentDescription = null,
-                tint = PTITTextLight,
-                modifier = Modifier.size(PTITSize.iconLg)
-            )
-            Text(
-                text = "KHÁM PHÁ CÁC CÔNG TY HÀNG ĐẦU",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp
-                ),
-                color = PTITTextLight,
-                textAlign = TextAlign.Center
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
             )
         }
+
+        Spacer(Modifier.height(PTITSpacing.md))
+
+        Text(
+            text = "KHÁM PHÁ CÁC CÔNG TY\nHÀNG ĐẦU",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 26.sp,
+                letterSpacing = 0.5.sp
+            ),
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
 
         Spacer(Modifier.height(PTITSpacing.sm))
 
         Text(
             text = "Tìm hiểu về những công ty uy tín và cơ hội việc làm hấp dẫn",
-            color = PTITTextLight.copy(alpha = 0.9f),
-            style = MaterialTheme.typography.bodyLarge,
+            color = Color.White.copy(alpha = 0.95f),
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
             textAlign = TextAlign.Center
         )
 
         Spacer(Modifier.height(PTITSpacing.xl))
 
         Surface(
-            shape = PTITCornerRadius.lg,
-            shadowElevation = PTITElevation.md,
-            modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(20.dp),
+            shadowElevation = 8.dp,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.White
         ) {
             Column(
                 modifier = Modifier.padding(PTITSpacing.lg),
@@ -293,7 +302,7 @@ private fun CompaniesHeader(
                     value = searchTerm,
                     onValueChange = onSearchTermChange,
                     placeholder = {
-                        Text("Tìm kiếm công ty...", color = PTITTextSecondary)
+                        Text("Tìm kiếm công ty...", color = PTITTextSecondary.copy(alpha = 0.6f))
                     },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = "Search", tint = PTITPrimary)
@@ -301,17 +310,28 @@ private fun CompaniesHeader(
                     trailingIcon = {
                         if (searchTerm.isNotEmpty()) {
                             IconButton(onClick = { onSearchTermChange("") }) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear", tint = PTITTextSecondary)
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    tint = PTITTextSecondary.copy(alpha = 0.5f)
+                                )
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = PTITNeutral300,
-                        focusedBorderColor = PTITPrimary
+                        unfocusedBorderColor = PTITNeutral300.copy(alpha = 0.5f),
+                        focusedBorderColor = PTITPrimary,
+                        unfocusedContainerColor = PTITNeutral50.copy(alpha = 0.3f),
+                        focusedContainerColor = PTITNeutral50.copy(alpha = 0.5f)
                     ),
                     singleLine = true,
-                    shape = PTITCornerRadius.md
+                    shape = RoundedCornerShape(16.dp)
+                )
+
+                HorizontalDivider(
+                    color = PTITNeutral300.copy(alpha = 0.3f),
+                    thickness = 1.dp
                 )
 
                 Row(
@@ -322,27 +342,30 @@ private fun CompaniesHeader(
                     Text(
                         text = "Chế độ xem:",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = PTITTextSecondary
+                            fontWeight = FontWeight.SemiBold,
+                            color = PTITTextSecondary,
+                            fontSize = 14.sp
                         )
                     )
 
                     Row(horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)) {
                         androidx.compose.material3.FilterChip(
                             onClick = { onViewModeChange(ViewMode.LIST) },
-                            label = { Text("Danh sách") },
+                            label = { Text("Danh sách", fontSize = 13.sp) },
                             selected = viewMode == ViewMode.LIST,
                             leadingIcon = if (viewMode == ViewMode.LIST) {
-                                { Icon(Icons.Default.List, null, modifier = Modifier.size(PTITSize.iconSm)) }
-                            } else null
+                                { Icon(Icons.Default.List, null, modifier = Modifier.size(18.dp)) }
+                            } else null,
+                            shape = RoundedCornerShape(12.dp)
                         )
                         androidx.compose.material3.FilterChip(
                             onClick = { onViewModeChange(ViewMode.GRID) },
-                            label = { Text("Lưới") },
+                            label = { Text("Lưới", fontSize = 13.sp) },
                             selected = viewMode == ViewMode.GRID,
                             leadingIcon = if (viewMode == ViewMode.GRID) {
-                                { Icon(Icons.Default.GridView, null, modifier = Modifier.size(PTITSize.iconSm)) }
-                            } else null
+                                { Icon(Icons.Default.GridView, null, modifier = Modifier.size(18.dp)) }
+                            } else null,
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                 }
@@ -350,42 +373,55 @@ private fun CompaniesHeader(
         }
     }
 }
-
-/* =========================
- * Khu vực kết quả / thẻ
- * ========================= */
 @Composable
 private fun ResultsHeader(count: Int, searchTerm: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = PTITCornerRadius.lg,
+        shape = RoundedCornerShape(18.dp),
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = 2.dp
     ) {
         Row(
-            modifier = Modifier.padding(PTITSpacing.lg),
-            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+            modifier = Modifier.padding(horizontal = PTITSpacing.lg, vertical = PTITSpacing.md),
+            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Business,
-                contentDescription = null,
-                tint = PTITPrimary,
-                modifier = Modifier.size(PTITSize.iconMd)
-            )
-            Column {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                PTITPrimary.copy(alpha = 0.1f),
+                                PTITPrimary.copy(alpha = 0.05f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Business,
+                    contentDescription = null,
+                    tint = PTITPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Tìm thấy $count công ty",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        color = PTITTextPrimary
+                        color = PTITTextPrimary,
+                        fontSize = 18.sp
                     )
                 )
                 if (searchTerm.isNotEmpty()) {
                     Text(
                         text = "Kết quả cho: \"$searchTerm\"",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = PTITTextSecondary
+                            color = PTITTextSecondary,
+                            fontSize = 13.sp
                         )
                     )
                 }
@@ -400,9 +436,9 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = PTITCornerRadius.lg,
+        shape = RoundedCornerShape(20.dp),
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = 3.dp
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.lg),
@@ -413,10 +449,10 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
                 Surface(
-                    modifier = Modifier.size(PTITSize.avatarLg),
-                    shape = PTITCornerRadius.md,
+                    modifier = Modifier.size(72.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = PTITNeutral50,
-                    tonalElevation = PTITElevation.xs
+                    shadowElevation = 1.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (company.logo.isNotBlank()) {
@@ -426,15 +462,17 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
                                     .crossfade(true)
                                     .build(),
                                 contentDescription = "${company.name} logo",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                contentScale = ContentScale.Fit
                             )
                         } else {
                             Icon(
                                 Icons.Default.Business,
                                 contentDescription = "Company placeholder",
-                                modifier = Modifier.size(PTITSize.iconLg),
-                                tint = PTITTextSecondary
+                                modifier = Modifier.size(32.dp),
+                                tint = PTITTextSecondary.copy(alpha = 0.5f)
                             )
                         }
                     }
@@ -442,13 +480,14 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
 
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
                         text = company.name,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = PTITTextPrimary
+                            color = PTITTextPrimary,
+                            fontSize = 18.sp
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -456,17 +495,24 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
                     Text(
                         text = company.size ?: "Chưa cập nhật",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = PTITTextSecondary
+                            color = PTITTextSecondary,
+                            fontSize = 13.sp
                         )
                     )
                 }
 
-                IconButton(onClick = { /* TODO: Add to favorites */ }) {
-                    Icon(
-                        Icons.Default.FavoriteBorder,
-                        contentDescription = "Add to favorites",
-                        tint = PTITTextSecondary
-                    )
+                Surface(
+                    shape = CircleShape,
+                    color = PTITPrimary.copy(alpha = 0.08f)
+                ) {
+                    IconButton(onClick = { /* TODO: Add to favorites */ }) {
+                        Icon(
+                            Icons.Default.FavoriteBorder,
+                            contentDescription = "Add to favorites",
+                            tint = PTITPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 
@@ -475,41 +521,77 @@ private fun CompanyCard(company: Company, onClick: () -> Unit) {
                     .filter { it.isNotBlank() }
                     .joinToString(" • "),
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = PTITTextSecondary
+                    color = PTITTextSecondary,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
+            HorizontalDivider(
+                color = PTITNeutral300.copy(alpha = 0.3f),
+                thickness = 1.dp
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)) {
-                    company.address?.let { address ->
-                        AssistChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    text = address,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                company.address?.let { address ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PTITNeutral50.copy(alpha = 0.5f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                null,
+                                modifier = Modifier.size(16.dp),
+                                tint = PTITPrimary
+                            )
+                            Text(
+                                text = address,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(PTITSize.iconSm))
-                            }
+                            )
+                        }
+                    }
+                }
+                val jobCount = company.jobCount ?: 0
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = PTITPrimary.copy(alpha = 0.08f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Work,
+                            null,
+                            modifier = Modifier.size(16.dp),
+                            tint = PTITPrimary
+                        )
+                        Text(
+                            text = "$jobCount việc làm",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = PTITPrimary
+                            )
                         )
                     }
-                    val jobCount = company.jobCount ?: 0
-                    AssistChip(
-                        onClick = {},
-                        label = { Text("$jobCount việc làm") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Work, null, modifier = Modifier.size(PTITSize.iconSm))
-                        }
-                    )
                 }
             }
         }
@@ -522,9 +604,9 @@ private fun CompanyGridCard(company: Company, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = PTITCornerRadius.lg,
+        shape = RoundedCornerShape(20.dp),
         color = Color.White,
-        tonalElevation = PTITElevation.sm
+        shadowElevation = 3.dp
     ) {
         Column(
             modifier = Modifier.padding(PTITSpacing.md),
@@ -532,10 +614,10 @@ private fun CompanyGridCard(company: Company, onClick: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
             Surface(
-                modifier = Modifier.size(PTITSize.avatarXl),
+                modifier = Modifier.size(80.dp),
                 shape = CircleShape,
                 color = PTITNeutral50,
-                tonalElevation = PTITElevation.xs
+                shadowElevation = 2.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (company.logo.isNotBlank()) {
@@ -545,15 +627,17 @@ private fun CompanyGridCard(company: Company, onClick: () -> Unit) {
                                 .crossfade(true)
                                 .build(),
                             contentDescription = "${company.name} logo",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
+                            contentScale = ContentScale.Fit
                         )
                     } else {
                         Icon(
                             Icons.Default.Business,
                             contentDescription = "Company placeholder",
-                            modifier = Modifier.size(PTITSize.iconXl),
-                            tint = PTITTextSecondary
+                            modifier = Modifier.size(36.dp),
+                            tint = PTITTextSecondary.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -563,7 +647,8 @@ private fun CompanyGridCard(company: Company, onClick: () -> Unit) {
                 text = company.name,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = PTITTextPrimary
+                    color = PTITTextPrimary,
+                    fontSize = 15.sp
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -573,25 +658,44 @@ private fun CompanyGridCard(company: Company, onClick: () -> Unit) {
             Text(
                 text = company.industry,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = PTITTextSecondary
+                    color = PTITTextSecondary,
+                    fontSize = 12.sp
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
 
-            AssistChip(
-                onClick = {},
-                label = { Text("${company.jobCount ?: 0} việc làm") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = PTITPrimary.copy(alpha = 0.08f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Work,
+                        null,
+                        modifier = Modifier.size(16.dp),
+                        tint = PTITPrimary
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "${company.jobCount ?: 0} việc làm",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PTITPrimary
+                        )
+                    )
+                }
+            }
         }
     }
 }
-
-/* =========================
- * Skeleton / Empty / Error
- * ========================= */
 @Composable
 private fun SkeletonCompanyCard() {
     Surface(

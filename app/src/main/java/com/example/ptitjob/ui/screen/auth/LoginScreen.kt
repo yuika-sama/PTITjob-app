@@ -65,15 +65,7 @@ fun LoginScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        PTITGradientStart,
-                        PTITGradientMiddle,
-                        PTITGradientEnd
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -165,7 +157,7 @@ private fun LoginHeader() {
             text = "Chào mừng trở lại!",
             style = MaterialTheme.typography.displaySmall.copy(
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = PTITNeutral900
             ),
             textAlign = TextAlign.Center
         )
@@ -173,7 +165,7 @@ private fun LoginHeader() {
         Text(
             text = "Kết nối với cơ hội nghề nghiệp tại PTIT",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = Color.White.copy(alpha = 0.9f)
+                color = PTITNeutral700
             ),
             textAlign = TextAlign.Center
         )
@@ -326,7 +318,7 @@ private fun LoginFooter(onSignUpClick: () -> Unit) {
             Text(
                 text = "Bạn chưa có tài khoản? ",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = PTITNeutral700
                 )
             )
             TextButton(
@@ -337,7 +329,7 @@ private fun LoginFooter(onSignUpClick: () -> Unit) {
                     text = "Đăng ký ngay",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = PTITPrimary
                     )
                 )
             }

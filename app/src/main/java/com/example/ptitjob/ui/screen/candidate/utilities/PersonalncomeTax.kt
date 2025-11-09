@@ -4,47 +4,51 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.ptitjob.ui.component.TaxCalculationResult
-import com.example.ptitjob.ui.component.TaxCalculator
-import com.example.ptitjob.ui.component.TaxResultDisplay
+import androidx.compose.ui.unit.sp
 import com.example.ptitjob.ui.theme.*
+import java.text.NumberFormat
+import java.util.Locale
 
-// Giả sử các component TaxCalculator, TaxResultDisplay và các data class tương ứng đã tồn tại
+data class TaxCalculationResult(
+    val grossIncome: Double,
+    val personalDeduction: Double,
+    val dependentDeduction: Double,
+    val totalDeduction: Double,
+    val taxableIncome: Double,
+    val tax: Double,
+    val netIncome: Double
+)
 
-// --- Component Màn hình Chính ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalIncomeTaxScreen(
     onBack: () -> Unit = {}
 ) {
-    // --- State Management cho UI ---
     var currentTab by remember { mutableIntStateOf(0) }
     var calculationResult by remember { mutableStateOf<TaxCalculationResult?>(null) }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         text = "Tính thuế TNCN",
@@ -61,8 +65,8 @@ fun PersonalIncomeTaxScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = PTITPrimary,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = PTITError,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -73,35 +77,20 @@ fun PersonalIncomeTaxScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            PTITGradientStart,
-                            PTITGradientMiddle,
-                            PTITGradientEnd
-                        )
-                    )
-                )
+                .background(PTITBackgroundLight)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(PTITSpacing.md),
-                verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
-                // --- Header Banner ---
-                item {
-                    TaxHeaderBanner()
-                }
-
-                // --- Navigation Tabs ---
+                item { TaxHeaderBanner() }
                 item {
                     TaxNavigationTabs(
                         currentTab = currentTab,
                         onTabChange = { currentTab = it }
                     )
                 }
-
-                // --- Content based on selected tab ---
                 item {
                     AnimatedVisibility(
                         visible = true,
@@ -122,124 +111,67 @@ fun PersonalIncomeTaxScreen(
     }
 }
 
-
-// --- Các Composable con và Section ---
-
 @Composable
 private fun TaxHeaderBanner() {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(PTITPrimary, PTITSecondary)
-                ),
-                shape = PTITCornerRadius.lg
-            ),
+    Card(
+        modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.Transparent,     // để không che gradient phía dưới
-        tonalElevation = PTITElevation.md
+        colors = CardDefaults.cardColors(containerColor = PTITPrimary, PTITSecondary),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(PTITSpacing.xl)
+        Column(
+            modifier = Modifier.padding(PTITSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
-            // Decorative elements
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = 20.dp, y = (-20).dp)
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(0.1f))
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .offset(x = (-30).dp, y = 30.dp)
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(0.05f))
-            )
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            Card(
+                modifier = Modifier.size(56.dp),
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Surface(
-                    modifier = Modifier.size(PTITSize.iconXxl),
-                    shape = CircleShape,
-                    color = Color.White
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Calculate,
-                            contentDescription = null,
-                            tint = PTITPrimary,
-                            modifier = Modifier.size(PTITSize.iconXl)
-                        )
-                    }
-                }
-                
-                Text(
-                    text = "Công cụ tính Thuế thu nhập cá nhân",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ),
-                    textAlign = TextAlign.Center
-                )
-                
-                Text(
-                    text = "Chuẩn 2025",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        color = Color.White.copy(0.9f),
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    textAlign = TextAlign.Center
-                )
-                
-                Text(
-                    text = "Tính toán chính xác theo quy định mới nhất của Bộ Tài chính",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.White.copy(0.8f)
-                    ),
-                    textAlign = TextAlign.Center
-                )
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-                ) {
-                    TaxInfoChip("Cập nhật 2025")
-                    TaxInfoChip("Miễn phí")
-                    TaxInfoChip("Chính xác 100%")
+                    Icon(
+                        imageVector = Icons.Default.Calculate,
+                        contentDescription = null,
+                        tint = PTITError,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun TaxInfoChip(text: String) {
-    Surface(
-        shape = PTITCornerRadius.sm,
-        color = Color.White.copy(0.2f)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            ),
-            modifier = Modifier.padding(
-                horizontal = PTITSpacing.sm,
-                vertical = PTITSpacing.xs
+            Text(
+                text = "Công cụ tính Thuế thu nhập cá nhân chuẩn 2025",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 18.sp
+                ),
+                textAlign = TextAlign.Center
             )
-        )
+
+            Text(
+                text = "Áp dụng quy định:",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color.White.copy(0.9f),
+                    fontSize = 12.sp
+                ),
+                textAlign = TextAlign.Center
+            )
+
+            Text(
+                text = "• Mức giảm trừ gia cảnh: 11 Tr/tháng (bản thân) và 4.4 Tr/tháng (người phụ thuộc)",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color.White.copy(0.85f),
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp
+                ),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
@@ -250,44 +182,50 @@ private fun TaxNavigationTabs(currentTab: Int, onTabChange: (Int) -> Unit) {
         "Bảng thuế suất" to Icons.Default.Info,
         "Hướng dẫn & FAQ" to Icons.Default.School
     )
-    
-    Surface(
+
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.sm
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(PTITSpacing.md)
-        ) {
+        Column(modifier = Modifier.padding(PTITSpacing.sm)) {
             tabs.forEachIndexed { index, (title, icon) ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = PTITSpacing.xs),
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
                     shape = PTITCornerRadius.md,
-                    color = if (currentTab == index) PTITPrimary else Color.Transparent,
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (currentTab == index) PTITError else Color.Transparent
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = if (currentTab == index) 2.dp else 0.dp
+                    ),
                     onClick = { onTabChange(index) }
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(PTITSpacing.md),
-                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                            .padding(
+                                horizontal = PTITSpacing.sm,
+                                vertical = PTITSpacing.sm
+                            ),
+                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
                             tint = if (currentTab == index) Color.White else PTITTextSecondary,
-                            modifier = Modifier.size(PTITSize.iconMd)
+                            modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = title,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (currentTab == index) Color.White else PTITTextPrimary
-                            )
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = if (currentTab == index) FontWeight.Bold else FontWeight.Normal,
+                                color = if (currentTab == index) Color.White else PTITTextPrimary,
+                                fontSize = 13.sp
+                            ),
+                            maxLines = 1
                         )
                     }
                 }
@@ -298,78 +236,244 @@ private fun TaxNavigationTabs(currentTab: Int, onTabChange: (Int) -> Unit) {
 
 @Composable
 private fun TaxCalculatorTab(
-    result: TaxCalculationResult?, 
+    result: TaxCalculationResult?,
     onCalculate: (TaxCalculationResult) -> Unit
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
-    ) {
-        // Calculator Section
-        Surface(
+    var grossIncome by remember { mutableStateOf("") }
+    var isInsuranceAbove by remember { mutableStateOf(true) }
+    var dependentsCount by remember { mutableStateOf("0") }
+
+    Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)) {
+        Card(
             modifier = Modifier.fillMaxWidth(),
             shape = PTITCornerRadius.lg,
-            color = Color.White,
-            tonalElevation = PTITElevation.sm
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(
-                modifier = Modifier.padding(PTITSpacing.xl),
-                verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+                modifier = Modifier.padding(PTITSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                    horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.Calculate,
                         contentDescription = null,
-                        tint = PTITPrimary,
-                        modifier = Modifier.size(PTITSize.iconMd)
+                        tint = PTITError,
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = "Nhập thông tin tính thuế",
-                        style = MaterialTheme.typography.titleLarge.copy(
+                        style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = PTITTextPrimary
                         )
                     )
                 }
-                
-                TaxCalculator()
+
+                // Income Input
+                Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)) {
+                    Text(
+                        text = "Thu Nhập (Gross)",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = PTITTextPrimary
+                        )
+                    )
+                    OutlinedTextField(
+                        value = grossIncome,
+                        onValueChange = { grossIncome = it.filter { char -> char.isDigit() } },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Thu nhập", fontSize = 14.sp) },
+                        suffix = { Text("VNĐ", fontSize = 14.sp, color = PTITTextSecondary) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PTITError,
+                            unfocusedBorderColor = PTITNeutral300
+                        )
+                    )
+                }
+
+                // Insurance Radio
+                Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)) {
+                    Text(
+                        text = "Mức lương đóng bảo hiểm",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = PTITTextPrimary
+                        )
+                    )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isInsuranceAbove = true },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                        ) {
+                            RadioButton(
+                                selected = isInsuranceAbove,
+                                onClick = { isInsuranceAbove = true },
+                                colors = RadioButtonDefaults.colors(selectedColor = PTITError)
+                            )
+                            Text(
+                                text = "Trên lương chính thức",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp)
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isInsuranceAbove = false },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                        ) {
+                            RadioButton(
+                                selected = !isInsuranceAbove,
+                                onClick = { isInsuranceAbove = false },
+                                colors = RadioButtonDefaults.colors(selectedColor = PTITError)
+                            )
+                            Text(
+                                text = "Khác",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp)
+                            )
+                        }
+                    }
+                }
+
+                // Dependents Input
+                Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)) {
+                    Text(
+                        text = "Số người phụ thuộc",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = PTITTextPrimary
+                        )
+                    )
+                    OutlinedTextField(
+                        value = dependentsCount,
+                        onValueChange = { dependentsCount = it.filter { char -> char.isDigit() } },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Số người", fontSize = 14.sp) },
+                        suffix = { Text("Người", fontSize = 14.sp, color = PTITTextSecondary) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PTITError,
+                            unfocusedBorderColor = PTITNeutral300
+                        )
+                    )
+                }
+
+                // Calculate Button
+                Button(
+                    onClick = {
+                        val income = grossIncome.toDoubleOrNull() ?: 0.0
+                        val deps = dependentsCount.toIntOrNull() ?: 0
+                        val result = calculateTax(income, deps)
+                        onCalculate(result)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = PTITError),
+                    contentPadding = PaddingValues(vertical = PTITSpacing.md)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Calculate,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(PTITSpacing.xs))
+                    Text(
+                        text = "Tính thuế",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
         }
 
         // Result Section
         result?.let {
-            Surface(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = PTITCornerRadius.lg,
-                color = PTITSuccess.copy(alpha = 0.1f),
-                tonalElevation = PTITElevation.sm
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(PTITSpacing.xl),
-                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+                    modifier = Modifier.padding(PTITSpacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.Assessment,
                             contentDescription = null,
                             tint = PTITSuccess,
-                            modifier = Modifier.size(PTITSize.iconMd)
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Kết quả tính thuế",
-                            style = MaterialTheme.typography.titleLarge.copy(
+                            text = "Kết quả tính toán",
+                            style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = PTITTextPrimary
                             )
                         )
                     }
-                    
-                    TaxResultDisplay(result = it)
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = PTITCornerRadius.md,
+                        colors = CardDefaults.cardColors(
+                            containerColor = PTITError.copy(alpha = 0.05f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(PTITSpacing.md),
+                            verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
+                        ) {
+                            ResultRow(
+                                label = "Giảm trừ bản thân",
+                                value = formatCurrency(it.personalDeduction),
+                                color = PTITTextSecondary
+                            )
+                            ResultRow(
+                                label = "Giảm trừ gia cảnh",
+                                value = formatCurrency(it.dependentDeduction),
+                                color = PTITTextSecondary
+                            )
+                            HorizontalDivider(color = PTITNeutral300)
+                            ResultRow(
+                                label = "Thu nhập chịu thuế",
+                                value = formatCurrency(it.taxableIncome),
+                                color = PTITWarning,
+                                bold = true
+                            )
+                            ResultRow(
+                                label = "Thuế TNCN phải nộp",
+                                value = formatCurrency(it.tax),
+                                color = PTITError,
+                                bold = true,
+                                large = true
+                            )
+                            HorizontalDivider(color = PTITNeutral300)
+                            ResultRow(
+                                label = "Thu nhập thực nhận",
+                                value = formatCurrency(it.netIncome),
+                                color = PTITSuccess,
+                                bold = true,
+                                large = true
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -377,40 +481,70 @@ private fun TaxCalculatorTab(
 }
 
 @Composable
+private fun ResultRow(
+    label: String,
+    value: String,
+    color: Color,
+    bold: Boolean = false,
+    large: Boolean = false
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontSize = if (large) 14.sp else 13.sp,
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                color = PTITTextPrimary
+            )
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontSize = if (large) 16.sp else 14.sp,
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold,
+                color = color
+            )
+        )
+    }
+}
+
+@Composable
 private fun TaxBracketsTab() {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.sm
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+            modifier = Modifier.padding(PTITSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
                     tint = PTITError,
-                    modifier = Modifier.size(PTITSize.iconMd)
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "Bảng thuế suất thuế thu nhập cá nhân 2025",
-                    style = MaterialTheme.typography.titleLarge.copy(
+                    text = "Bảng thuế suất TNCN 2025",
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = PTITTextPrimary
                     )
                 )
             }
-            
+
             val taxBracketInfo = getTaxBracketInfo()
-            Column(
-                verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)) {
                 taxBracketInfo.forEach { bracket ->
                     TaxBracketCard(bracket = bracket)
                 }
@@ -423,107 +557,109 @@ private fun TaxBracketsTab() {
 private fun TaxBracketCard(bracket: Map<String, Any>) {
     val level = bracket["level"] as Int
     val color = when {
-        level <= 2 -> PTITPrimary
-        level <= 4 -> PTITSecondary
+        level <= 2 -> PTITSuccess
+        level <= 4 -> PTITWarning
         else -> PTITError
     }
-    
-    Surface(
+
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.md,
-        color = color.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(PTITSpacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(PTITSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Bậc ${bracket["level"]}: ${bracket["range"]}",
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = PTITTextPrimary
-                    )
-                )
-                Text(
-                    text = bracket["description"].toString(),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = PTITTextSecondary
-                    )
-                )
-            }
-            
-            Surface(
-                shape = PTITCornerRadius.sm,
-                color = color
-            ) {
-                Text(
-                    text = bracket["rate"].toString(),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
                     ),
-                    modifier = Modifier.padding(
-                        horizontal = PTITSpacing.md,
-                        vertical = PTITSpacing.sm
-                    )
+                    modifier = Modifier.weight(1f, fill = false)
                 )
+
+                Surface(
+                    shape = PTITCornerRadius.sm,
+                    color = color
+                ) {
+                    Text(
+                        text = bracket["rate"].toString(),
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        ),
+                        modifier = Modifier.padding(
+                            horizontal = PTITSpacing.sm,
+                            vertical = PTITSpacing.xs
+                        )
+                    )
+                }
             }
+
+            Text(
+                text = bracket["description"].toString(),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = PTITTextSecondary,
+                    fontSize = 11.sp
+                )
+            )
         }
     }
 }
 
 @Composable
 private fun TaxFaqTab() {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.lg,
-        color = Color.White,
-        tonalElevation = PTITElevation.sm
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.lg)
+            modifier = Modifier.padding(PTITSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.School,
                     contentDescription = null,
-                    tint = PTITWarning,
-                    modifier = Modifier.size(PTITSize.iconMd)
+                    tint = PTITInfo,
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = "Hướng dẫn và câu hỏi thường gặp",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = PTITTextPrimary
-                    )
-                )
-            }
-            
-            // Tax Formula Section
-            TaxFormulaCard()
-            
-            // FAQ Section
-            Column(
-                verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
-            ) {
-                Text(
-                    text = "Câu hỏi thường gặp:",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = PTITTextPrimary
                     )
                 )
-                
+            }
+
+            TaxFormulaCard()
+
+            Column(verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)) {
+                Text(
+                    text = "Câu hỏi thường gặp:",
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = PTITTextPrimary
+                    ),
+                    modifier = Modifier.padding(top = PTITSpacing.sm)
+                )
+
                 val faqData = getFaqData()
                 faqData.forEach { (question, answer) ->
                     TaxFaqAccordion(question = question, answer = answer)
@@ -535,67 +671,87 @@ private fun TaxFaqTab() {
 
 @Composable
 private fun TaxFormulaCard() {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.md,
-        color = PTITInfo.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
+        colors = CardDefaults.cardColors(
+            containerColor = PTITInfo.copy(alpha = 0.08f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(PTITSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(PTITSpacing.md)
+            modifier = Modifier.padding(PTITSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(PTITSpacing.sm)
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(PTITSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Functions,
                     contentDescription = null,
                     tint = PTITInfo,
-                    modifier = Modifier.size(PTITSize.iconSm)
+                    modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = "Công thức tính thuế thu nhập cá nhân",
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    text = "Công thức tính thuế",
+                    style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = PTITTextPrimary
                     )
                 )
             }
-            
-            Surface(
+
+            Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = PTITCornerRadius.sm,
-                color = Color.White
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(PTITSpacing.md),
-                    verticalArrangement = Arrangement.spacedBy(PTITSpacing.xs)
+                    modifier = Modifier.padding(PTITSpacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Thu nhập chịu thuế = Thu nhập - Giảm trừ gia cảnh - Giảm trừ bản thân",
-                        style = MaterialTheme.typography.bodyMedium.copy(
+                        text = "Thu nhập chịu thuế = Thu nhập - Giảm trừ",
+                        style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.SemiBold,
                             color = PTITInfo
                         )
                     )
                     Text(
                         text = "Thuế TNCN = Thu nhập chịu thuế × Thuế suất",
-                        style = MaterialTheme.typography.bodyMedium.copy(
+                        style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.SemiBold,
                             color = PTITInfo
                         )
                     )
                 }
             }
-            
-            Text(
-                text = "• Giảm trừ bản thân: 11,000,000 VNĐ/tháng\n• Giảm trừ người phụ thuộc: 4,400,000 VNĐ/người/tháng\n• Áp dụng thuế suất lũy tiến từ 5% đến 35%",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = PTITTextSecondary
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "• Giảm trừ bản thân: 11 triệu/tháng",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = PTITTextSecondary,
+                        fontSize = 11.sp
+                    )
                 )
-            )
+                Text(
+                    text = "• Giảm trừ phụ thuộc: 4.4 triệu/người",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = PTITTextSecondary,
+                        fontSize = 11.sp
+                    )
+                )
+                Text(
+                    text = "• Thuế suất: 5% - 35% (lũy tiến)",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = PTITTextSecondary,
+                        fontSize = 11.sp
+                    )
+                )
+            }
         }
     }
 }
@@ -604,27 +760,27 @@ private fun TaxFormulaCard() {
 private fun TaxFaqAccordion(question: String, answer: String) {
     var isExpanded by remember { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f, 
-        label = "tax_faq_rotation"
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "faq_rotation"
     )
 
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = PTITCornerRadius.md,
-        color = PTITWarning.copy(alpha = 0.1f),
-        tonalElevation = PTITElevation.xs
+        colors = CardDefaults.cardColors(containerColor = PTITNeutral50),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { isExpanded = !isExpanded }
-                    .padding(PTITSpacing.lg),
+                    .padding(PTITSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = question,
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         color = PTITTextPrimary
                     ),
@@ -633,26 +789,26 @@ private fun TaxFaqAccordion(question: String, answer: String) {
                 Icon(
                     imageVector = Icons.Default.ExpandMore,
                     contentDescription = "Mở rộng",
-                    tint = PTITWarning,
+                    tint = PTITTextSecondary,
                     modifier = Modifier
-                        .size(PTITSize.iconMd)
+                        .size(20.dp)
                         .rotate(rotationAngle)
                 )
             }
-            
+
             AnimatedVisibility(visible = isExpanded) {
                 Column(
                     modifier = Modifier.padding(
-                        start = PTITSpacing.lg,
-                        end = PTITSpacing.lg,
-                        bottom = PTITSpacing.lg
+                        start = PTITSpacing.md,
+                        end = PTITSpacing.md,
+                        bottom = PTITSpacing.md
                     )
                 ) {
-                    HorizontalDivider(color = PTITWarning.copy(alpha = 0.3f))
-                    Spacer(Modifier.height(PTITSpacing.md))
+                    HorizontalDivider(color = PTITNeutral300, thickness = 0.5.dp)
+                    Spacer(Modifier.height(PTITSpacing.sm))
                     Text(
                         text = answer,
-                        style = MaterialTheme.typography.bodyMedium.copy(
+                        style = MaterialTheme.typography.bodySmall.copy(
                             color = PTITTextSecondary
                         )
                     )
@@ -662,33 +818,63 @@ private fun TaxFaqAccordion(question: String, answer: String) {
     }
 }
 
+// Helper Functions
+private fun calculateTax(grossIncome: Double, dependentsCount: Int): TaxCalculationResult {
+    val personalDeduction = 11_000_000.0
+    val dependentDeduction = dependentsCount * 4_400_000.0
+    val totalDeduction = personalDeduction + dependentDeduction
+    val taxableIncome = maxOf(0.0, grossIncome - totalDeduction)
 
-// --- Preview ---
-@Preview(showBackground = true, widthDp = 1200, heightDp = 1800)
+    val tax = when {
+        taxableIncome <= 5_000_000 -> taxableIncome * 0.05
+        taxableIncome <= 10_000_000 -> 5_000_000 * 0.05 + (taxableIncome - 5_000_000) * 0.10
+        taxableIncome <= 18_000_000 -> 5_000_000 * 0.05 + 5_000_000 * 0.10 + (taxableIncome - 10_000_000) * 0.15
+        taxableIncome <= 32_000_000 -> 5_000_000 * 0.05 + 5_000_000 * 0.10 + 8_000_000 * 0.15 + (taxableIncome - 18_000_000) * 0.20
+        taxableIncome <= 52_000_000 -> 5_000_000 * 0.05 + 5_000_000 * 0.10 + 8_000_000 * 0.15 + 14_000_000 * 0.20 + (taxableIncome - 32_000_000) * 0.25
+        taxableIncome <= 80_000_000 -> 5_000_000 * 0.05 + 5_000_000 * 0.10 + 8_000_000 * 0.15 + 14_000_000 * 0.20 + 20_000_000 * 0.25 + (taxableIncome - 52_000_000) * 0.30
+        else -> 5_000_000 * 0.05 + 5_000_000 * 0.10 + 8_000_000 * 0.15 + 14_000_000 * 0.20 + 20_000_000 * 0.25 + 28_000_000 * 0.30 + (taxableIncome - 80_000_000) * 0.35
+    }
+
+    val netIncome = grossIncome - tax
+
+    return TaxCalculationResult(
+        grossIncome = grossIncome,
+        personalDeduction = personalDeduction,
+        dependentDeduction = dependentDeduction,
+        totalDeduction = totalDeduction,
+        taxableIncome = taxableIncome,
+        tax = tax,
+        netIncome = netIncome
+    )
+}
+
+private fun formatCurrency(amount: Double): String {
+    val formatter = NumberFormat.getInstance(Locale("vi", "VN"))
+    return "${formatter.format(amount)} đ"
+}
+
+private fun getFaqData() = listOf(
+    "Thuế thu nhập cá nhân là gì?" to "Thuế TNCN là khoản tiền mà người có thu nhập phải nộp cho nhà nước, được tính dựa trên thu nhập chịu thuế sau khi trừ các khoản giảm trừ.",
+    "Mức lương bao nhiêu phải nộp thuế?" to "Nếu thu nhập sau khi trừ giảm trừ bản thân (11 triệu/tháng) và người phụ thuộc (4.4 triệu/người) lớn hơn 0 thì phải nộp thuế.",
+    "Giảm trừ gia cảnh là gì?" to "Là khoản được trừ vào thu nhập trước khi tính thuế, gồm giảm trừ bản thân (11 triệu/tháng) và giảm trừ người phụ thuộc (4.4 triệu/người/tháng).",
+    "Thuế suất lũy tiến là gì?" to "Là thuế suất tăng dần theo bậc thu nhập. Thu nhập càng cao thì phần vượt sẽ chịu thuế suất cao hơn, từ 5% đến 35%.",
+    "Ai là người phụ thuộc?" to "Người phụ thuộc bao gồm con dưới 18 tuổi, người thân không có thu nhập hoặc thu nhập dưới 1 triệu/tháng và được đăng ký hợp lệ."
+)
+
+private fun getTaxBracketInfo() = listOf(
+    mapOf("level" to 1, "range" to "Đến 5 triệu", "rate" to "5%", "description" to "Thu nhập chịu thuế đến 5 triệu đồng"),
+    mapOf("level" to 2, "range" to "Trên 5 - 10 triệu", "rate" to "10%", "description" to "Thu nhập chịu thuế từ trên 5 đến 10 triệu đồng"),
+    mapOf("level" to 3, "range" to "Trên 10 - 18 triệu", "rate" to "15%", "description" to "Thu nhập chịu thuế từ trên 10 đến 18 triệu đồng"),
+    mapOf("level" to 4, "range" to "Trên 18 - 32 triệu", "rate" to "20%", "description" to "Thu nhập chịu thuế từ trên 18 đến 32 triệu đồng"),
+    mapOf("level" to 5, "range" to "Trên 32 - 52 triệu", "rate" to "25%", "description" to "Thu nhập chịu thuế từ trên 32 đến 52 triệu đồng"),
+    mapOf("level" to 6, "range" to "Trên 52 - 80 triệu", "rate" to "30%", "description" to "Thu nhập chịu thuế từ trên 52 đến 80 triệu đồng"),
+    mapOf("level" to 7, "range" to "Trên 80 triệu", "rate" to "35%", "description" to "Thu nhập chịu thuế trên 80 triệu đồng")
+)
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 fun PersonalIncomeTaxScreenPreview() {
     MaterialTheme {
         PersonalIncomeTaxScreen()
     }
 }
-
-
-// --- Dữ liệu Mẫu và Placeholder ---
-private fun getSampleTaxResult() = TaxCalculationResult(
-    30000000,
-    11000000,
-    4400000,
-    15400000,
-    11450000,
-    867500,
-    25982500,
-//    emptyList()
-)
-private fun getFaqData() = listOf(
-    "Thuế thu nhập cá nhân là gì?" to "Là khoản tiền người có thu nhập cần trích nộp vào ngân sách nhà nước...",
-    "Mức lương bao nhiêu phải nộp thuế?" to "Trên 11 triệu/tháng nếu không có người phụ thuộc...",
-)
-private fun getTaxBracketInfo() = listOf(
-    mapOf("level" to 1, "range" to "Đến 5 triệu", "rate" to "5%", "description" to "Mức thuế thấp nhất"),
-    mapOf("level" to 2, "range" to "Trên 5 - 10 triệu", "rate" to "10%", "description" to "Mức thuế cơ bản"),
-)
